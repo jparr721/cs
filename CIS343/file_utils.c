@@ -8,22 +8,16 @@
 int read_file(const char* filename, char** buffer) {
   FILE* fp;
 
-  fp = fopen(filename, "r+e");
+  fp = fopen(filename, "r");
 
-  if (fp == NULL) {
+  if (fp) {
+    fread(&buffer, sizeof(char), sizeof(buffer)/sizeof(char), fp);
+    fclose(fp);
+  } else {
     fprintf(stderr, "BOYYYY THAT AINT A FILE, YA'LL");
 
     return errno;
   }
-
-  char c;
-
-  while ((c = getc(fp)) != EOF) {
-    printf("%c", c);
-    strncpy(*buffer, &c, sizeof(buffer));
-  }
-
-  fclose(fp);
 
   return 0;
 }

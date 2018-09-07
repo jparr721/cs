@@ -1,10 +1,27 @@
 #include "file_utils.h"
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
+off_t fsize(const char* filename) {
+  FILE * fp;
+  fp = fopen(filename, "r");
+  fseek(fp, 0, SEEK_END);
+  long bytes = ftell(fp);
+  rewind(fp);
+  fclose(fp);
+  return bytes;
+}
+
 int reverse(const char* file_1, const char* file_2) {
-  char* buffer = (char*)malloc(4096 * sizeof(char));
+  off_t file_size = fsize(file_1);
+
+  char* buffer = (char*)malloc(sizeof(char) * file_size);
+  char* reverse = (char*)malloc(sizeof(char) * file_size);
+
 
   if (buffer == 0) {
     fprintf(stderr, "BOYYYY WE HAD AN ERROR ALLOCATING THIS MEMORY");
@@ -23,10 +40,18 @@ int reverse(const char* file_1, const char* file_2) {
     return errno;
   }
 
+  printf("%s\n", buffer);
+
+  for (int i = 0; i < sizeof(buffer); i++) {
+    reverse[i] = buffer[sizeof(buffer) - i - 1];
+  }
+
   free(buffer);
+  free(reverse);
 
   return 0;
 }
+
 
 int main(int argc, char** argv) {
   if (argc != 3) {
