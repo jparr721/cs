@@ -1,22 +1,43 @@
-#include "file_utils.c"
+#include "file_utils.h"
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 
-int reverse(char* file_1, char* file_2) {
-  char* buffer = malloc(sizeof(char)*2048);
-  char* new_file = malloc(sizeof(char)*2048);
+int reverse(const char* file_1, const char* file_2) {
+  char* buffer = (char*)malloc(4096 * sizeof(char));
 
-  if (read_file(file_1, &buffer) != 0) {
-    fprinf(stderr, "BOYYYY WE CAN'T READ INTO THIS BUFFER");
+  if (buffer == 0) {
+    fprintf(stderr, "BOYYYY WE HAD AN ERROR ALLOCATING THIS MEMORY");
     return errno;
   }
 
-  if (write_file(file_2, new_file, sizeof(buffer))) {
+  ssize_t read = 0;
 
+  if ((read = read_file(file_1, &buffer)) != 0) {
+    fprintf(stderr, "BOYYYY WE CAN'T READ INTO THIS BUFFER");
+    return errno;
   }
+
+  if ((read = write_file(file_2, buffer, sizeof(buffer)) != 0)) {
+    fprintf(stderr, "BOYYY WE CAN'T WRITE TO THIS BUFFER");
+    return errno;
+  }
+
+  free(buffer);
+
+  return 0;
 }
 
 int main(int argc, char** argv) {
+  if (argc != 3) {
+    printf("Invalid number of arguments provided, exiting");
+    return EXIT_FAILURE;
+  }
+
   char* file_1 = argv[1];
   char* file_2 = argv[2];
+
+  reverse(file_1, file_2);
+
+  return EXIT_SUCCESS;
 }
