@@ -23,5 +23,17 @@ int read_file(const char* filename, char** buffer) {
 }
 
 int write_file(const char* filename, char* buffer, size_t size) {
+  FILE * fp;
+
+  fp = fopen(filename, "w");
+
+  if (fp) {
+    fwrite(buffer, sizeof(char), size, fp);
+    fclose(fp);
+  } else {
+    fprintf(stderr, "BOYYY WE CAN'T WRITE TO THIS FILE");
+
+    return errno;
+  }
   return 0;
 }

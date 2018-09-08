@@ -35,21 +35,22 @@ int reverse(const char* file_1, const char* file_2) {
     return errno;
   }
 
-  if ((read = write_file(file_2, buffer, sizeof(buffer)) != 0)) {
+  for (int i = file_size; i > 0; --i) {
+    reverse[i] = buffer[file_size - i - 1];
+  }
+
+  printf("%s", reverse);
+
+  if ((read = write_file(file_2, reverse, file_size) != 0)) {
     fprintf(stderr, "BOYYY WE CAN'T WRITE TO THIS BUFFER");
     return errno;
   }
 
-  printf("%s\n", buffer);
-
-  for (int i = 0; i < sizeof(buffer); i++) {
-    reverse[i] = buffer[sizeof(buffer) - i - 1];
-  }
 
   free(buffer);
   free(reverse);
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
