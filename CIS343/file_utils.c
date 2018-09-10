@@ -5,6 +5,13 @@
 #include <string.h>
 #include <unistd.h>
 
+/**
+ * Reads a file by filename and passes
+ * it into the provided input buffer
+ *
+ * @param {char*} filename - The name of the file
+ * @param {char**} buffer - The buffer to store file data to
+ */
 int read_file(const char* filename, char** buffer) {
   FILE* fp;
 
@@ -22,6 +29,14 @@ int read_file(const char* filename, char** buffer) {
   return 0;
 }
 
+/**
+ * Writes a file by filename to a provided
+ * output buffer
+ *
+ * @param {char*} filename - The name of the file
+ * @param {char*} buffer - The buffer to store the file data to
+ * @param {size_t} size - The size of the input data buffer
+ */
 int write_file(const char* filename, char* buffer, size_t size) {
   FILE * fp;
 
