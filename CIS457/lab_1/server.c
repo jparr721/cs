@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
@@ -7,31 +8,36 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
-char* file_exists(char* filename) {
-  char* buffer;
-  long bytes;
-  FILE* f = fopen(filename, "r");
+off_t fsize(char* filename) {
+  FILE * fp;
+  fp = fopen(strtok(filename, "\n"), "r");
+  fseek(fp, 0, SEEK_END);
 
-  if (f) {
-    fseek(f, 0, SEEK_END);
-    bytes = ftell(f);
-    fseek(f, 0, SEEK_SET);
+  long bytes = ftell(fp);
+  rewind(fp);
+  fclose(fp);
 
-    buffer = malloc(bytes);
-
-    fread(&buffer, sizeof(char), sizeof(buffer)/sizeof(char), f);
-    fclose(f);
-
-    return buffer;
-  }
-
-  return "Unable to find that file, boss";
+  return bytes;
 }
 
-int main(void) {
+void* get_in_addr(struct sockaddr* sa) {
+  if (sa->sa_family == AF_INET) {
+    return &(((struct sockaddr_in*)sa)->sin_addr);
+  }
+
+  return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+int main(int argc, char** argv) {
   char client_ip[INET6_ADDRSTRLEN];
+
+  char port[5];
+
+  printf("Please enter the port to connect to: ");
+  fgets(port, 5, stdin);
 
   // Create our new ipv4 socket
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,23 +45,25 @@ int main(void) {
   struct sockaddr_storage client;
   struct sockaddr_in server;
   server.sin_family = AF_INET;
-  server.sin_port = htons(8080);
-  server.sin_addr.s_addr = INADDR_ANY;
+  server.sin_port = htons(atoi(port));
+  server.sin_addr.s_addr = INADDR_ANY; // Use my IP
 
   // Attempt to bind to the target port and addr
-  if (bind(sockfd, (struct sockaddr*) &server, sizeof(server)) != 0) {
+  if (bind(sockfd, (struct sockaddr*) &server, sizeof(server)) == -1) {
     fprintf(stderr, "Error, could not bind to specified port and address");
     return EXIT_FAILURE;
   }
 
-  listen(sockfd, 10);
   printf("Server now accepting connections...");
+  listen(sockfd, 10);
 
   // Server loop
   while(1) {
-    int client_socket = accept(sockfd, (struct sockaddr*) &client, sizeof(client));
-    if (client_socket != 0) {
-      fprintf(stderr, "Error accepting connection from device");
+    socklen_t sin_size = sizeof client;
+    int client_socket = accept(sockfd, (struct sockaddr*) &client, &sin_size);
+
+    if (client_socket == -1) {
+      fprintf(stderr, "Error accepting connection from device\n");
     }
 
     inet_ntop(client.ss_family, get_in_addr((struct sockaddr *) &client), client_ip, sizeof(client_ip));
@@ -66,11 +74,19 @@ int main(void) {
     // Get the requested file name
     recv(client_socket, file_name, 100, 0);
 
-    char* message = "Checking on that for you...";
-    send(client_socket, message, sizeof(message), 0);
+    off_t file_size = fsize(file_name);
+    char* buffer = (char*)malloc(sizeof(char) * file_size);
+    FILE* f = fopen(file_name, "r");
 
-    char* file_data = file_exists(file_name);
-    send(client_socket, file_data, sizeof(file_data), 0);
+    if (f) {
+      printf("file was found!\n");
+      fread(&buffer, sizeof(char), sizeof(buffer)/sizeof(char), f);
+      printf("%s", buffer);
+      fclose(f);
+    }
+
+    printf("%s", buffer);
+    send(client_socket, buffer, sizeof(buffer) * sizeof(char), 0);
 
     printf("Data sent to client successfully");
     close(client_socket);
