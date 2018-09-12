@@ -11,16 +11,19 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-off_t fsize(char* filename) {
+char* fsize(char* filename) {
   FILE * fp;
-  fp = fopen(strtok(filename, "\n"), "r");
+  filename[strlen(filename) - 1] = 0;
+  fp = fopen(filename, "r");
   fseek(fp, 0, SEEK_END);
-
   long bytes = ftell(fp);
-  rewind(fp);
-  fclose(fp);
+  fseek(fp, 0, SEEK_SET);
 
-  return bytes;
+  char* buffer = (char*) malloc(bytes * sizeof(char));
+  fread(buffer, sizeof(char), bytes, fp);
+
+  fclose(fp);
+  return buffer;
 }
 
 void* get_in_addr(struct sockaddr* sa) {
@@ -74,19 +77,10 @@ int main(int argc, char** argv) {
     // Get the requested file name
     recv(client_socket, file_name, 100, 0);
 
-    off_t file_size = fsize(file_name);
-    char* buffer = (char*)malloc(sizeof(char) * file_size);
-    FILE* f = fopen(file_name, "r");
-
-    if (f) {
-      printf("file was found!\n");
-      fread(&buffer, sizeof(char), sizeof(buffer)/sizeof(char), f);
-      printf("%s", buffer);
-      fclose(f);
-    }
+    char* buffer = fsize(file_name);
 
     printf("%s", buffer);
-    send(client_socket, buffer, sizeof(buffer) * sizeof(char), 0);
+    send(client_socket, buffer, strlen(buffer) + 1, 0);
 
     printf("Data sent to client successfully");
     close(client_socket);
