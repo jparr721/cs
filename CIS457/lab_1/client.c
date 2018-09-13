@@ -55,7 +55,7 @@ int main(void) {
 
   FILE* fp = fopen("copy.txt", "w");
 
-  fwrite(buffer, sizeof(char), strlen(buffer) + 1, fp);
+  fwrite(buffer, sizeof(char), strlen(buffer), fp);
 
   return 0;
 }
