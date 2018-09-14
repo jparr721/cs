@@ -76,6 +76,12 @@ int reverse(const char* file_1, const char* file_2) {
 }
 
 
+/**
+ * The main method that starts the code
+ *
+ * @param {int} argc - The number of provided args
+ * @param {char**} argv - The arguments themselves
+ */
 int main(int argc, char** argv) {
   if (argc != 3) {
     printf("Invalid number of arguments provided, exiting");
