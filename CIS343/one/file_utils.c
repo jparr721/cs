@@ -18,7 +18,7 @@ int read_file(const char* filename, char** buffer) {
   fp = fopen(filename, "r");
 
   if (fp) {
-    fread(&buffer, sizeof(char), sizeof(buffer)/sizeof(char), fp);
+    fread(&buffer, sizeof(char), sizeof(buffer) + 1, fp);
     fclose(fp);
   } else {
     fprintf(stderr, "BOYYYY THAT AINT A FILE, YA'LL");
@@ -43,7 +43,7 @@ int write_file(const char* filename, char* buffer, size_t size) {
   fp = fopen(filename, "w");
 
   if (fp) {
-    fwrite(buffer, sizeof(char), size + 1, fp);
+    fwrite(buffer, sizeof(char), size, fp);
     fclose(fp);
   } else {
     fprintf(stderr, "BOYYY WE CAN'T WRITE TO THIS FILE");

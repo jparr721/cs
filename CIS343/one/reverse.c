@@ -16,6 +16,12 @@
 off_t fsize(const char* filename) {
   FILE * fp;
   fp = fopen(filename, "r");
+
+  if (fp == NULL) {
+    fprintf(stderr, "Cannot read file length");
+    return EXIT_FAILURE;
+  }
+
   fseek(fp, 0, SEEK_END);
 
   // get the size in bytes
@@ -53,7 +59,7 @@ int reverse(const char* file_1, const char* file_2) {
     return errno;
   }
 
-  for (int i = file_size; i > 0; --i) {
+  for (int i = file_size; i >= 0; --i) {
     reverse[i] = buffer[file_size - i - 1];
   }
 
