@@ -75,4 +75,6 @@ int main(int argc, char** argv) {
     printf("Got the goods, boss: %s\n", data);
     close(client_socket);
   }
+
+  return EXIT_SUCCESS;
 }

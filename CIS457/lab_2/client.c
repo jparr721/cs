@@ -10,7 +10,7 @@
 
 # define MAXDATASIZE 4096
 
-int main(int argc, char** argv) {
+int main(void) {
   int numbytes;
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   char message[MAXDATASIZE];
