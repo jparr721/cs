@@ -21,19 +21,15 @@ void* get_in_addr(struct sockaddr* sa) {
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int main(int argc, char** argv) {
-  if (argc != 3) {
-    fprintf(stderr, "usage: ./server port message");
-    return EXIT_FAILURE;
-  }
-
-  char* port = argv[1];
-  char* message = argv[2];
-  char client_ip[INET6_ADDRSTRLEN];
+int main(void) {
+  char port[6];
   int sockfd;
   char buffer[MAXLINE];
   struct sockaddr_storage client;
   struct sockaddr_in server;
+
+  printf("Please enter the port to bind to: ");
+  fgets(port, sizeof(port), stdin);
 
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     fprintf(stderr, "Failed to create datagram socket");
@@ -52,29 +48,13 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  listen(sockfd, 10);
+  socklen_t len = sizeof client;
+  int n = recvfrom(sockfd, (char*) buffer, MAXLINE, MSG_WAITALL, (struct sockaddr*) &client, &len);
 
-  while(1) {
-    socklen_t sin_size = sizeof client;
-    int client_socket = accept(sockfd, (struct sockaddr*) &client, &sin_size);
+  buffer[n] = '\0';
+  printf("Client said: %s", buffer);
 
-    if (client_socket == -1) {
-      fprintf(stderr, "Error accepting connection from device\n");
-    }
-
-    inet_ntop(client.ss_family, get_in_addr((struct sockaddr*) &client), client_ip, sizeof(client_ip));
-
-    printf("Server: New connection from: %s\n", client_ip);
-
-    // Send data over the socket
-    send(client_socket, message, strlen(message), 0);
-
-    char* data;
-    recv(client_socket, data, 100, 0);
-
-    printf("Got the goods, boss: %s\n", data);
-    close(client_socket);
-  }
+  sendto(sockfd, buffer, strlen(buffer), MSG_CONFIRM, (struct sockaddr*) &client, len);
 
   return EXIT_SUCCESS;
 }

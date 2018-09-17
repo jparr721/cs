@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-# define MAXDATASIZE 4096
+#define MAXDATASIZE 1024
 
 int main(void) {
   int numbytes;
@@ -19,13 +19,13 @@ int main(void) {
   char ip[21];
 
   printf("Please enter the port to connect to: ");
-  fgets(ip, sizeof(ip), stdin);
+  fgets(port, 6, stdin);
 
   printf("Please enter the host to connect to: ");
-  fgets(port, sizeof(port), stdin);
+  fgets(ip, 21, stdin);
 
   printf("What would you like to say?: ");
-  fgets(message, sizeof(message), stdin);
+  fgets(message, MAXDATASIZE, stdin);
 
   if (sockfd < 0) {
     fprintf(stderr, "There was an error creating the socket\n");
@@ -46,18 +46,15 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  if (sendto(sockfd, message, strlen(message), MSG_CONFIRM, (struct sockaddr*) &server, sizeof(server)) == -1) {
-    fprintf(stderr, "Error sending the requested data");
+  if (send(sockfd, message, strlen(message), 0) == -1) {
+    fprintf(stderr, "Error sending the message");
   }
 
   if ((numbytes = recv(sockfd, buffer, MAXDATASIZE - 1, 0)) == -1) {
     fprintf(stderr, "error receiving message");
   }
 
-  socklen_t len = sizeof(server);
-
-  int n = recvfrom(sockfd, (char*) buffer, MAXDATASIZE, MSG_WAITALL, (struct sockaddr*) &server, &len);
-  buffer[n] = '\0';
+  buffer[numbytes] = '\0';
 
   printf("\nGot a reply from the server: %s\n", buffer);
 
