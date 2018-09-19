@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-# define MAXDATASIZE 4096
+#define MAXDATASIZE 4096
 
 int main(char* argc, char** argv) {
   if (argc != 3) {
