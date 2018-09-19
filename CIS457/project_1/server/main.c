@@ -24,6 +24,12 @@ int file_size(FILE** f) {
     return size;
 }
 
+void read_file_by_packet_size(FILE** f, int pack_num, char* contents) {
+    int offset = (pack_num * PACKET_SIZE) * sizeof(char);
+    fseek(*f, offset, SEEK_SET);
+    fread(contents, sizeof(char), PACKET_SIZE, *f);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2) {
         fprintf(stderr, "Invalid argument count. Usage: ./server port");
@@ -58,10 +64,12 @@ int main(int argc, char** argv) {
         int len = sizeof(client);
         char cli_req[PACKET_SIZE];
 
-        int res = (int) recvfrom(sockfd, cli_req, PACKET_SIZE, MSG_WAITALL, (struct sockaddr*) &client, &len);
+        int res = (int) recvfrom(sockfd, cli_req, PACKET_SIZE, 0, (struct sockaddr*) &client, &len);
 
-        if (res < 0) {
+        if (res == -1) {
             fprintf(stderr, "Error, could not receive data from client.");
+        } else {
+            fprintf(stdout, "Client file request: %s", cli_req);
         }
 
         // Trying to be efficient, so we open the file stream once, and then close it once.
@@ -74,5 +82,13 @@ int main(int argc, char** argv) {
 
         int size = file_size(&file);
         fprintf(stdout, "File Size: %d", size);
+
+        // Just an example.
+        char packet[PACKET_SIZE];
+        read_file_by_packet_size(&file, 0, packet);
     }
+
+    close(sockfd);
+
+    return EXIT_SUCCESS;
 }
