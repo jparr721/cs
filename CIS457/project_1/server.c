@@ -18,6 +18,9 @@ char* fzie(char* filename) {
   filename[strlen(filename) - 1] = 0;
 
   fp = fopen(filename, "r");
+  if (!fp) {
+    fprintf(stderr, "Error, could not find file");
+  }
 
   fseek(fp, 0, SEEK_END);
   long bytes = ftell(fp);
@@ -46,7 +49,7 @@ int main(int argc, char** argv) {
 
   char* port = argv[1];
   int sockfd;
-  char bufer[MAXLINE];
+  char buffer[MAXLINE];
   struct sockaddr_in server, client;
 
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -66,9 +69,18 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+
   listen(sockfd, 10);
 
   while(1) {
-    socklen_t sin_size = sizeof client;
+    socklen_t len = sizeof client;
+    // Accept the file name from the client
+    int n = recvfrom(sockfd, (char*) buffer, MAXLINE, MSG_WAITALL, (struct sockaddr*) &client, &len);
+
+    if (n == -1) {
+      fprintf(stderr, "Error, could not receive data from client");
+    }
+
+    char* file_size = fsize(buffer);
   }
 }
