@@ -48,13 +48,15 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  socklen_t len = sizeof client;
-  int n = recvfrom(sockfd, (char*) buffer, MAXLINE, MSG_WAITALL, (struct sockaddr*) &client, &len);
+  while(1) {
+    socklen_t len = sizeof client;
+    int n = recvfrom(sockfd, (char*) buffer, MAXLINE, MSG_WAITALL, (struct sockaddr*) &client, &len);
 
-  buffer[n] = '\0';
-  printf("Client said: %s", buffer);
+    buffer[n] = '\0';
+    printf("Client said: %s", buffer);
 
-  sendto(sockfd, buffer, strlen(buffer), MSG_CONFIRM, (struct sockaddr*) &client, len);
+    sendto(sockfd, buffer, strlen(buffer), MSG_CONFIRM, (struct sockaddr*) &client, len);
+  }
 
   return EXIT_SUCCESS;
 }
