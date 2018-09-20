@@ -1,11 +1,11 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netdb.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
 #define PACKET_SIZE 1024
 
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     }
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    uint16_t port = (uint16_t) argv[1];
+    int port =atoi(argv[1]);
     struct sockaddr_in server, client;
 
     if (sockfd < 0) {
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     // Disables the huge compiler warning temporarily.
     while(test == 1) {
-        int len = sizeof(client);
+        socklen_t len = sizeof(client);
         char cli_req[PACKET_SIZE];
 
         int res = (int) recvfrom(sockfd, cli_req, PACKET_SIZE, 0, (struct sockaddr*) &client, &len);

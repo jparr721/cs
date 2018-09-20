@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     char* host = argv[1];
-    uint16_t port = (uint16_t) argv[2];
+    int port = atoi(argv[2]);
     struct sockaddr_in server;
 
     if (sockfd < 0) {
