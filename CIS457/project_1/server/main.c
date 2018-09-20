@@ -38,7 +38,10 @@ int main(int argc, char** argv) {
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     int port =atoi(argv[1]);
-    struct sockaddr_in server, client;
+    char cli_req[PACKET_SIZE];
+
+    struct sockaddr_storage client;
+    struct sockaddr_in server;
 
     if (sockfd < 0) {
         perror("Failed to create udp socket.");
@@ -57,35 +60,32 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    int test = 1;
+    while(1) {
+      socklen_t len = sizeof client;
 
-    // Disables the huge compiler warning temporarily.
-    while(test == 1) {
-        socklen_t len = sizeof(client);
-        char cli_req[PACKET_SIZE];
+      int res = recvfrom(sockfd, (char*) cli_req, PACKET_SIZE, MSG_WAITALL, (struct sockaddr*) &client, &len);
+      printf("%s", cli_req);
 
-        int res = (int) recvfrom(sockfd, cli_req, PACKET_SIZE, 0, (struct sockaddr*) &client, &len);
+      if (res == -1) {
+          fprintf(stderr, "Error, could not receive data from client.");
+      } else {
+          fprintf(stdout, "Client file request: %s", cli_req);
+      }
 
-        if (res == -1) {
-            fprintf(stderr, "Error, could not receive data from client.");
-        } else {
-            fprintf(stdout, "Client file request: %s", cli_req);
-        }
+      // Trying to be efficient, so we open the file stream once, and then close it once.
+      FILE* file;
+      int file_res = init_fstream(cli_req, &file);
 
-        // Trying to be efficient, so we open the file stream once, and then close it once.
-        FILE* file;
-        int file_res = init_fstream(cli_req, &file);
+      if (file_res < 0) {
+          fprintf(stderr, "File [%s] does not exist.\n", cli_req);
+      }
 
-        if (file_res < 0) {
-            fprintf(stderr, "File [%s] does not exist.\n", cli_req);
-        }
+      int size = file_size(&file);
+      fprintf(stdout, "File Size: %d", size);
 
-        int size = file_size(&file);
-        fprintf(stdout, "File Size: %d", size);
-
-        // Just an example.
-        char packet[PACKET_SIZE];
-        read_file_by_packet_size(&file, 0, packet);
+      // Just an example.
+      char packet[PACKET_SIZE];
+      read_file_by_packet_size(&file, 0, packet);
     }
 
     close(sockfd);

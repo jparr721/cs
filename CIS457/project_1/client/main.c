@@ -17,28 +17,28 @@ int main(int argc, char** argv) {
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     char* host = argv[1];
     int port = atoi(argv[2]);
-    struct sockaddr_in server;
+    char request[PACKET_SIZE];
 
     if (sockfd < 0) {
         perror("Failed to create udp socket.");
         return EXIT_FAILURE;
     }
 
+    struct sockaddr_in server;
     memset(&server, 0, sizeof(server));
 
     server.sin_family = AF_INET;
-    server.sin_addr.s_addr = inet_addr(host);
     server.sin_port = htons(port);
+    server.sin_addr.s_addr = inet_addr(host);
 
-    char request[PACKET_SIZE];
     printf("Enter your file request: ");
     fgets(request, PACKET_SIZE, stdin);
 
     // Replacing a possible \n from the request char*.
-    char* new_char = strchr(request, '\n');
-    *new_char = '\0';
+    request[strlen(request)] = '\0';
+    printf("%s", request);
 
-    sendto(sockfd, request, strlen(request) + 1, 0, (struct sockaddr*)&server, sizeof(server));
+    sendto(sockfd, request, strlen(request), MSG_CONFIRM, (struct sockaddr*) &server, sizeof(server));
 
     close(sockfd);
 }
