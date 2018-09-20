@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
 
     // Replacing a possible \n from the request char*.
     request[strlen(request)] = '\0';
-    printf("%s", request);
 
     sendto(sockfd, request, strlen(request), MSG_CONFIRM, (struct sockaddr*) &server, sizeof(server));
 
