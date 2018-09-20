@@ -39,14 +39,7 @@ int main(void) {
   server.sin_port = htons(atoi(port));
   server.sin_addr.s_addr = inet_addr(ip);
 
-  int e = connect(sockfd, (struct sockaddr*) &server, sizeof(server));
-
-  if (e == -1) {
-    fprintf(stderr, "There was an error conncecting to the server");
-    return EXIT_FAILURE;
-  }
-
-  if (send(sockfd, message, strlen(message), 0) == -1) {
+  if (sendto(sockfd, message, strlen(message), MSG_CONFIRM, (struct sockaddr*) &server, sizeof(server)) == -1) {
     fprintf(stderr, "Error sending the message");
   }
 
