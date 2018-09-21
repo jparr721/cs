@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     }
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    int port =atoi(argv[1]);
+    int port = atoi(argv[1]);
     char cli_req[PACKET_SIZE];
 
     struct sockaddr_storage client;
