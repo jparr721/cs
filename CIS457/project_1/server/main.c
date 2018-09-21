@@ -9,19 +9,36 @@
 
 #define PACKET_SIZE 1024
 
-int init_fstream(char* location, FILE** f) {
-    *f = fopen(location, "r");
-    if (*f == NULL) {
-        return errno;
-    }
-    return EXIT_SUCCESS;
+off_t file_size(FILE** f);
+FILE* init_fstream(char* location);
+char* read_fild(long bytes, FILE** f);
+
+FILE* init_fstream(char* location) {
+  FILE* fp;
+  location[strlen(location) - 1] = 0;
+  printf("%s", location);
+  fp = fopen(location, "r");
+
+  if (!fp) {
+    fprintf(stderr, "Error, could not find file: %s", location);
+  }
+
+  return fp;
 }
 
-int file_size(FILE** f) {
+off_t file_size(FILE** f) {
     fseek(*f, 0L, SEEK_END);
-    int size = (int) ftell(*f);
+    long size = ftell(*f);
     fseek(*f, 0L, SEEK_SET);
+
     return size;
+}
+
+char* read_file(long bytes, FILE** f) {
+    char* buffer = (char*) malloc(bytes* sizeof(char));
+    fread(buffer, sizeof(char), bytes, *f);
+
+    return buffer;
 }
 
 void read_file_by_packet_size(FILE** f, int pack_num, char* contents) {
@@ -73,19 +90,17 @@ int main(int argc, char** argv) {
       }
 
       // Trying to be efficient, so we open the file stream once, and then close it once.
-      FILE* file;
-      int file_res = init_fstream(cli_req, &file);
+      FILE* file_ptr = init_fstream(cli_req);
 
-      if (file_res < 0) {
-          fprintf(stderr, "File [%s] does not exist.\n", cli_req);
-      }
+      off_t size = file_size(&file_ptr);
+      fprintf(stdout, "File Size: %li", size);
 
-      int size = file_size(&file);
-      fprintf(stdout, "File Size: %d", size);
+      char* file_contents = read_file(size, &file_ptr);
+      printf("File contents: %s", file_contents);
 
       // Just an example.
       char packet[PACKET_SIZE];
-      read_file_by_packet_size(&file, 0, packet);
+      read_file_by_packet_size(&file_ptr, 0, packet);
     }
 
     close(sockfd);
