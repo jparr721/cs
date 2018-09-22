@@ -148,7 +148,6 @@ int main(int argc, char** argv) {
       socklen_t len = sizeof client;
 
       int res = recvfrom(sockfd, (char*) cli_req, PACKET_SIZE, MSG_WAITALL, (struct sockaddr*) &client, &len);
-      printf("Client has requested file: %s", cli_req);
 
       if (res == -1) {
           fprintf(stderr, "Error, could not receive data from client.");
@@ -182,7 +181,14 @@ int main(int argc, char** argv) {
       // Initialize our packets to be sent over the wire
       struct packet* packet_queue = construct_packet_transport_queue(size, file_ptr);
 
+      for (int i = 0; i < sizeof(packet_queue); i++) {
+        printf("%s", packet_queue[i].data);
+      }
+
       int ack = 0;
+
+      // Send number of packets to receive
+      sendto(sockfd, &packets_remaining, sizeof(int), MSG_CONFIRM, (struct sockaddr*) &client, sizeof client);
 
       while (packets_remaining > 0) {
         int i;
