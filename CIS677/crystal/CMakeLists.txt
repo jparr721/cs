@@ -11,7 +11,8 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 find_package(OpenMP)
 
 add_executable(crystal
-  "${PROJECT_SOURCE_DIR}/src/main.cpp"
+  "${PROJECT_SOURCE_DIR}/src/main.cc"
+  "${PROJECT_SOURCE_DIR}/arc/crystal.cc
 )
 
 target_link_libraries(crystal)
