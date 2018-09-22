@@ -39,5 +39,7 @@ int main(int argc, char** argv) {
 
     sendto(sockfd, request, strlen(request), MSG_CONFIRM, (struct sockaddr*) &server, sizeof(server));
 
+    char response[PACKET_SIZE];
+
     close(sockfd);
 }
