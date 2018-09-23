@@ -11,7 +11,7 @@
 struct packet {
   int packet_number;
   char data[PACKET_SIZE];
-}
+};
 
 int main(int argc, char** argv) {
     if (argc != 3) {
