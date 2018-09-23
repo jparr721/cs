@@ -185,10 +185,6 @@ int main(int argc, char** argv) {
       // Initialize our packets to be sent over the wire
       struct packet* packet_queue = construct_packet_transport_queue(size, file_ptr);
 
-      for (int i = 0; i < sizeof(packet_queue); i++) {
-        fprintf(stderr, "%s", packet_queue[i].data);
-      }
-
       int ack = 0;
      
       // Send number of packets to receive
