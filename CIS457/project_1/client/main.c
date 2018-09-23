@@ -13,6 +13,28 @@ struct packet {
   char data[PACKET_SIZE];
 };
 
+void reorder_packets(struct packet* packet_queue, int total_packets) {
+  for (int i = 0; i < total_packets; i++) {
+    if (packet_queue[i].packet_number != (i + 1)) {
+
+    }
+  }
+}
+
+int write_buffer_to_file(char* data, char* filename) {
+  FILE* fp;
+
+  fp = fopen(filename, "a");
+
+  if (fp) {
+    fwrite(data, sizeof(char), strlen(data), fp);
+    return 0;
+  }
+
+  fprintf(stderr, "Could not write data\n");
+  return -1;
+}
+
 int main(int argc, char** argv) {
     if (argc != 3) {
         fprintf(stderr, "Invalid argument count. Usage: ./client host port");
@@ -59,11 +81,16 @@ int main(int argc, char** argv) {
         packet_data[i] = 0;
     }
 
+    struct packet* packets = (struct packet*) malloc (total_packets * sizeof(struct packet));
+
     while (packets_remaining > 0) {
       struct packet current_packet;
 
       // Receive the server's packet.
       recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
+      packets[current_packet.packet_number] = current_packet;
+
+      reorder_packets(&packets, total_packets);
 
       packet_data[current_packet.packet_number] = 1;
 
@@ -79,9 +106,13 @@ int main(int argc, char** argv) {
 
 
       printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
+      if ((write_buffer_to_file(current_packet.data, "sample_copy.txt")) == -1) {
+        fprintf(stderr, "Failed to write buffer to file");
+      }
       packets_remaining--;
     }
 
+    free(packets);
     free(packet_data);
     close(sockfd);
 }
