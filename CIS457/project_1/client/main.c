@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 
         recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
 
-        printf("Packet data: %d\n", current_packet.packet_number);
+        printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
     }
 
     close(sockfd);
