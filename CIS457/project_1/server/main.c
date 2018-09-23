@@ -34,12 +34,13 @@ struct packet {
 FILE* init_fstream(char* location) {
   FILE* fp;
 
-  location[strlen(location) - 1] = 0;
-  printf("%s", location);
-  fp = fopen(location, "r");
+  fp = fopen("sample.txt", "r");
 
-  if (!fp) {
-    fprintf(stderr, "Error, could not find file: %s", location);
+  printf("searching...\n");
+  if (fp) {
+    printf("file found!\n");
+  } else {
+    fprintf(stderr, "Error, could not find file: %s\n", location);
   }
 
   return fp;
@@ -68,6 +69,7 @@ void read_file_by_packet_size(FILE** f, int pack_num, char* contents) {
 }
 
 struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
+    printf("\n");
     int num_packets = (size / PACKET_SIZE);
 
     // Set remaining packets to the number we have left
@@ -116,7 +118,7 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        fprintf(stderr, "Invalid argument count. Usage: ./server port");
+        fprintf(stderr, "Invalid argument count. Usage: ./server port\n");
         return EXIT_FAILURE;
     }
 
@@ -128,7 +130,7 @@ int main(int argc, char** argv) {
     struct sockaddr_in server;
 
     if (sockfd < 0) {
-        perror("Failed to create udp socket.");
+        perror("Failed to create udp socket.\n");
         return EXIT_FAILURE;
     }
 
@@ -140,20 +142,22 @@ int main(int argc, char** argv) {
     server.sin_port = htons(port);
 
     if (bind(sockfd, (struct sockaddr*) &server, sizeof(server)) < 0) {
-        fprintf(stderr, "Error, could not bind to the specified port.");
+        fprintf(stderr, "Error, could not bind to the specified port.\n");
         return EXIT_FAILURE;
     }
 
     while(1) {
       socklen_t len = sizeof client;
 
-      int res = recvfrom(sockfd, (char*) cli_req, PACKET_SIZE, MSG_WAITALL, (struct sockaddr*) &client, &len);
+      int res = recvfrom(sockfd, (char*) cli_req, PACKET_SIZE, 0, (struct sockaddr*) &client, &len);
 
       if (res == -1) {
-          fprintf(stderr, "Error, could not receive data from client.");
-      } else {
-          fprintf(stdout, "Client file request: %s", cli_req);
+          fprintf(stderr, "Error, could not receive data from client.\n");
       }
+
+      cli_req[res] = 0;
+
+      printf("Client file request: %s\n", cli_req);
 
       // Trying to be efficient, so we open the file stream once, and then close it once.
       FILE* file_ptr = init_fstream(cli_req);
@@ -182,7 +186,7 @@ int main(int argc, char** argv) {
       struct packet* packet_queue = construct_packet_transport_queue(size, file_ptr);
 
       for (int i = 0; i < sizeof(packet_queue); i++) {
-        printf("%s", packet_queue[i].data);
+        fprintf(stderr, "%s", packet_queue[i].data);
       }
 
       int ack = 0;
