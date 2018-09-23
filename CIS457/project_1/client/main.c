@@ -11,7 +11,7 @@
 struct packet {
   int packet_number;
   char data[PACKET_SIZE];
-}
+};
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -50,11 +50,13 @@ int main(int argc, char** argv) {
 
     printf("Expected Packets: %d\n", packets_remaining);
 
-    struct packet current_packet;
+    while (packets_remaining > 0) {
+        struct packet current_packet;
 
-    recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
+        recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
 
-    printf("Packet data: %d\n", current_packet.packet_number);
+        printf("Packet data: %d\n", current_packet.packet_number);
+    }
 
     close(sockfd);
 }
