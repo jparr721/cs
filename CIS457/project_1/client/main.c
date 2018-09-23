@@ -45,17 +45,41 @@ int main(int argc, char** argv) {
     sendto(sockfd, request, strlen(request), 0, (struct sockaddr*) &server, sizeof(server));
 
     char response[PACKET_SIZE];
+    int total_packets;
     int packets_remaining;
+
     recv(sockfd, &packets_remaining, PACKET_SIZE, MSG_CONFIRM);
+    total_packets = packets_remaining;
 
     printf("Expected Packets: %d\n", packets_remaining);
+
+    int* packet_data = (int*) malloc(packets_remaining * sizeof(int));
+
+    for (int i = 0; i < packets_remaining; ++i) {
+        packet_data[i] = 0;
+    }
 
     while (packets_remaining > 0) {
         struct packet current_packet;
 
-        recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
+	  // Receive the server's packet.
+    recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
 
-        printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
+    packet_data[current_packet.packet_number] = 1;
+
+	  // Send the server the ACK packet.
+    sendto(sockfd, &current_packet.packet_number, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+
+    int packets_not_received = 0;
+    for (int i = 0; i < total_packets; ++i) {
+        if (packet_data[i] == 0) {
+            packets_not_received++;
+        }
+    }
+
+      printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
+      packets_remaining = packets_not_received;
+      printf("Packet data: %d\n", current_packet.packet_number);
     }
 
     close(sockfd);
