@@ -73,7 +73,7 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
     int num_packets = (size / PACKET_SIZE);
 
     // Set remaining packets to the number we have left
-    int packets_remaining = num_packets;
+    int packets_remaining = num_packets + 1;
 
     int buffer_length = num_packets;
 
@@ -89,7 +89,7 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
         for(i = 0; i < WINDOW_SIZE; i++) {
           // Tag our packets
           current_packet.packet_number = i;
-          int offset = ((i + 1) * PACKET_SIZE) * sizeof(char); // woo
+          int offset = (i * PACKET_SIZE) * sizeof(char); // woo
 
           fseek(file_ptr, offset, SEEK_SET);
           fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
@@ -103,7 +103,7 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
         for (i = 0; i < buffer_length; i++) {// If we're just a little bit over...
           if (size - (i * PACKET_SIZE) > PACKET_SIZE) {
             current_packet.packet_number = i;
-            int offset = ((i + 1) * PACKET_SIZE) * sizeof(char); // woo
+            int offset = (i * PACKET_SIZE) * sizeof(char); // woo
 
             fseek(file_ptr, offset, SEEK_SET);
             fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
@@ -114,10 +114,10 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
 
             current_packet.packet_number = i;
 
-            int offset = ((i + 1) * PACKET_SIZE) * sizeof(char); // woo
+            int offset = (i * PACKET_SIZE) * sizeof(char); // woo
 
             fseek(file_ptr, offset, SEEK_SET);
-            fread(current_packet.data, sizeof(char), diff, file_ptr);
+            fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
 
             send_queue[i] = current_packet;
           }
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
       int num_packets = (size / PACKET_SIZE);
 
       // Set remaining packets to the number we have left
-      int packets_remaining = num_packets;
+      int packets_remaining = num_packets + 1;
       printf("%d", packets_remaining);
 
       // Initialize our packets to be sent over the wire
@@ -210,33 +210,34 @@ int main(int argc, char** argv) {
 
         // Incrementally send each packet in the window
         for (i = 0; i < packets_to_send; i++) {
-          fprintf(stderr, "%s", packet_queue[i].data);
           sendto(sockfd, &packet_queue[i], sizeof(struct packet) + 1, MSG_CONFIRM, (struct sockaddr*) &client, len);
         }
 
-        // Receive acks
-        int received = recvfrom(sockfd, &ack, sizeof(int), MSG_WAITALL, (struct sockaddr*) &client, &len);
-        if (received == -1) {
-          fprintf(stderr, "Failed to receive ack reply from client.\n");
-          printf("Packet dropped.\n");
-        }
+        packets_remaining--;
 
-        if (ack < buffer_length) {
-          packets_remaining -= ack;
-        } else {
-          fprintf(stdout, "\n\nAll packets sent successfully.\n");
-          packets_remaining -= buffer_length;
-        }
+        // Receive acks
+        /* int received = recvfrom(sockfd, &ack, sizeof(int), MSG_WAITALL, (struct sockaddr*) &client, &len); */
+        /* if (received == -1) { */
+        /*   fprintf(stderr, "Failed to receive ack reply from client.\n"); */
+        /*   printf("Packet dropped.\n"); */
+        /* } */
+
+        /* if (ack < buffer_length) { */
+        /*   packets_remaining -= ack; */
+        /* } else { */
+        /*   fprintf(stdout, "\n\nAll packets sent successfully.\n"); */
+        /*   packets_remaining -= buffer_length; */
+        /* } */
 
         fprintf(stdout, "Remaining packets: %d\n", packets_remaining);
       }
 
       fclose(file_ptr);
       free(packet_queue);
+
+      close(sockfd);
+
+      return EXIT_SUCCESS;
     }
 
-
-    close(sockfd);
-
-    return EXIT_SUCCESS;
 }

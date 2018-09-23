@@ -60,27 +60,28 @@ int main(int argc, char** argv) {
     }
 
     while (packets_remaining > 0) {
-        struct packet current_packet;
+      struct packet current_packet;
 
-	  // Receive the server's packet.
-    recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
+      // Receive the server's packet.
+      recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
 
-    packet_data[current_packet.packet_number] = 1;
+      packet_data[current_packet.packet_number] = 1;
 
-	  // Send the server the ACK packet.
-    sendto(sockfd, &current_packet.packet_number, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+      /* int packets_not_received = 0; */
+      /* for (int i = 0; i < total_packets; ++i) { */
+      /*     if (packet_data[i] == 0) { */
+      /*         packets_not_received++; */
+      /*     } */
+      /* } */
 
-    int packets_not_received = 0;
-    for (int i = 0; i < total_packets; ++i) {
-        if (packet_data[i] == 0) {
-            packets_not_received++;
-        }
-    }
+      // Send the server the ACK packet.
+      sendto(sockfd, &current_packet.packet_number, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+
 
       printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
-      packets_remaining = packets_not_received;
-      printf("Packet data: %d\n", current_packet.packet_number);
+      packets_remaining--;
     }
 
+    free(packet_data);
     close(sockfd);
 }
