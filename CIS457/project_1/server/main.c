@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
 
       // Acquire file size for proper splitting
       off_t size = file_size(&file_ptr);
-      fprintf(stdout, "File Size: %li", size);
+      fprintf(stdout, "File Size: %li\n", size);
 
       // Store the data into a content buffer
       char* file_contents = read_file(size, &file_ptr);
@@ -186,10 +186,10 @@ int main(int argc, char** argv) {
       }
 
       int ack = 0;
-
+     
       // Send number of packets to receive
-      sendto(sockfd, &packets_remaining, sizeof(int), MSG_CONFIRM, (struct sockaddr*) &client, sizeof client);
-
+      sendto(sockfd, &packets_remaining, sizeof(int), 0, (struct sockaddr*) &client, sizeof client);
+      printf("Client should receive %d packets.\n", packets_remaining);
       while (packets_remaining > 0) {
         int i;
         int packets_to_send = packets_remaining;
@@ -203,14 +203,14 @@ int main(int argc, char** argv) {
         // Receive acks
         int received = recvfrom(sockfd, &ack, sizeof(int), MSG_WAITALL, (struct sockaddr*) &client, &len);
         if (received == -1) {
-          fprintf(stderr, "Failed to receive ack reply from client");
-          printf("Packet dropped");
+          fprintf(stderr, "Failed to receive ack reply from client.\n");
+          printf("Packet dropped.\n");
         }
 
         if (ack < packets_to_send) {
           packets_remaining -= ack;
         } else {
-          printf("\n\nnAll packets sent successfully");
+          printf("\n\nAll packets sent successfully.\n");
           packets_remaining -= packets_to_send;
         }
 

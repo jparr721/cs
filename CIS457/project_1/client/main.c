@@ -8,6 +8,11 @@
 
 #define PACKET_SIZE 1024
 
+struct packet {
+  int packet_number;
+  char data[PACKET_SIZE];
+}
+
 int main(int argc, char** argv) {
     if (argc != 3) {
         fprintf(stderr, "Invalid argument count. Usage: ./client host port");
@@ -37,9 +42,19 @@ int main(int argc, char** argv) {
     // Replacing a possible \n from the request char*.
     request[strlen(request)] = '\0';
 
-    sendto(sockfd, request, strlen(request), MSG_CONFIRM, (struct sockaddr*) &server, sizeof(server));
+    sendto(sockfd, request, strlen(request), 0, (struct sockaddr*) &server, sizeof(server));
 
     char response[PACKET_SIZE];
+    int packets_remaining;
+    recv(sockfd, &packets_remaining, PACKET_SIZE, MSG_CONFIRM);
+
+    printf("Expected Packets: %d\n", packets_remaining);
+
+    struct packet current_packet;
+
+    recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
+
+    printf("Packet data: %d\n", current_packet.packet_number);
 
     close(sockfd);
 }
