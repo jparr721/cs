@@ -35,6 +35,7 @@ struct packet {
 FILE* init_fstream(char* location) {
   FILE* fp;
 
+  location[strlen(location) - 1] = 0;
   fp = fopen(location, "r");
 
   printf("searching...\n");
