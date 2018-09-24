@@ -93,7 +93,6 @@ int main(int argc, char** argv) {
 
       // Receive the server's packet.
       recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
-      /* printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data); */
       packets[current_packet.packet_number] = current_packet;
 
 
@@ -109,11 +108,6 @@ int main(int argc, char** argv) {
       // Send the server the ACK packet.
       sendto(sockfd, &current_packet.packet_number, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
 
-
-     /* printf("%s\n", current_packet.data); */
-      /* if ((write_file_by_packet_size("sample_copy.txt", &current_packet)) == -1) { */
-      /*   fprintf(stderr, "Failed to write buffer to file"); */
-      /* } */
       packets_remaining--;
     }
 
@@ -123,21 +117,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < total_packets; i++) {
       fprintf(fp, "%s", packets[i].data);
     }
-    /* fprintf(fp, "%s", packets[0].data); */
-    /* fprintf(fp, "%s", packets[1].data); */
-    /* fprintf(fp, "%s", packets[2].data); */
-    /* fprintf(fp, "%s", packets[3].data); */
-    /* fprintf(fp, "%s", packets[4].data); */
-    /* fprintf(fp, "%s", packets[5].data); */
     fclose(fp);
-
-
-    /* for (int i = 0; i < total_packets; i++) { */
-    /*   printf("Packet number: %d data: %s\n", packets[i].packet_number, packets[i].data); */
-    /*   FILE* fp; */
-    /*   fp = fopen("sample_copy.txt", "a"); */
-    /*   fprintf(fp, "%s", packets[0].data); */
-    /* } */
 
     free(packets);
     free(packet_data);
