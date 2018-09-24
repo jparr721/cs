@@ -15,8 +15,12 @@ struct packet {
 
 void reorder_packets(struct packet* packet_queue, int total_packets) {
   for (int i = 0; i < total_packets; i++) {
-    if (packet_queue[i].packet_number != (i + 1)) {
-
+    for (int j = 0; j < total_packets; j++) {
+      if (packet_queue[i].packet_number > packet_queue[j].packet_number) {
+        struct packet temp = packet_queue[i];
+        packet_queue[i] = packet_queue[j];
+        packet_queue[j] = temp;
+      }
     }
   }
 }
@@ -24,10 +28,11 @@ void reorder_packets(struct packet* packet_queue, int total_packets) {
 int write_buffer_to_file(char* data, char* filename) {
   FILE* fp;
 
-  fp = fopen(filename, "w");
+  fp = fopen(filename, "a");
 
   if (fp) {
-    fwrite(data, sizeof(char), strlen(data), fp);
+    /* fwrite(data, sizeof(char), strlen(data), fp); */
+    fprintf(fp, "%s", data);
     return 0;
   }
 
@@ -88,9 +93,10 @@ int main(int argc, char** argv) {
 
       // Receive the server's packet.
       recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
+      /* printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data); */
       packets[current_packet.packet_number] = current_packet;
 
-      reorder_packets(&packets, total_packets);
+      /* reorder_packets(packets, total_packets); */
 
       packet_data[current_packet.packet_number] = 1;
 
@@ -105,12 +111,21 @@ int main(int argc, char** argv) {
       sendto(sockfd, &current_packet.packet_number, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
 
 
-      printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
-      if ((write_buffer_to_file(current_packet.data, "sample_copy.txt")) == -1) {
-        fprintf(stderr, "Failed to write buffer to file");
-      }
       packets_remaining--;
     }
+    printf("%s", packets[0].data);
+    printf("%s", packets[1].data);
+    printf("%s", packets[2].data);
+    printf("%s", packets[3].data);
+    printf("%s", packets[4].data);
+    printf("%s", packets[5].data);
+
+    /* for (int i = 0; i < total_packets; i++) { */
+    /*   printf("Packet number: %d data: %s\n", packets[i].packet_number, packets[i].data); */
+    /*   FILE* fp; */
+    /*   fp = fopen("sample_copy.txt", "a"); */
+    /*   fprintf(fp, "%s", packets[0].data); */
+    /* } */
 
     free(packets);
     free(packet_data);
