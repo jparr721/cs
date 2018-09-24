@@ -236,10 +236,7 @@ int main(int argc, char** argv) {
 
       fclose(file_ptr);
       free(packet_queue);
-
-      close(sockfd);
-
-      return EXIT_SUCCESS;
     }
 
+  return EXIT_SUCCESS;
 }
