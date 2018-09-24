@@ -24,7 +24,7 @@ void reorder_packets(struct packet* packet_queue, int total_packets) {
 int write_buffer_to_file(char* data, char* filename) {
   FILE* fp;
 
-  fp = fopen(filename, "a");
+  fp = fopen(filename, "w");
 
   if (fp) {
     fwrite(data, sizeof(char), strlen(data), fp);

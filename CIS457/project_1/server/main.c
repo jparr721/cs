@@ -94,7 +94,7 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
 
           fseek(file_ptr, offset, SEEK_SET);
           fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
-	  printf("Packet data: %s\n", current_packet.data);
+          printf("Packet data: %s\n", current_packet.data);
           // Store the current packet to our packet queue
           send_queue[i] = current_packet;
         }
