@@ -35,7 +35,7 @@ struct packet {
 FILE* init_fstream(char* location) {
   FILE* fp;
 
-  fp = fopen("sample.txt", "r");
+  fp = fopen(location, "r");
 
   printf("searching...\n");
   if (fp) {
@@ -75,14 +75,14 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
     // Set remaining packets to the number we have left
     int packets_remaining = num_packets + 1;
 
-    int buffer_length = num_packets;
+    int buffer_length = packets_remaining;
 
     // Queue up and tag the next packet
     struct packet* send_queue = (struct packet*) malloc (WINDOW_SIZE * sizeof(struct packet));
 
     // The packet to be sent
     struct packet current_packet;
-
+    printf("I'M HERE\n");
     while (packets_remaining > 0) {
       if (packets_remaining > WINDOW_SIZE) {
         int i;
@@ -93,21 +93,22 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
 
           fseek(file_ptr, offset, SEEK_SET);
           fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
+	  printf("Packet data: %s\n", current_packet.data);
           // Store the current packet to our packet queue
           send_queue[i] = current_packet;
         }
       } else { // Our final packet in the window
         // Add remaining data without overshooting and filling our files with trash...
         int i;
-
+        printf("Buffer length: %d\n", buffer_length);
         for (i = 0; i < buffer_length; i++) {// If we're just a little bit over...
           if (size - (i * PACKET_SIZE) > PACKET_SIZE) {
             current_packet.packet_number = i;
             int offset = (i * PACKET_SIZE) * sizeof(char); // woo
-
+            printf("Offset: %d | %d\n", offset, PACKET_SIZE);
             fseek(file_ptr, offset, SEEK_SET);
             fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
-
+            printf("Packet data: %s\n", current_packet.data);
             send_queue[i] = current_packet;
           } else {
             int diff = size - (num_packets * PACKET_SIZE);
@@ -115,10 +116,10 @@ struct packet* construct_packet_transport_queue(off_t size, FILE* file_ptr) {
             current_packet.packet_number = i;
 
             int offset = (i * PACKET_SIZE) * sizeof(char); // woo
-
+            printf("Diff: %d | %d\n", diff, offset);
             fseek(file_ptr, offset, SEEK_SET);
-            fread(current_packet.data, sizeof(char), PACKET_SIZE, file_ptr);
-
+            fread(current_packet.data, sizeof(char), diff, file_ptr);
+            printf("Packet data: %s\n", current_packet.data);
             send_queue[i] = current_packet;
           }
         }
@@ -191,7 +192,7 @@ int main(int argc, char** argv) {
 
       // Set remaining packets to the number we have left
       int packets_remaining = num_packets + 1;
-      printf("%d", packets_remaining);
+      printf("Packet total: %d\n", packets_remaining);
 
       // Initialize our packets to be sent over the wire
       struct packet* packet_queue = construct_packet_transport_queue(size, file_ptr);
