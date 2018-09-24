@@ -1,26 +1,21 @@
 #ifndef CRYSTAL_PARTICLE_HPP
 #define CRYSTAL_PARTICLE_HPP
 
-#include <vector>
+#include <tuple>
 
 namespace crystal {
   class Particle {
     public:
       int x;
       int y;
-      Particle(int particle_num, int x, int y);
+      bool caught;
+      Particle(bool, int, int);
       ~Particle() = default;
-      Particle(Particle &&) = default;
 
-      void update(int x, int y, bool caught);
+      void update_location(bool, int, int);
 
       // For debugging
-      std::vector<int> get_coordinates();
-
-    private:
-      bool is_caught;
-      bool check_caught();
-
+      std::tuple<int, int> get_coordinates();
   };
 
 } //namespace crystal

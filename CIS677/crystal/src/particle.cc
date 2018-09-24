@@ -1,16 +1,20 @@
-#include <crystal/particle.hpp>
+/* #include <crystal/particle.hpp> */
+#include "../include/crystal/particle.hpp"
 
 namespace crystal {
-  Particle::Particle(int particle_num, bool caught, int x, int y) {
-    this->x = x;
-    this-> y = y;
-    this->is_caught = false;
-  }
-
-  Particle::update(int x, int y, bool caught) {
+  Particle::Particle(bool caught, int x, int y) {
+    this->caught = caught;
     this->x = x;
     this->y = y;
-    this->is_caught = caught;
   }
 
+  void Particle::update_location(bool caught, int x, int y) {
+    this->caught = caught;
+    this->x = x;
+    this->y = y;
+  }
+
+  std::tuple<int, int> Particle::get_coordinates() {
+    return std::make_tuple(this->x, this->y);
+  }
 }// namespace crystal
