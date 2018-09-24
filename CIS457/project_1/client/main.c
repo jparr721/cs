@@ -21,13 +21,14 @@ void reorder_packets(struct packet* packet_queue, int total_packets) {
   }
 }
 
-int write_buffer_to_file(char* data, char* filename) {
+int write_file_by_packet_size(char* location, struct packet* packet) {
   FILE* fp;
 
-  fp = fopen(filename, "w");
+  fp = fopen(location, "w");
 
   if (fp) {
-    fwrite(data, sizeof(char), strlen(data), fp);
+    fseek(fp, (packet->packet_number * PACKET_SIZE) * sizeof(char), SEEK_SET);
+    fwrite(packet->data, sizeof(char), strlen(packet->data), fp);
     return 0;
   }
 
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
       recv(sockfd, &current_packet, PACKET_SIZE, MSG_CONFIRM);
       packets[current_packet.packet_number] = current_packet;
 
-      reorder_packets(&packets, total_packets);
+      //reorder_packets(&packets, total_packets);
 
       packet_data[current_packet.packet_number] = 1;
 
@@ -105,8 +106,8 @@ int main(int argc, char** argv) {
       sendto(sockfd, &current_packet.packet_number, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
 
 
-      printf("Packet number: %d data: %s\n", current_packet.packet_number, current_packet.data);
-      if ((write_buffer_to_file(current_packet.data, "sample_copy.txt")) == -1) {
+      printf("%s\n", current_packet.data);
+      if ((write_file_by_packet_size("sample_copy.txt", &current_packet)) == -1) {
         fprintf(stderr, "Failed to write buffer to file");
       }
       packets_remaining--;
