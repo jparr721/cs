@@ -17,6 +17,9 @@
 // Window size is arbitrary
 #define WINDOW_SIZE 5
 
+#define PCK_ERR 0
+#define PCK_REG 1
+
 /** Function prototypes **/
 off_t file_size(FILE** f);
 FILE* init_fstream(char* location);
@@ -28,6 +31,7 @@ struct packet* make_packet(off_t size, FILE* file_ptr);
 struct packet {
   int packet_number;
   unsigned int size;
+  unsigned int type;
   char data[PACKET_SIZE];
 };
 
@@ -91,6 +95,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
       current.data[PACKET_SIZE] = '\0';
+      current.type = PCK_REG;
       packets[i] = current;
 
     } else {
@@ -103,6 +108,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fread(current.data, sizeof(char), diff, file_ptr);
       current.size = diff;
       current.data[diff] = '\0';
+      current.type = PCK_REG;
       //printf("Last String Length: %d\n", (int) strlen(current.data));
       packets[i] = current;
     }
@@ -184,6 +190,12 @@ int main(int argc, char** argv) {
       printf("All packets were sent to the client.\n");
       fclose(file_ptr);
     } else {
+      struct packet* err_pck;
+      err_pck->packet_number = -1;
+      err_pck->size = PACKET_SIZE;
+      err_pck->data = "The desired file was not found on the server.";
+      err_pck->type = PCK_ERR;
+      sendto(sockfd, err_pck, sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
       printf("File [%s]  was not found.\n", cli_req);
     }
     printf("\n---------- END SESSION ----------\n");
@@ -192,4 +204,9 @@ int main(int argc, char** argv) {
   free(packets);
   return EXIT_SUCCESS;
 }
+
+
+
+
+
 
