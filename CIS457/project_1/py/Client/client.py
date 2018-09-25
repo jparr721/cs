@@ -1,5 +1,6 @@
 import socket
 import sys
+from IPy import IP
 
 
 class Client():
@@ -45,12 +46,25 @@ class Client():
 
 
 if __name__ == '__main__':
-
     host = sys.argv[1]
+
+    try:
+        IP(host)
+    except Exception as e:
+        print('Invalid host, exiting')
+        sys.exit()
 
     port = sys.argv[2]
 
+    if len(port) < 4:
+        print("Error! Port must be <= 65535 and >= 1024")
+        sys.exit()
+
     filename = input('What file would you like to get from the server?\n')
+    if filename is None:
+        print("Error, please enter a valid filename")
+        sys.exit()
+
     client = Client(host, int(port))
     client.run(filename)
 

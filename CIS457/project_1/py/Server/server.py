@@ -1,7 +1,6 @@
 import socket
 import os.path
 import sys
-import time
 
 
 class Server():
@@ -43,9 +42,12 @@ class Server():
                 # Send the packet
                 while base < num_packets:
                     # Send all packets within the window
-                    while next_frame < base + window and next_frame < num_packets:
+                    while (next_frame < base + window
+                           and next_frame < num_packets):
                         print('Sending packet ', next_frame)
-                        self.send_data_to_socket(packets[next_frame], client_host)
+                        self.send_data_to_socket(
+                                                 packets[next_frame],
+                                                 client_host)
                         next_frame += 1
                         base += 1
 
@@ -71,6 +73,9 @@ class Server():
 if __name__ == '__main__':
 
     port = sys.argv[1]
+    if len(port) < 4:
+        print("Error! Port must be <= 65535 and >= 1024")
+        sys.exit()
 
     server = Server(int(port))
     server.listen()
