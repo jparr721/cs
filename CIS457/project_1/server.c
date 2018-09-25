@@ -72,7 +72,7 @@ int validate_args(int count) {
 }
 
 struct packet* make_packets(off_t size, FILE* file_ptr) {
-  int num_packets = ceil(size / PACKET_SIZE);
+  int num_packets = ceil(size / PACKET_SIZE) + 1;
 
   int offset = 0;
 
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
       printf("File size is %li bytes\n", size);
 
       //Send number of incoming packets
-      int num_packets = ceil(size / PACKET_SIZE);
+      int num_packets = ceil(size / PACKET_SIZE) + 1;
       int packets_left = num_packets;
       printf("Packets to send: %d\n", num_packets);
       sendto(sockfd, &num_packets, sizeof(int), 0, (struct sockaddr*) &client, sizeof client);
