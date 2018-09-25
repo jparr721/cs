@@ -1,3 +1,3 @@
-all: client/main.c server/main.c
-	gcc -Wall -g client/main.c -o c
-	gcc -Wall -g server/main.c -o s
+all: client.c server.c
+	gcc -Wall -g server.c -o s
+	gcc -Wall -g client.c -o c
