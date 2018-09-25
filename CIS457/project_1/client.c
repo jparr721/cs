@@ -56,37 +56,31 @@ int main(int argc, char** argv) {
 
   char response[PACKET_SIZE];
   int packets_remaining;
-
-  recv(sockfd, &packets_remaining, PACKET_SIZE, MSG_CONFIRM);
+  //printf("Packet Total Size: %d", (int) sizeof(struct packet));
+  recv(sockfd, &packets_remaining, (int) sizeof(struct packet), MSG_CONFIRM);
 
   printf("Expected Packets: %d\n", packets_remaining);
 
   struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
   struct packet current;
 
+  FILE* clear = fopen("sample_copy.txt", "w");
+  fclose(clear);
+
   FILE* fp;
   fp = fopen("sample_copy.txt", "a");
-
+  
   // Store all packets
   for (int i = 0; i < packets_remaining; i++) {
-    recv(sockfd, &current, PACKET_SIZE, MSG_CONFIRM);
+    recv(sockfd, &current, (int) sizeof(struct packet), MSG_CONFIRM);
     packets[i] = current;
+    //packets[i].data[packets[i].size] = '\0';
+    //printf("\n---------- PACKET DATA ----------\n%s\n", current.data);
   }
 
 
   for (int i = 0; i < packets_remaining; i++) {
-    printf("%d", packets[i].size);
-    if (packets[i].size < PACKET_SIZE) {
-      char* buf = (char*) malloc(packets[i].size);
-      for (int i = 0; i < packets[i].size; i++) {
-        buf[i] = packets[i].data[i];
-      }
-
-      fprintf(fp, "%s", buf);
-      free(buf);
-    } else {
-      fprintf(fp, "%s", packets[i].data);
-    }
+    fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
   }
 
   fclose(fp);

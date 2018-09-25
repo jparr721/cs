@@ -76,35 +76,41 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
   int num_packets = ceil(size / PACKET_SIZE) + 1;
 
   int offset = 0;
-
+  int bytes_left = (int) size;
   struct packet* packets = (struct packet*) malloc (WINDOW_SIZE * sizeof(struct packet));
 
   struct packet current;
-
+  //printf("Packet Total Size: %d", (int) sizeof(struct packet));
   for (int i = 0; i < num_packets; i++) {
+
+    offset = (i * PACKET_SIZE);
+
     if (size - (i * PACKET_SIZE) > PACKET_SIZE) {
       current.packet_number = i;
-      offset = (i * PACKET_SIZE);
-
+      bytes_left = bytes_left - PACKET_SIZE;
+      
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
+      current.data[PACKET_SIZE] = '\0';
       packets[i] = current;
 
     } else {
-      int diff = size - ((i - 1) * PACKET_SIZE);
+      int diff = size - offset;
       current.packet_number = i;
 
-      offset = (i * PACKET_SIZE);
-
+      bytes_left = bytes_left - diff;
+      
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), diff, file_ptr);
       current.size = diff;
-
+      current.data[diff] = '\0';
+      //printf("Last String Length: %d\n", (int) strlen(current.data));
       packets[i] = current;
     }
+    //printf("Offset: %d\n", offset);
+    //printf("\n---------- PACKET DATA ----------\n%s\n", current.data);
   }
-
   return packets;
 }
 
@@ -171,7 +177,7 @@ int main(int argc, char** argv) {
 
       // int ack = 0;
       for (int i = 0; i < num_packets; i++) {
-        printf("Sending data: %s\n", packets[i].data);
+        //printf("Sending data: %s\n", packets[i].data);
         sendto(sockfd, &packets[i], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
       }
 
