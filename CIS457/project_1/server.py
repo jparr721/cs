@@ -8,7 +8,7 @@ class Server():
         self.host = '127.0.0.1'
         self.port = port
         self.sockfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sockfd.bind(self.host, self.port)
+        self.sockfd.bind((self.host, self.port))
         self.WINDOW_SIZE = 5
         self.PACKET_SIZE = 1024
 
