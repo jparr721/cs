@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 
   char* host = argv[1];
   int port = atoi(argv[2]);
-  char request[PACKET_SIZE];
+  char* request = (char*) malloc(sizeof(char));
 
   struct sockaddr_in server;
   memset(&server, 0, sizeof(server));
@@ -50,11 +50,10 @@ int main(int argc, char** argv) {
   printf("Enter your file request: ");
   fgets(request, PACKET_SIZE, stdin);
 
-  request[strlen(request)] = 0;
+  request[strlen(request)] = '\0';
 
   sendto(sockfd, request, strlen(request), 0, (struct sockaddr*)&server, sizeof(server));
 
-  char response[PACKET_SIZE];
   int packets_remaining;
   //printf("Packet Total Size: %d", (int) sizeof(struct packet));
   recv(sockfd, &packets_remaining, (int) sizeof(struct packet), MSG_CONFIRM);
@@ -63,12 +62,6 @@ int main(int argc, char** argv) {
 
   struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
   struct packet current;
-
-  FILE* clear = fopen("sample_copy.txt", "w");
-  fclose(clear);
-
-  FILE* fp;
-  fp = fopen("sample_copy.txt", "a");
   
   // Store all packets
   for (int i = 0; i < packets_remaining; i++) {
@@ -78,13 +71,25 @@ int main(int argc, char** argv) {
     //printf("\n---------- PACKET DATA ----------\n%s\n", current.data);
   }
 
+  printf("All packets have been received.\n");
+
+  char* dest = (char*) malloc(sizeof(char));
+  printf("Enter your desired file destination: ");
+  fgets(dest, PACKET_SIZE, stdin);
+  dest[strlen(dest) - 1] = '\0';
+
+  FILE* clear = fopen(dest, "w");
+  fclose(clear);
+
+  FILE* fp;
+  fp = fopen(dest, "a");
 
   for (int i = 0; i < packets_remaining; i++) {
     fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
   }
 
   fclose(fp);
-
+  free(request);
   free(packets);
   close(sockfd);
 

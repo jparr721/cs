@@ -31,16 +31,14 @@ struct packet {
   char data[PACKET_SIZE];
 };
 
-
 FILE* init_fstream(char* location) {
   FILE* fp;
 
   location[strlen(location) - 1] = 0;
   fp = fopen(location, "r");
 
-  printf("searching...\n");
   if (fp) {
-    fprintf(stdout, "file found!\n");
+    fprintf(stdout, "Found File [%s]\n", location);
   } else {
     fprintf(stderr, "Error, could not find file: %s\n", location);
   }
@@ -156,9 +154,11 @@ int main(int argc, char** argv) {
       fprintf(stderr, "Error, could not receive client request\n");
     }
 
+    printf("\n--------- START SESSION --------\n");
+
     // insert nullbyte
     cli_req[req] = 0;
-    printf("Client has made a file request!: %s\n", cli_req);
+    printf("Client has made a file request: %s\n", cli_req);
 
     // Load pointer to file
     FILE* file_ptr = init_fstream(cli_req);
@@ -180,11 +180,16 @@ int main(int argc, char** argv) {
         //printf("Sending data: %s\n", packets[i].data);
         sendto(sockfd, &packets[i], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
       }
-
+      
+      printf("All packets were sent to the client.\n");
       fclose(file_ptr);
+    } else {
+      printf("File [%s]  was not found.\n", cli_req);
     }
+    printf("\n---------- END SESSION ----------\n");
   }
 
   free(packets);
   return EXIT_SUCCESS;
 }
+
