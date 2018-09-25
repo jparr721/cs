@@ -12,6 +12,7 @@
 
 struct packet {
   int packet_number;
+  unsigned int size;
   char data[PACKET_SIZE];
 };
 
@@ -74,7 +75,18 @@ int main(int argc, char** argv) {
 
 
   for (int i = 0; i < packets_remaining; i++) {
-    fprintf(fp, "%s", packets[i].data);
+    printf("%d", packets[i].size);
+    if (packets[i].size < PACKET_SIZE) {
+      char* buf = (char*) malloc(packets[i].size);
+      for (int i = 0; i < packets[i].size; i++) {
+        buf[i] = packets[i].data[i];
+      }
+
+      fprintf(fp, "%s", buf);
+      free(buf);
+    } else {
+      fprintf(fp, "%s", packets[i].data);
+    }
   }
 
   fclose(fp);

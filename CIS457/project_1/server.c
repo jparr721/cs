@@ -27,6 +27,7 @@ struct packet* make_packet(off_t size, FILE* file_ptr);
 
 struct packet {
   int packet_number;
+  unsigned int size;
   char data[PACKET_SIZE];
 };
 
@@ -87,16 +88,18 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
 
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
+      current.size = PACKET_SIZE;
       packets[i] = current;
 
     } else {
-      int diff = size - (i * PACKET_SIZE);
+      int diff = size - ((i - 1) * PACKET_SIZE);
       current.packet_number = i;
 
-      offset = (i * PACKET_SIZE) * sizeof(char);
+      offset = (i * PACKET_SIZE);
 
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), diff, file_ptr);
+      current.size = diff;
 
       packets[i] = current;
     }
@@ -155,14 +158,12 @@ int main(int argc, char** argv) {
     FILE* file_ptr = init_fstream(cli_req);
 
     if (file_ptr) {
-      int buffer_length = WINDOW_SIZE;
 
       off_t size = file_size(&file_ptr);
       printf("File size is %li bytes\n", size);
 
       //Send number of incoming packets
       int num_packets = ceil(size / PACKET_SIZE) + 1;
-      int packets_left = num_packets;
       printf("Packets to send: %d\n", num_packets);
       sendto(sockfd, &num_packets, sizeof(int), 0, (struct sockaddr*) &client, sizeof client);
 
