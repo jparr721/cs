@@ -1,0 +1,30 @@
+uname: mininet
+pw: mininet
+
+// Inside the vm
+sudo rm /etc/ssh/*key*
+sudo /usr/sbin/dpkg-reconfigure openssh-server
+sudo service ssh restart
+
+ssh into your mininet system
+run sudo mn -x to start the simulation
+
+on another terminal, scop your code into the host since they share a file system
+Make sure to change the client and server ip to 10.0.0.1 and 10.0.0.2 respectively
+restart your simulator
+
+## Simulating Loss
+On the switch, you run the command tc qdisc add dev s1-eth-1 root netem loss 20%
+to simulate loss of response you can say tc qdisc add dev s1-eth2 root netem loss 20%
+
+## Simulating Duplication
+Same command as above but change loss to duplicate
+tc qdisc add dev s1-eth2 root netem duplicate 20%
+
+For more than one
+tc qdisc add dev s1-eth1 root netem duplicate 20% loss 30%
+
+## Simulating reorder
+Change the command to delay
+tc qdisc add dev s1-eth1 root netem delay 4ms reorder 50%
+tc qdisc add dev s1-eth2 root netem delay 4ms reorder 50%
