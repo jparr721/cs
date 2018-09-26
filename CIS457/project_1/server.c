@@ -190,12 +190,8 @@ int main(int argc, char** argv) {
       printf("All packets were sent to the client.\n");
       fclose(file_ptr);
     } else {
-      struct packet* err_pck;
-      err_pck->packet_number = -1;
-      err_pck->size = PACKET_SIZE;
-      err_pck->data = "The desired file was not found on the server.";
-      err_pck->type = PCK_ERR;
-      sendto(sockfd, err_pck, sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
+      int response = -1;
+      sendto(sockfd, &response, sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
       printf("File [%s]  was not found.\n", cli_req);
     }
     printf("\n---------- END SESSION ----------\n");
