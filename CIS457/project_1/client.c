@@ -55,10 +55,14 @@ int main(int argc, char** argv) {
   sendto(sockfd, request, strlen(request), 0, (struct sockaddr*)&server, sizeof(server));
 
   int packets_remaining;
-  //printf("Packet Total Size: %d", (int) sizeof(struct packet));
   recv(sockfd, &packets_remaining, (int) sizeof(struct packet), MSG_CONFIRM);
 
-  printf("Expected Packets: %d\n", packets_remaining);
+  if (packets_remaining < 0) {
+    printf("The server could not find the desired file.\n\nExiting...\n");
+    return EXIT_SUCCESS; 
+  } else {
+    printf("Expected Packets: %d\n", packets_remaining);
+  }
 
   struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
   struct packet current;
@@ -67,8 +71,6 @@ int main(int argc, char** argv) {
   for (int i = 0; i < packets_remaining; i++) {
     recv(sockfd, &current, (int) sizeof(struct packet), MSG_CONFIRM);
     packets[i] = current;
-    //packets[i].data[packets[i].size] = '\0';
-    //printf("\n---------- PACKET DATA ----------\n%s\n", current.data);
   }
 
   printf("All packets have been received.\n");
