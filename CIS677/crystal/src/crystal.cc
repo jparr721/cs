@@ -1,16 +1,15 @@
-/* #include <crystal/crystal.hpp> */
-/* #include <crystal/particle.hpp> */
 #include <algorithm>
 #include <chrono>
+#include <crystal/crystal.hpp>
 #include <fstream>
-#include "../include/crystal/crystal.hpp"
-#include "../include/crystal/particle.hpp"
+/* #include "../include/crystal/crystal.hpp" */
+/* #include "../include/crystal/particle.hpp" */
 #include <iostream>
 #include <iterator>
 #include <random>
 
 namespace crystal {
-  int Crystal::Run(int particles) {
+  void Crystal::Run(int particles) {
     int radius = 0;
     std::vector<std::vector<int>> simulation_space(
         this->ROWS,
@@ -25,12 +24,14 @@ namespace crystal {
     for (int i = 0; i < particles; i++) {
       if (radius >= this->ROWS) {
         this->end_simulation(simulation_space);
-        return EXIT_SUCCESS;
       }
 
       std::tuple<int, int> point_location = this->insert_particle(simulation_space);
-      this->random_walk(point_location, &simulation_space);
+      this->random_walk(point_location, simulation_space);
+      radius++;
     }
+
+    this->end_simulation(simulation_space);
   }
 
   /**
@@ -53,7 +54,7 @@ namespace crystal {
 
   void Crystal::random_walk(
       std::tuple<int, int> coordinates,
-      std::vector<std::vector<int>> *simulation_space
+      std::vector<std::vector<int>> &simulation_space
       ) {
     std::random_device rd;
     std::mt19937 g(rd());
@@ -63,26 +64,41 @@ namespace crystal {
     int move = 0;
 
     while (current_steps <= this->MAX_MOVES ) {
-      move = g() % 2;
+      move = g() % 4;
 
-      if (move == 0) {
-        if (this->collision(new_x++, new_y, *simulation_space))
-          break;
-        new_x++;
-      }
-
-      if (move == 1) {
-        if (this->collision(new_x, new_y++, *simulation_space))
-          break;
-        new_y++;
+      switch (move) {
+        case 0:
+          if (this->collision(new_x++, new_y, simulation_space)) {
+            break;
+          }
+          new_x++;
+        case 1:
+          if (this->collision(new_x, new_y++, simulation_space)) {
+            break;
+          }
+          new_y++;
+        case 2:
+          if (this->collision(new_x--, new_y, simulation_space)) {
+            break;
+          }
+          new_x--;
+        case 3:
+          if (this->collision(new_x, new_y--, simulation_space)) {
+            break;
+          }
+          new_y--;
       }
     }
 
-    simulation_space[new_x][new_y] = 2;
+    if (new_x < 0 || new_y < 0) {
+      return;
+    } else {
+      simulation_space[new_x][new_y] = 2;
+    }
   }
 
   bool Crystal::collision(int x, int y, const std::vector<std::vector<int>>& simulation_space) {
-    return simulation_space[x][y] == 2;
+    return simulation_space[x][y] == 2 && (x > 0 && y > 0);
   }
 
   bool Crystal::valid_coordinates(const std::vector<std::vector<int>>& simulation_space, int x, int y) {

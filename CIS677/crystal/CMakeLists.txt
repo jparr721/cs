@@ -8,11 +8,13 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-find_package(OpenMP)
+find_package(OpenMP REQUIRED)
+
+include_directories("${PROJECT_SOURCE_DIR}/include")
 
 add_executable(crystal
   "${PROJECT_SOURCE_DIR}/src/main.cc"
-  "${PROJECT_SOURCE_DIR}/arc/crystal.cc
+  "${PROJECT_SOURCE_DIR}/src/crystal.cc"
 )
 
 target_link_libraries(crystal)
