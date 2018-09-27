@@ -8,22 +8,16 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  long int iterations = atoi(argv[1]);
+  long int iterations = atol(argv[1]);
 
   double step = 1.0/ static_cast<double>(iterations);
 
   double x, sum = 0.0;
 
-  #pragma omp parallel
-  {
-    #pragma omp for
-    for (long int i = 1; i < iterations; i++) {
-      #pragma omp critical
-      {
-        x = (i - 0.5) * step;
-        sum += 4.0/(1.0 + x*x);
-      }
-    }
+  #pragma omp parallel for reduction (+: sum) private(x)
+  for (long int i = 1; i <= iterations; i++) {
+    x = (i - 0.5) * step;
+    sum = sum + 4.0/(1.0 + x*x);
   }
 
   std::cout << "PI is " << sum * step << std::endl;
