@@ -20,7 +20,7 @@ namespace crystal {
     int origin_column = std::get<1>(this->ORIGIN);
 
     // Place our point in the center of the board
-    simulation_space[origin_row][origin_column] = 1;
+    simulation_space[origin_row][origin_column] = 2;
 
     for (int i = 0; i < particles; i++) {
       if (radius >= this->ROWS) {
@@ -29,7 +29,7 @@ namespace crystal {
       }
 
       std::tuple<int, int> point_location = this->insert_particle(simulation_space);
-
+      this->random_walk(point_location, &simulation_space);
     }
   }
 
@@ -49,6 +49,40 @@ namespace crystal {
       }
       the_goods << "\n";
     }
+  }
+
+  void Crystal::random_walk(
+      std::tuple<int, int> coordinates,
+      std::vector<std::vector<int>> *simulation_space
+      ) {
+    std::random_device rd;
+    std::mt19937 g(rd());
+    int current_steps = 0;
+    int new_x = std::get<0>(coordinates);
+    int new_y = std::get<1>(coordinates);
+    int move = 0;
+
+    while (current_steps <= this->MAX_MOVES ) {
+      move = g() % 2;
+
+      if (move == 0) {
+        if (this->collision(new_x++, new_y, *simulation_space))
+          break;
+        new_x++;
+      }
+
+      if (move == 1) {
+        if (this->collision(new_x, new_y++, *simulation_space))
+          break;
+        new_y++;
+      }
+    }
+
+    simulation_space[new_x][new_y] = 2;
+  }
+
+  bool Crystal::collision(int x, int y, const std::vector<std::vector<int>>& simulation_space) {
+    return simulation_space[x][y] == 2;
   }
 
   bool Crystal::valid_coordinates(const std::vector<std::vector<int>>& simulation_space, int x, int y) {
