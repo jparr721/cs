@@ -26,6 +26,39 @@ int validate_args(int count) {
   return 0;
 }
 
+int check_order(int len, struct packet* packets) {
+  for (int i = 0; i < len; i++) {
+    if (packets[i].packet_number != i + 1) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+int reorder_packets(int len, struct packet* packets) {
+  for (int i = 0; i < len; i++) {
+    for (int j = i + 1; j < len; j++) {
+      if (packets[i].packet_number > packets[j].packet_number) {
+        struct packet temp_packet = packets[i];
+        packets[i] = packets[j];
+        packets[j] = temp_packet;
+      }
+    }
+  }
+
+  return 0;
+}
+
+int write_packet(int packets_remaining, struct packet* packets, char* dest) {
+  FILE* fp;
+  fp = fopen(dest, "a");
+
+  for (int i = 0; i < packets_remaining; i++) {
+    fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
+  }
+}
+
 void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets_expected) {
   printf("Checking the transport buffer for a reply");
 
@@ -36,36 +69,38 @@ void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets
 
   begin = clock();
 
-  while(true) {
+  while(1) {
     if (clock() - begin > timeout) {
       break;
+    }
+    struct packet packet;
+    socklen_t server_len = sizeof server;
+    int res = recv(sockfd, &packet, (int) sizeof(struct packet), MSG_CONFIRM);
+    if (res == -1) {
+      printf("Failed to receive packet");
+      sleep(1/1000);
     } else {
-      struct packet packet;
-      int res = recvfrom(sockfd, (struct packet) packet, (int) sizeof(struct packet), 0, (struct sockaddr*) &server, sizeof server);
-      if (res == -1) {
-        printf("Failed to receive packet");
-        sleep(1/1000);
-      } else {
-        int num = packet.packet_number;
-        printf("Got packet number: %d", num);
-        char* data = packet.data;
+      int num = packet.packet_number;
+      printf("Got packet number: %d", num);
+      char* data = packet.data;
 
-        if (num == expected_value) {
-          printf("Sending ack number: ", expected_value);
+      if (num == expected_value) {
+        printf("Sending ack number: ", expected_value);
 
-          int req = sendto(sockfd, (int) expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
-          if (req == -1) {
-            printf("Error in packet ack: %d sending", expected_value);
-            sleep(1/1000);
-          } else {
-            packets[expected_value] = packet;
-            expected_value += 1;
-          }
-          begin = clock();
+        int req = sendto(sockfd, (int) expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+        if (req == -1) {
+          printf("Error in packet ack: %d sending", expected_value);
+          sleep(1/1000);
+        } else {
+          packets[expected_value] = packet;
+          expected_value += 1;
         }
+        begin = clock();
       }
     }
   }
+
+  free(packets);
 }
 
 int main(int argc, char** argv) {
