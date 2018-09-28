@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #define PACKET_SIZE 1024
@@ -23,6 +24,48 @@ int validate_args(int count) {
   }
 
   return 0;
+}
+
+void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets_expected) {
+  printf("Checking the transport buffer for a reply");
+
+  int timeout = 2;
+  int expected_value = 0;
+  clock_t begin;
+  struct packet* packets = (struct packet*) malloc (packets_expected * sizeof(struct packet));
+
+  begin = clock();
+
+  while(true) {
+    if (clock() - begin > timeout) {
+      break;
+    } else {
+      struct packet packet;
+      int res = recvfrom(sockfd, (struct packet) packet, (int) sizeof(struct packet), 0, (struct sockaddr*) &server, sizeof server);
+      if (res == -1) {
+        printf("Failed to receive packet");
+        sleep(1/1000);
+      } else {
+        int num = packet.packet_number;
+        printf("Got packet number: %d", num);
+        char* data = packet.data;
+
+        if (num == expected_value) {
+          printf("Sending ack number: ", expected_value);
+
+          int req = sendto(sockfd, (int) expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+          if (req == -1) {
+            printf("Error in packet ack: %d sending", expected_value);
+            sleep(1/1000);
+          } else {
+            packets[expected_value] = packet;
+            expected_value += 1;
+          }
+          begin = clock();
+        }
+      }
+    }
+  }
 }
 
 int main(int argc, char** argv) {
@@ -59,14 +102,14 @@ int main(int argc, char** argv) {
 
   if (packets_remaining < 0) {
     printf("The server could not find the desired file.\n\nExiting...\n");
-    return EXIT_SUCCESS; 
+    return EXIT_SUCCESS;
   } else {
     printf("Expected Packets: %d\n", packets_remaining);
   }
 
   struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
   struct packet current;
-  
+
   // Store all packets
   for (int i = 0; i < packets_remaining; i++) {
     recv(sockfd, &current, (int) sizeof(struct packet), MSG_CONFIRM);
