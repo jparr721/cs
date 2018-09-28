@@ -87,7 +87,7 @@ void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets
       if (num == expected_value) {
         printf("Sending ack number: ", expected_value);
 
-        int req = sendto(sockfd, (int) expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+        int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
         if (req == -1) {
           printf("Error in packet ack: %d sending", expected_value);
           sleep(1/1000);
