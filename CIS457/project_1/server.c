@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include<time.h>
 #include <unistd.h>
 
 // Data received size
@@ -18,7 +19,16 @@
 // Window size is arbitrary
 #define WINDOW_SIZE 5
 
+// Our wait time to receive our ack packet
+#define DURATION 0.5
+
+// Our timeout time
+#define TIMEOUT 2
+
+// Error packet (for corrupted packets)
 #define PCK_ERR 0
+
+// Regular packet
 #define PCK_REG 1
 
 /** Function prototypes **/
@@ -135,6 +145,18 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
   return packets;
 }
 
+int set_window(int num_packets, int base) {
+  return fmin(WINDOW_SIZE, num_packets - base);
+}
+
+int did_timeout(clock_t now) {
+  if(clock() - now >= DURATION) {
+    return 1;
+  }
+
+  return 0;
+}
+
 int main(int argc, char** argv) {
   if ((validate_args(argc)) == -1) {
     return EXIT_FAILURE;
@@ -196,7 +218,46 @@ int main(int argc, char** argv) {
       printf("Packets to send: %d\n", num_packets);
       sendto(sockfd, &num_packets, sizeof(int), 0, (struct sockaddr*) &client, sizeof client);
 
+      int next_frame = 0;
+      int base = 0;
+      int window = set_window(num_packets, base);
+
       packets = make_packets(size, file_ptr);
+
+      while (base < num_packets) {
+        while (next_frame < base + window && next_frame < num_packets) {
+          printf("Sending packet #: %d", next_frame);
+          sendto(sockfd, &packets[next_frame], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
+          next_frame += 1;
+        }
+
+        clock_t time = clock();
+        int ack = 0;
+
+        while (did_timeout(time) != 1) {
+          int res = recvfrom(sockfd, (int) ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
+          if (res == -1 || did_timeout(time) == 1) {
+            printf("Error receiving ack number: %d from client", next_frame);
+          } else {
+            printf("Got ack number: %d", ack);
+            if (ack >= base) {
+              base = ack + 1;
+              time = -1;
+            }
+          }
+        }
+
+        if (did_timeout(time) == 1) {
+          time = -1;
+          next_frame = base;
+        } else {
+          printf("Shifting window");
+          window = set_window(num_packets, base);
+        }
+
+        sleep(1);
+        printf("Listening on 127.0.0.1:%d", port);
+      }
 
       // int ack = 0;
       for (int i = 0; i < num_packets; i++) {
@@ -217,9 +278,4 @@ int main(int argc, char** argv) {
   free(packets);
   return EXIT_SUCCESS;
 }
-
-
-
-
-
 

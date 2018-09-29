@@ -19,6 +19,16 @@ struct packet {
   unsigned int chk;
 };
 
+unsigned short make_checksum(char* data, int length) {
+  unsigned short chk = 0;
+
+  while (length != 0) {
+    chk -= *data++;
+  }
+
+  return chk;
+}
+
 int validate_args(int count) {
   if (count != 3) {
     fprintf(stderr, "Invalid argument count. Usage: ./client host port\n");
