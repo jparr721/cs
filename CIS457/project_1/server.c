@@ -50,9 +50,10 @@ struct packet {
 
 unsigned short make_checksum(char* data, int length) {
   unsigned short chk = 0;
-
-  while (length != 0) {
+  unsigned int cur_length = length;
+  while (cur_length != 0) {
     chk -= *data++;
+    cur_length--;
   }
 
   return chk;
@@ -109,7 +110,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
   for (int i = 0; i < num_packets; i++) {
 
     offset = (i * PACKET_SIZE);
-
+    printf("Making packet %d...\n", i);
     if (size - (i * PACKET_SIZE) > PACKET_SIZE) {
       current.packet_number = i;
       bytes_left = bytes_left - PACKET_SIZE;
@@ -118,7 +119,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
       current.data[PACKET_SIZE] = '\0';
-      unsigned short checksum = make_checksum(current.data, strlen(current.data));
+      unsigned short checksum = make_checksum(current.data, current.size);
       current.type = PCK_REG;
       current.chk = checksum;
       packets[i] = current;
