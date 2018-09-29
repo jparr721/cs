@@ -56,7 +56,10 @@ int write_packet(int packets_remaining, struct packet* packets, char* dest) {
 
   for (int i = 0; i < packets_remaining; i++) {
     fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
+    return 1;
   }
+
+  return 0;
 }
 
 void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets_expected) {
@@ -73,9 +76,10 @@ void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets
     if (clock() - begin > timeout) {
       break;
     }
+
     struct packet packet;
-    socklen_t server_len = sizeof server;
     int res = recv(sockfd, &packet, (int) sizeof(struct packet), MSG_CONFIRM);
+
     if (res == -1) {
       printf("Failed to receive packet");
       sleep(1/1000);

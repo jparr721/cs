@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 // Data received size
@@ -25,6 +26,7 @@ off_t file_size(FILE** f);
 FILE* init_fstream(char* location);
 char* read_file(long bytes, FILE** f);
 struct packet* make_packet(off_t size, FILE* file_ptr);
+unsigned_short checksum(unsigned_short *buf, int count);
 
 #pragma pack(1)
 
@@ -34,6 +36,8 @@ struct packet {
   unsigned int type;
   char data[PACKET_SIZE];
 };
+
+
 
 FILE* init_fstream(char* location) {
   FILE* fp;
@@ -90,7 +94,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
     if (size - (i * PACKET_SIZE) > PACKET_SIZE) {
       current.packet_number = i;
       bytes_left = bytes_left - PACKET_SIZE;
-      
+
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
@@ -103,7 +107,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       current.packet_number = i;
 
       bytes_left = bytes_left - diff;
-      
+
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), diff, file_ptr);
       current.size = diff;
@@ -186,7 +190,7 @@ int main(int argc, char** argv) {
         //printf("Sending data: %s\n", packets[i].data);
         sendto(sockfd, &packets[i], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
       }
-      
+
       printf("All packets were sent to the client.\n");
       fclose(file_ptr);
     } else {
