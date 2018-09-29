@@ -259,12 +259,6 @@ int main(int argc, char** argv) {
         printf("Listening on 127.0.0.1:%d", port);
       }
 
-      // int ack = 0;
-      for (int i = 0; i < num_packets; i++) {
-        //printf("Sending data: %s\n", packets[i].data);
-        sendto(sockfd, &packets[i], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
-      }
-
       printf("All packets were sent to the client.\n");
       fclose(file_ptr);
     } else {
