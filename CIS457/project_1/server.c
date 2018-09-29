@@ -26,7 +26,7 @@ off_t file_size(FILE** f);
 FILE* init_fstream(char* location);
 char* read_file(long bytes, FILE** f);
 struct packet* make_packet(off_t size, FILE* file_ptr);
-unsigned_short checksum(unsigned_short *buf, int count);
+unsigned short checksum(struct packet packet, int length);
 
 #pragma pack(1)
 
@@ -35,9 +35,18 @@ struct packet {
   unsigned int size;
   unsigned int type;
   char data[PACKET_SIZE];
+  unsigned short chk;
 };
 
+unsigned short make_checksum(char* data, int length) {
+  unsigned short chk = 0;
 
+  while (length != 0) {
+    chk -= *data++;
+  }
+
+  return chk;
+}
 
 FILE* init_fstream(char* location) {
   FILE* fp;
@@ -99,7 +108,9 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
       current.data[PACKET_SIZE] = '\0';
+      unsigned short checksum = make_checksum(current.data, strlen(current.data));
       current.type = PCK_REG;
+      current.chk = checksum;
       packets[i] = current;
 
     } else {
@@ -110,6 +121,8 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
 
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), diff, file_ptr);
+      unsigned short checksum = make_checksum(current.data, strlen(current.data));
+      current.chk = checksum;
       current.size = diff;
       current.data[diff] = '\0';
       current.type = PCK_REG;

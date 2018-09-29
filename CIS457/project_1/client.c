@@ -14,7 +14,9 @@
 struct packet {
   int packet_number;
   unsigned int size;
+  unsigned int type;
   char data[PACKET_SIZE];
+  unsigned int chk;
 };
 
 int validate_args(int count) {
