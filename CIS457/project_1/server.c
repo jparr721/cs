@@ -118,7 +118,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
-      current.data[PACKET_SIZE] = '\0';
+      current.data[strlen(current.data) + 1] = '\0';
       unsigned short checksum = make_checksum(current.data, current.size);
       current.type = PCK_REG;
       current.chk = checksum;
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
 
       while (base < num_packets) {
         while (next_frame < base + window && next_frame < num_packets) {
-          printf("Sending packet #: %d", next_frame);
+          printf("Sending packet #: %d\n", next_frame);
           sendto(sockfd, &packets[next_frame], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
           next_frame += 1;
         }
@@ -243,14 +243,14 @@ int main(int argc, char** argv) {
         while (did_timeout(time) != 1) {
           // Ack is expected to be the packet number
           int res = recvfrom(sockfd, &ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
-
+          printf("--- RESPONSE --- \n%d\n", ack);
           if (res == -1 || did_timeout(time) == 1) {
-            printf("Error receiving ack number: %d from client", next_frame);
+            printf("Error receiving ack number: %d from client\n", next_frame);
           } else {
             if (ack == PCK_ERR) {
 
             } else {
-              printf("Got ack number: %d", ack);
+              printf("Got ack number: %d\n", ack);
               if (ack >= base) {
                 base = ack + 1;
                 time = -1;
@@ -263,12 +263,11 @@ int main(int argc, char** argv) {
           time = -1;
           next_frame = base;
         } else {
-          printf("Shifting window");
+          printf("Shifting window\n");
           window = set_window(num_packets, base);
         }
 
         sleep(1);
-        printf("Listening on 127.0.0.1:%d", port);
       }
 
       printf("All packets were sent to the client.\n");
