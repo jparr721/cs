@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include<time.h>
+#include <time.h>
 #include <unistd.h>
 
 // Data received size
@@ -142,11 +142,16 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
     //printf("Offset: %d\n", offset);
     //printf("\n---------- PACKET DATA ----------\n%s\n", current.data);
   }
+  printf("Successfully made all packets.\n");
   return packets;
 }
 
 int set_window(int num_packets, int base) {
-  return fmin(WINDOW_SIZE, num_packets - base);
+  if (WINDOW_SIZE > (num_packets - base)) {
+    return num_packets - base;
+  } else {
+    return WINDOW_SIZE;
+  }
 }
 
 int did_timeout(clock_t now) {
@@ -236,7 +241,7 @@ int main(int argc, char** argv) {
 
         while (did_timeout(time) != 1) {
           // Ack is expected to be the packet number
-          int res = recvfrom(sockfd, (int) ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
+          int res = recvfrom(sockfd, &ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
 
           if (res == -1 || did_timeout(time) == 1) {
             printf("Error receiving ack number: %d from client", next_frame);

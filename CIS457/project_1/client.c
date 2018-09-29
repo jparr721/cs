@@ -115,7 +115,7 @@ void get_file(int sockfd, struct sockaddr_in server, char* filename, int packets
 
       if (num == expected_value) {
         if (validate_checksum(packet) == 1) {
-          printf("Sending ack number: ", expected_value);
+          printf("Sending ack number: %d\n", expected_value);
 
           int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
           if (req == -1) {
