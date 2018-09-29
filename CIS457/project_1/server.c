@@ -102,7 +102,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
 
   int offset = 0;
   int bytes_left = (int) size;
-  struct packet* packets = (struct packet*) malloc (WINDOW_SIZE * sizeof(struct packet));
+  struct packet* packets = (struct packet*) malloc (num_packets * sizeof(struct packet));
 
   struct packet current;
   //printf("Packet Total Size: %d", (int) sizeof(struct packet));
