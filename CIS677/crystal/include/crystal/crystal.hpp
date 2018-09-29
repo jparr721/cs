@@ -7,20 +7,22 @@
 namespace crystal {
   class Crystal {
   public:
-    const int ROWS = 100;
-    const int COLS = 100;
-    const int MAX_MOVES = 200;
-    const std::tuple<int, int> ORIGIN = std::make_tuple(ROWS / 2, COLS / 2);
+    int ROWS;
+    int COLS;
+    int SIMULATION_SIZE;
+    int MAX_MOVES;
+    int CENTER;
 
-    Crystal() = default;
+    Crystal(int, int);
     ~Crystal() = default;
 
     void Run(int);
     void end_simulation(const std::vector<std::vector<int>>&);
-    std::tuple<int, int> insert_particle(const std::vector<std::vector<int>>&);
+    std::tuple<int, int> insert_particle(int);
     bool valid_coordinates(const std::vector<std::vector<int>>&, int, int);
-    void random_walk(std::tuple<int, int>, std::vector<std::vector<int>>&);
+    void random_walk(int&, int&, std::vector<std::vector<int>>&);
     bool collision(int, int, const std::vector<std::vector<int>>&);
+    void print(const std::vector<std::vector<int>>&);
   };
 } // namespace crystal
 

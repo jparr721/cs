@@ -2,14 +2,17 @@
 #include <iostream>
 
 int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cout << "usage: ./crystal number_of_particles" << std::endl;
+  if (argc != 3) {
+    std::cout << "usage: ./crystal number_of_particles simulation_size" << std::endl;
     return EXIT_FAILURE;
   }
 
-  crystal::Crystal crystal;
+  int particles = atoi(argv[1]);
+  int simulation_size = atoi(argv[2]);
 
-  crystal.Run();
+  crystal::Crystal crystal(particles, simulation_size);
+
+  crystal.Run(particles);
 
   return EXIT_SUCCESS;
 }
