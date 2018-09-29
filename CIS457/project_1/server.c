@@ -20,10 +20,10 @@
 #define WINDOW_SIZE 5
 
 // Our wait time to receive our ack packet
-#define DURATION 0.5
+#define DURATION 500
 
 // Our timeout time
-#define TIMEOUT 2
+#define TIMEOUT 2000
 
 // Error packet (for corrupted packets)
 #define PCK_ERR (-404)
@@ -156,7 +156,7 @@ int set_window(int num_packets, int base) {
 }
 
 int did_timeout(clock_t now) {
-  if(clock() - now >= DURATION) {
+  if(clock() - now >= TIMEOUT) {
     return 1;
   }
 
@@ -236,14 +236,15 @@ int main(int argc, char** argv) {
           sendto(sockfd, &packets[next_frame], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
           next_frame += 1;
         }
-
-        clock_t time = clock();
+        
+				clock_t time = clock();
         int ack = 0;
 
         while (did_timeout(time) != 1) {
           // Ack is expected to be the packet number
+
           int res = recvfrom(sockfd, &ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
-          printf("--- RESPONSE --- \n%d\n", ack);
+					printf("--- RESPONSE --- \n%d\n", ack);
           if (res == -1 || did_timeout(time) == 1) {
             printf("Error receiving ack number: %d from client\n", next_frame);
           } else {
@@ -254,11 +255,12 @@ int main(int argc, char** argv) {
               if (ack >= base) {
                 base = ack + 1;
                 time = -1;
+								printf("Timeout again: %d\n", did_timeout(time));
               }
             }
           }
-        }
-
+				}
+        printf("Timeout: %d | %d\n", did_timeout(time), (int) time);
         if (did_timeout(time) == 1) {
           time = -1;
           next_frame = base;
