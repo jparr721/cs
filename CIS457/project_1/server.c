@@ -163,6 +163,14 @@ int did_timeout(clock_t now) {
   return 0;
 }
 
+int timer_running(clock_t now) {
+  if (now == -1) {
+    return 0;
+  }
+
+  return 1;
+}
+
 int main(int argc, char** argv) {
   if ((validate_args(argc)) == -1) {
     return EXIT_FAILURE;
@@ -233,18 +241,19 @@ int main(int argc, char** argv) {
       while (base < num_packets) {
         while (next_frame < base + window && next_frame < num_packets) {
           printf("Sending packet #: %d\n", next_frame);
+          printf("----------PACKET DATA---------\n%s\n", packets[next_frame].data);
           sendto(sockfd, &packets[next_frame], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
           next_frame += 1;
         }
-        
-				clock_t time = clock();
+
+        clock_t time = clock();
         int ack = 0;
 
-        while (did_timeout(time) != 1) {
+        while (timer_running(time) == 1 && did_timeout(time) != 1) {
           // Ack is expected to be the packet number
 
           int res = recvfrom(sockfd, &ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
-					printf("--- RESPONSE --- \n%d\n", ack);
+          printf("--- RESPONSE --- \n%d\n", ack);
           if (res == -1 || did_timeout(time) == 1) {
             printf("Error receiving ack number: %d from client\n", next_frame);
           } else {
@@ -255,11 +264,11 @@ int main(int argc, char** argv) {
               if (ack >= base) {
                 base = ack + 1;
                 time = -1;
-								printf("Timeout again: %d\n", did_timeout(time));
+                printf("Timeout again: %d\n", did_timeout(time));
               }
             }
           }
-				}
+        }
         printf("Timeout: %d | %d\n", did_timeout(time), (int) time);
         if (did_timeout(time) == 1) {
           time = -1;

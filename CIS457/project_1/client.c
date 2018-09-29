@@ -24,7 +24,7 @@ unsigned short make_checksum(char* data, int length) {
   unsigned int cur_length = length;
   while (cur_length != 0) {
     chk -= *data++;
-		cur_length--;
+    cur_length--;
   }
 
   return chk;
@@ -86,66 +86,6 @@ int validate_checksum(struct packet packet) {
   return 1;
 }
 
-void get_file(int sockfd, struct sockaddr_in* server, char* filename, int packets_expected) {
-  printf("Checking the transport buffer for a reply\n");
-
-  int timeout = 2000;
-  int packet_errno = -404;
-  int expected_value = 0;
-  clock_t begin;
-  struct packet* packets = (struct packet*) malloc (packets_expected * sizeof(struct packet));
-
-  begin = clock();
-
-  while(1) {
-    if (clock() - begin > timeout) {
-			printf("FUCK\n");
-      break;
-    }
-
-    // Scoop up the packet
-    struct packet packet;
-    int res = recv(sockfd, &packet, (int) sizeof(struct packet), MSG_CONFIRM);
-
-    if (res == -1) {
-      printf("Failed to receive packet\n");
-      sleep(1/1000);
-    } else {
-      int num = packet.packet_number;
-      printf("Got packet number: %d\n", num);
-      char* data = packet.data;
-      //printf("---------- PACKET DATA ----------\n%s\n", packet.data);
-      //printf("Expected packet %d and got %d\n", expected_value, num);
-      if (num == expected_value) {
-        if (validate_checksum(packet) == 1) {
-          printf("Sending ack number: %d\n", expected_value);
-          printf("Size: %d\n", (int) sizeof(server));
-          int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
-          if (req == -1) {
-            printf("Error in packet ack: %d sending\n", expected_value);
-            sleep(1/1000);
-          } else {
-            packets[expected_value] = packet;
-            expected_value += 1;
-          }
-          begin = clock();
-        } else {
-				  printf("Checksum invalid. Packet corruption detected.\n");
-				}
-      } else {
-        // Packet has invalid checksum
-        int req = sendto(sockfd, &packet_errno, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
-
-        if (req == -1) {
-          printf("Error sending error response\n");
-        }
-      }
-    }
-  }
-
-  free(packets);
-}
-
 int main(int argc, char** argv) {
   if ((validate_args(argc)) == -1) {
     return EXIT_FAILURE;
@@ -197,7 +137,7 @@ int main(int argc, char** argv) {
 
   while(1) {
     if (clock() - begin > timeout) {
-			printf("FUCK\n");
+      printf("FUCK\n");
       break;
     }
 
@@ -212,11 +152,12 @@ int main(int argc, char** argv) {
       int num = packet.packet_number;
       printf("Got packet number: %d\n", num);
       char* data = packet.data;
-      //printf("---------- PACKET DATA ----------\n%s\n", packet.data);
-      //printf("Expected packet %d and got %d\n", expected_value, num);
+      printf("---------- PACKET DATA ----------\n%s\n", packet.data);
+      printf("Expected packet %d and got %d\n", expected_value, num);
       if (num == expected_value) {
         if (validate_checksum(packet) == 1) {
           printf("Sending ack number: %d\n", expected_value);
+          printf("Data: \n%s\n", packet.data);
           printf("Size: %d\n", (int) sizeof(server));
           int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
           if (req == -1) {
@@ -228,8 +169,8 @@ int main(int argc, char** argv) {
           }
           begin = clock();
         } else {
-				  printf("Checksum invalid. Packet corruption detected.\n");
-				}
+          printf("Checksum invalid. Packet corruption detected.\n");
+        }
       } else {
         // Packet has invalid checksum
         int req = sendto(sockfd, &packet_errno, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
