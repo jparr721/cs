@@ -169,7 +169,8 @@ int main(int argc, char** argv) {
           }
           begin = clock();
         } else {
-          printf("Checksum invalid. Packet corruption detected.\n");
+          printf("Checksum invalid. Packet corruption detected, alerting the server\n");
+          /* int checksum_res = sendto(sockfd, &packet_errno, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server)); */
         }
       } else {
         // Packet has invalid checksum
@@ -195,8 +196,12 @@ int main(int argc, char** argv) {
   FILE* fp;
   fp = fopen(dest, "a");
 
-  for (int i = 0; i < packets_remaining; i++) {
-//    fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
+  if (check_order(packets_remaining, packets) == -1) {
+    reorder_packets(packets_remaining, packets);
+  } else {
+    for (int i = 0; i < packets_remaining; i++) {
+      fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
+    }
   }
 
   fclose(fp);

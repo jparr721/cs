@@ -258,13 +258,11 @@ int main(int argc, char** argv) {
             printf("Error receiving ack number: %d from client\n", next_frame);
           } else {
             if (ack == PCK_ERR) {
-
             } else {
               printf("Got ack number: %d\n", ack);
               if (ack >= base) {
                 base = ack + 1;
                 time = -1;
-                printf("Timeout again: %d\n", did_timeout(time));
               }
             }
           }
