@@ -21,9 +21,10 @@ struct packet {
 
 unsigned short make_checksum(char* data, int length) {
   unsigned short chk = 0;
-
-  while (length != 0) {
+  unsigned int cur_length = length;
+  while (cur_length != 0) {
     chk -= *data++;
+		cur_length--;
   }
 
   return chk;
@@ -180,14 +181,7 @@ int main(int argc, char** argv) {
     printf("Expected Packets: %d\n", packets_remaining);
   }
 
-  struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
-  struct packet current;
-
-  // Store all packets
-  for (int i = 0; i < packets_remaining; i++) {
-    recv(sockfd, &current, (int) sizeof(struct packet), MSG_CONFIRM);
-    packets[i] = current;
-  }
+  get_file(sockfd, server, request, packets_remaining);
 
   printf("All packets have been received.\n");
 
@@ -203,12 +197,12 @@ int main(int argc, char** argv) {
   fp = fopen(dest, "a");
 
   for (int i = 0; i < packets_remaining; i++) {
-    fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
+//    fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
   }
 
   fclose(fp);
   free(request);
-  free(packets);
+ // free(packets);
   close(sockfd);
 
   return EXIT_SUCCESS;
