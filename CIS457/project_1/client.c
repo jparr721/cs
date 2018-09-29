@@ -185,7 +185,61 @@ int main(int argc, char** argv) {
     printf("Expected Packets: %d\n", packets_remaining);
   }
 
-  get_file(sockfd, &server, request, packets_remaining);
+  printf("Checking the transport buffer for a reply\n");
+
+  int timeout = 2000;
+  int packet_errno = -404;
+  int expected_value = 0;
+  clock_t begin;
+  struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
+
+  begin = clock();
+
+  while(1) {
+    if (clock() - begin > timeout) {
+			printf("FUCK\n");
+      break;
+    }
+
+    // Scoop up the packet
+    struct packet packet;
+    int res = recv(sockfd, &packet, (int) sizeof(struct packet), MSG_CONFIRM);
+
+    if (res == -1) {
+      printf("Failed to receive packet\n");
+      sleep(1/1000);
+    } else {
+      int num = packet.packet_number;
+      printf("Got packet number: %d\n", num);
+      char* data = packet.data;
+      //printf("---------- PACKET DATA ----------\n%s\n", packet.data);
+      //printf("Expected packet %d and got %d\n", expected_value, num);
+      if (num == expected_value) {
+        if (validate_checksum(packet) == 1) {
+          printf("Sending ack number: %d\n", expected_value);
+          printf("Size: %d\n", (int) sizeof(server));
+          int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+          if (req == -1) {
+            printf("Error in packet ack: %d sending\n", expected_value);
+            sleep(1/1000);
+          } else {
+            packets[expected_value] = packet;
+            expected_value += 1;
+          }
+          begin = clock();
+        } else {
+				  printf("Checksum invalid. Packet corruption detected.\n");
+				}
+      } else {
+        // Packet has invalid checksum
+        int req = sendto(sockfd, &packet_errno, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
+
+        if (req == -1) {
+          printf("Error sending error response\n");
+        }
+      }
+    }
+  }
 
   printf("All packets have been received.\n");
 
@@ -206,7 +260,7 @@ int main(int argc, char** argv) {
 
   fclose(fp);
   free(request);
- // free(packets);
+  free(packets);
   close(sockfd);
 
   return EXIT_SUCCESS;
