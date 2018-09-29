@@ -26,7 +26,7 @@
 #define TIMEOUT 2
 
 // Error packet (for corrupted packets)
-#define PCK_ERR 0
+#define PCK_ERR (-404)
 
 // Regular packet
 #define PCK_REG 1
@@ -235,14 +235,20 @@ int main(int argc, char** argv) {
         int ack = 0;
 
         while (did_timeout(time) != 1) {
+          // Ack is expected to be the packet number
           int res = recvfrom(sockfd, (int) ack, sizeof(int), 0, (struct sockaddr*) &client, &len);
+
           if (res == -1 || did_timeout(time) == 1) {
             printf("Error receiving ack number: %d from client", next_frame);
           } else {
-            printf("Got ack number: %d", ack);
-            if (ack >= base) {
-              base = ack + 1;
-              time = -1;
+            if (ack == PCK_ERR) {
+
+            } else {
+              printf("Got ack number: %d", ack);
+              if (ack >= base) {
+                base = ack + 1;
+                time = -1;
+              }
             }
           }
         }
