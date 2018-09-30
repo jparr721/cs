@@ -30,13 +30,11 @@ namespace crystal {
         break;
       }
 
-      std::cout << "creating particle" << std::endl;
       const auto point_location = this->insert_particle(radius);
       std::cout << "particle created, walking" << std::endl;
       int x = std::get<0>(point_location);
       int y = std::get<1>(point_location);
       this->random_walk(x, y, simulation_space);
-      std::cout << "walk complete." << std::endl;
 
       if (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
         const int distance = std::max(std::abs(this->CENTER - x), std::abs(this->CENTER - y));
@@ -118,9 +116,11 @@ namespace crystal {
       for (int j = -1; j <= 1; j++) {
         int t_x = x + i;
         int t_y = y + j;
+        std::cout << "t_x: " << t_x << std::endl;
+        std::cout << "t_y: " << t_y << std::endl;
 
         if (t_x >= 0 && t_x < this->SIMULATION_SIZE && t_y >= 0 && t_y < this->SIMULATION_SIZE) {
-          if (simulation_space[i][j] == 1) {
+          if (simulation_space[t_x][t_y] == 1) {
             return true;
           }
         }
