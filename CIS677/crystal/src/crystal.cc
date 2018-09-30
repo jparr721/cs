@@ -8,7 +8,7 @@
 #include <random>
 
 namespace crystal {
-  Crystal::Crystal(int particles, int simulation_size) {
+  Crystal::Crystal(long int particles, long int simulation_size) {
     this->SIMULATION_SIZE = simulation_size;
     this->ROWS = simulation_size;
     this->COLS = simulation_size;
@@ -16,7 +16,7 @@ namespace crystal {
     this->CENTER = simulation_size / 2;
   }
 
-  void Crystal::Run(int particles) {
+  void Crystal::Run(long int particles) {
     int radius = 0;
     std::vector<std::vector<int>> simulation_space(
         this->ROWS,
@@ -32,8 +32,8 @@ namespace crystal {
 
       const auto point_location = this->insert_particle(radius);
       std::cout << "particle created, walking" << std::endl;
-      int x = std::get<0>(point_location);
-      int y = std::get<1>(point_location);
+      long int x = std::get<0>(point_location);
+      long int y = std::get<1>(point_location);
       this->random_walk(x, y, simulation_space);
 
       if (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
@@ -58,8 +58,8 @@ namespace crystal {
 
     the_goods.open("output.txt");
 
-    for (int i = 0; i < simulation_space.size(); i++) {
-      for (int j = 0; j < simulation_space[i].size(); j++) {
+    for (long unsigned int i = 0; i < simulation_space.size(); ++i) {
+      for (long unsigned int j = 0; j < simulation_space[i].size(); ++j) {
         int current = 0;
 
         if (simulation_space[i][j] == 1) {
@@ -67,7 +67,7 @@ namespace crystal {
         }
 
         if (j != 0) {
-          the_goods << ", ";
+          the_goods << " ";
         }
 
         the_goods << current;
@@ -79,8 +79,8 @@ namespace crystal {
   }
 
   void Crystal::print(const std::vector<std::vector<int>>& simulation_space) {
-    for (int i = 0; i < this->SIMULATION_SIZE; i++) {
-      for (int j = 0; j < this->SIMULATION_SIZE; j++) {
+    for (long unsigned int i = 0; i < this->SIMULATION_SIZE; ++i) {
+      for (long unsigned int j = 0; j < this->SIMULATION_SIZE; ++j) {
         int current = simulation_space[i][j];
 
         std::cout << current << ", " << std::endl;
@@ -91,16 +91,14 @@ namespace crystal {
   }
 
   void Crystal::random_walk(
-      int &x,
-      int &y,
+      long int &x,
+      long int &y,
       std::vector<std::vector<int>> &simulation_space
       ) {
     std::random_device rd;
     std::mt19937 g(rd());
 
     while (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
-      std::cout << x << std::endl;
-      std::cout << y << std::endl;
       if (this->collision(x, y, simulation_space)) {
         simulation_space[x][y] = 1;
         return;
@@ -111,13 +109,11 @@ namespace crystal {
     }
   }
 
-  bool Crystal::collision(int x, int y, const std::vector<std::vector<int>>& simulation_space) {
+  bool Crystal::collision(long int x, long int y, const std::vector<std::vector<int>>& simulation_space) {
     for (int i = -1; i <= 1; i++) {
       for (int j = -1; j <= 1; j++) {
-        int t_x = x + i;
-        int t_y = y + j;
-        std::cout << "t_x: " << t_x << std::endl;
-        std::cout << "t_y: " << t_y << std::endl;
+        long int t_x = x + i;
+        long int t_y = y + j;
 
         if (t_x >= 0 && t_x < this->SIMULATION_SIZE && t_y >= 0 && t_y < this->SIMULATION_SIZE) {
           if (simulation_space[t_x][t_y] == 1) {
@@ -130,15 +126,15 @@ namespace crystal {
     return false;
   }
 
-  bool Crystal::valid_coordinates(const std::vector<std::vector<int>>& simulation_space, int x, int y) {
+  bool Crystal::valid_coordinates(const std::vector<std::vector<int>>& simulation_space, long int x, long int y) {
     return x < this->SIMULATION_SIZE && y < this->SIMULATION_SIZE;
   }
 
-  std::tuple<int, int> Crystal::insert_particle(const int radius) {
+  std::tuple<long int, long int> Crystal::insert_particle(const int radius) {
     std::random_device rd;
     std::mt19937 g(rd());
-    int random_row = 0;
-    int random_col = 0;
+    long int random_row = 0;
+    long int random_col = 0;
 
     do {
       random_row = g() % this->ROWS;

@@ -7,21 +7,21 @@
 namespace crystal {
   class Crystal {
   public:
-    int ROWS;
-    int COLS;
-    int SIMULATION_SIZE;
-    int MAX_MOVES;
-    int CENTER;
+    long int ROWS;
+    long int COLS;
+    long int SIMULATION_SIZE;
+    long int MAX_MOVES;
+    long int CENTER;
 
-    Crystal(int, int);
+    Crystal(long int, long int);
     ~Crystal() = default;
 
-    void Run(int);
+    void Run(long int);
     void end_simulation(const std::vector<std::vector<int>>&);
-    std::tuple<int, int> insert_particle(int);
-    bool valid_coordinates(const std::vector<std::vector<int>>&, int, int);
-    void random_walk(int&, int&, std::vector<std::vector<int>>&);
-    bool collision(int, int, const std::vector<std::vector<int>>&);
+    std::tuple<long int, long int> insert_particle(int);
+    bool valid_coordinates(const std::vector<std::vector<int>>&, long int, long int);
+    void random_walk(long int&, long int&, std::vector<std::vector<int>>&);
+    bool collision(long int, long int, const std::vector<std::vector<int>>&);
     void print(const std::vector<std::vector<int>>&);
   };
 } // namespace crystal
