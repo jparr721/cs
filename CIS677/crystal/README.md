@@ -15,8 +15,8 @@ Everything is started in the Run function which houses the main logic relating t
 ## Results
 In order to adequately benchmark speedup and compare the affects of parallelizing this code, it was ran with several iterations under varying circumstances. Those circumstances were: sequential, 2 cores, 4 cores, 8 cores, 16 cores. They boasted the following results:
 
-##### Sequential: `30 minutes 48 seconds`
-##### 2 Cores: 
+##### Sequential: `21.983 minutes (1319 seconds)`
+##### 2 Cores:
 ##### 4 Cores:
 ##### 8 Cores:
 ##### 16 Cores:

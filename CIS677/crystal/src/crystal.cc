@@ -1,17 +1,18 @@
 #include <algorithm>
 #include <chrono>
-/* #include <crystal/crystal.hpp> */
+#include <crystal/crystal.hpp>
 #include <fstream>
-#include "../include/crystal/crystal.hpp"
+/* #include "../include/crystal/crystal.hpp" */
 #include <iostream>
 #include <iterator>
 #include <random>
-#include "omp.h"
+#include <omp.h>
 
 namespace crystal {
   auto read_simulation_space = [](const long int x, const long int y, const std::vector<std::vector<int>>& simulation_space)->int {
+    int val = 0;
     #pragma omp atomic read
-    auto val = simulation_space[x][y];
+    val = simulation_space[x][y];
     return val;
   };
 
@@ -21,8 +22,9 @@ namespace crystal {
   };
 
   auto read_radius = [](const int& radius)->int {
+    int val = 0;
     #pragma omp atomic read
-    auto val = radius;
+    val = radius;
     return val;
   };
 
@@ -47,9 +49,12 @@ namespace crystal {
 
     // Place our point in the center of the board
     simulation_space[this->CENTER][this->CENTER] = 1;
+    omp_set_num_threads(16);
 
+    auto now = std::chrono::high_resolution_clock::now();
     #pragma omp parallel
     {
+      std::cout << omp_get_num_threads() << std::endl;
       for (int i = 0; i < particles; ++i) {
         if (read_radius(radius) >= this->SIMULATION_SIZE / 2) {
           break;
@@ -71,6 +76,9 @@ namespace crystal {
 
       this->end_simulation(simulation_space);
     }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::cout << std::chrono::duration_cast<std::chrono::seconds>(end - now).count() << "s" << std::endl;
   }
 
   /**
