@@ -45,7 +45,7 @@ struct packet {
   unsigned int size;
   unsigned int type;
   char data[PACKET_SIZE];
-  unsigned short chk;
+  unsigned int chk;
 };
 
 unsigned short make_checksum(char* data, int length) {
@@ -118,7 +118,8 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
-      current.data[strlen(current.data) + 1] = '\0';
+      current.data[PACKET_SIZE] = '\0';
+			printf("Packet checksum params %d | %d\n", strlen(current.data), current.size);
       unsigned short checksum = make_checksum(current.data, current.size);
       current.type = PCK_REG;
       current.chk = checksum;
@@ -137,8 +138,10 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       current.size = diff;
       current.data[diff] = '\0';
       current.type = PCK_REG;
-      //printf("Last String Length: %d\n", (int) strlen(current.data));
+      //printf("Last String Length: %d\n", (int) strlen(current.data));i
       packets[i] = current;
+			printf("Last Packet Checksum: %d | %d | %d\n", current.chk, current.size, (int) strlen(current.data));
+
     }
     //printf("Offset: %d\n", offset);
     //printf("\n---------- PACKET DATA ----------\n%s\n", current.data);
@@ -239,6 +242,7 @@ int main(int argc, char** argv) {
       packets = make_packets(size, file_ptr);
 
       while (base < num_packets) {
+				printf("While Loop Params %d | %d | %d\n", next_frame, base, window);
         while (next_frame < base + window && next_frame < num_packets) {
           printf("Sending packet #: %d\n", next_frame);
           printf("----------PACKET DATA---------\n%s\n", packets[next_frame].data);

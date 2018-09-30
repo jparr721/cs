@@ -77,8 +77,8 @@ int write_packet(int packets_remaining, struct packet* packets, char* dest) {
 
 int validate_checksum(struct packet packet) {
   unsigned short checksum = packet.chk;
-  unsigned short new_checksum = make_checksum(packet.data, packet.size);
-  printf("Checksums: %d | %d\n", checksum, new_checksum);
+  unsigned short new_checksum = make_checksum(packet.data, (int) strlen(packet.data));
+  printf("Checksums: %d | %d ... %d | %d\n", checksum, new_checksum, packet.size, strlen(packet.data));
   if (checksum != new_checksum) {
     return -1;
   }
@@ -137,13 +137,13 @@ int main(int argc, char** argv) {
 
   while(1) {
     if (clock() - begin > timeout) {
-      printf("FUCK\n");
       break;
     }
 
     // Scoop up the packet
     struct packet packet;
     int res = recv(sockfd, &packet, (int) sizeof(struct packet), MSG_CONFIRM);
+    packet.data[packet.size] = '\0';
 
     if (res == -1) {
       printf("Failed to receive packet\n");
