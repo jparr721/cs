@@ -1,5 +1,6 @@
 #include <crystal/crystal.hpp>
 #include <iostream>
+#include "omp.h"
 
 int main(int argc, char** argv) {
   if (argc != 3) {

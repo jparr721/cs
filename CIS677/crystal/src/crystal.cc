@@ -6,8 +6,31 @@
 #include <iostream>
 #include <iterator>
 #include <random>
+#include "omp.h"
 
 namespace crystal {
+  auto read_simulation_space = [](const long int x, const long int y, const std::vector<std::vector<int>>& simulation_space)->int {
+    #pragma omp atomic read
+    auto val = simulation_space[x][y];
+    return val;
+  };
+
+  auto write_simulation_space = [](const long int x, const long int y, std::vector<std::vector<int>>& simulation_space, int val)->void {
+    #pragma omp atomic write
+    simulation_space[x][y] = val;
+  };
+
+  auto read_radius = [](const int& radius)->int {
+    #pragma omp atomic read
+    auto val = radius;
+    return val;
+  };
+
+  auto write_radius = [](int& radius, int val)->void {
+    #pragma omp atomic write
+    radius = val;
+  };
+
   Crystal::Crystal(long int particles, long int simulation_size) {
     this->SIMULATION_SIZE = simulation_size;
     this->ROWS = simulation_size;
@@ -25,27 +48,29 @@ namespace crystal {
     // Place our point in the center of the board
     simulation_space[this->CENTER][this->CENTER] = 1;
 
-    for (int i = 0; i < particles; ++i) {
-      if (radius >= this->SIMULATION_SIZE / 2) {
-        break;
-      }
+    #pragma omp parallel
+    {
+      for (int i = 0; i < particles; ++i) {
+        if (read_radius(radius) >= this->SIMULATION_SIZE / 2) {
+          break;
+        }
 
-      const auto point_location = this->insert_particle(radius);
-      std::cout << "particle created, walking" << std::endl;
-      long int x = std::get<0>(point_location);
-      long int y = std::get<1>(point_location);
-      this->random_walk(x, y, simulation_space);
+        const auto point_location = this->insert_particle(simulation_space, radius);
+        long int x = std::get<0>(point_location);
+        long int y = std::get<1>(point_location);
+        this->random_walk(x, y, simulation_space);
 
-      if (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
-        const int distance = std::max(std::abs(this->CENTER - x), std::abs(this->CENTER - y));
+        if (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
+          const int distance = std::max(std::abs(this->CENTER - x), std::abs(this->CENTER - y));
 
-        if (distance > radius) {
-          radius = distance;
+          if (distance > read_radius(radius)) {
+            write_radius(radius, distance);
+          }
         }
       }
-    }
 
-    this->end_simulation(simulation_space);
+      this->end_simulation(simulation_space);
+    }
   }
 
   /**
@@ -100,7 +125,8 @@ namespace crystal {
 
     while (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
       if (this->collision(x, y, simulation_space)) {
-        simulation_space[x][y] = 1;
+        std::cout << "Writing to simulation space!" << std::endl;
+        write_simulation_space(x, y, simulation_space, 1);
         return;
       }
 
@@ -112,11 +138,11 @@ namespace crystal {
   bool Crystal::collision(long int x, long int y, const std::vector<std::vector<int>>& simulation_space) {
     for (int i = -1; i <= 1; i++) {
       for (int j = -1; j <= 1; j++) {
-        long int t_x = x + i;
-        long int t_y = y + j;
+        const long int t_x = x + i;
+        const long int t_y = y + j;
 
-        if (t_x >= 0 && t_x < this->SIMULATION_SIZE && t_y >= 0 && t_y < this->SIMULATION_SIZE) {
-          if (simulation_space[t_x][t_y] == 1) {
+        if (t_x >= 0 && t_x < this->SIMULATION_SIZE && t_y >= 0 && t_y < this->SIMULATION_SIZE && read_simulation_space(t_x, t_y, simulation_space) == 1) {
+          if (read_simulation_space(t_x, t_y, simulation_space) == 1) {
             return true;
           }
         }
@@ -126,11 +152,7 @@ namespace crystal {
     return false;
   }
 
-  bool Crystal::valid_coordinates(const std::vector<std::vector<int>>& simulation_space, long int x, long int y) {
-    return x < this->SIMULATION_SIZE && y < this->SIMULATION_SIZE;
-  }
-
-  std::tuple<long int, long int> Crystal::insert_particle(const int radius) {
+  std::tuple<long int, long int> Crystal::insert_particle(const std::vector<std::vector<int>>& simulation_space, const int radius) {
     std::random_device rd;
     std::mt19937 g(rd());
     long int random_row = 0;
@@ -139,7 +161,7 @@ namespace crystal {
     do {
       random_row = g() % this->ROWS;
       random_col = g() % this->COLS;
-    } while (abs(this->CENTER - random_row) <= radius + 1 && abs(this->CENTER - random_col) <= radius - 1);
+    } while ((abs(this->CENTER - random_row) <= radius + 1 && abs(this->CENTER - random_col) <= radius - 1) || read_simulation_space(random_row, random_col, simulation_space) != 0);
 
     return std::make_tuple(random_row, random_col);
   }
