@@ -51,11 +51,11 @@ struct packet {
 unsigned short make_checksum(char* data, int length) {
   unsigned short chk = 0;
   unsigned int cur_length = length;
+	printf("---- CHECKSUM (%d, %d) ----\n", (int) strlen(data), length);
   while (cur_length != 0) {
     chk -= *data++;
     cur_length--;
   }
-
   return chk;
 }
 
@@ -133,10 +133,10 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
 
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), diff, file_ptr);
+			current.size = diff;
+			current.data[diff] = '\0';
       unsigned short checksum = make_checksum(current.data, strlen(current.data));
       current.chk = checksum;
-      current.size = diff;
-      current.data[diff] = '\0';
       current.type = PCK_REG;
       //printf("Last String Length: %d\n", (int) strlen(current.data));i
       packets[i] = current;
@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
 				printf("While Loop Params %d | %d | %d\n", next_frame, base, window);
         while (next_frame < base + window && next_frame < num_packets) {
           printf("Sending packet #: %d\n", next_frame);
-          printf("----------PACKET DATA---------\n%s\n", packets[next_frame].data);
+          //printf("----------PACKET DATA---------\n%s\n", packets[next_frame].data);
           sendto(sockfd, &packets[next_frame], sizeof(struct packet), MSG_CONFIRM, (struct sockaddr*) &client, len);
           next_frame += 1;
         }
@@ -280,7 +280,6 @@ int main(int argc, char** argv) {
           window = set_window(num_packets, base);
         }
 
-        sleep(1);
       }
 
       printf("All packets were sent to the client.\n");
