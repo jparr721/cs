@@ -18,8 +18,7 @@ namespace crystal {
 
     void Run(long int);
     void end_simulation(const std::vector<std::vector<int>>&);
-    std::tuple<long int, long int> insert_particle(int);
-    bool valid_coordinates(const std::vector<std::vector<int>>&, long int, long int);
+    std::tuple<long int, long int> insert_particle(const std::vector<std::vector<int>>&, int);
     void random_walk(long int&, long int&, std::vector<std::vector<int>>&);
     bool collision(long int, long int, const std::vector<std::vector<int>>&);
     void print(const std::vector<std::vector<int>>&);
