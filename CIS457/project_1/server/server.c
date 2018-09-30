@@ -51,7 +51,7 @@ struct packet {
 unsigned short make_checksum(char* data, int length) {
   unsigned short chk = 0;
   unsigned int cur_length = length;
-	printf("---- CHECKSUM (%d, %d) ----\n", (int) strlen(data), length);
+  printf("---- CHECKSUM (%d, %d) ----\n", (int) strlen(data), length);
   while (cur_length != 0) {
     chk -= *data++;
     cur_length--;
@@ -119,7 +119,7 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
       fread(current.data, sizeof(char), PACKET_SIZE, file_ptr);
       current.size = PACKET_SIZE;
       current.data[PACKET_SIZE] = '\0';
-			printf("Packet checksum params %d | %d\n", strlen(current.data), current.size);
+      printf("Packet checksum params %d | %d\n", (int) strlen(current.data), current.size);
       unsigned short checksum = make_checksum(current.data, current.size);
       current.type = PCK_REG;
       current.chk = checksum;
@@ -133,14 +133,14 @@ struct packet* make_packets(off_t size, FILE* file_ptr) {
 
       fseek(file_ptr, offset, SEEK_SET);
       fread(current.data, sizeof(char), diff, file_ptr);
-			current.size = diff;
-			current.data[diff] = '\0';
+      current.size = diff;
+      current.data[diff] = '\0';
       unsigned short checksum = make_checksum(current.data, strlen(current.data));
       current.chk = checksum;
       current.type = PCK_REG;
       //printf("Last String Length: %d\n", (int) strlen(current.data));i
       packets[i] = current;
-			printf("Last Packet Checksum: %d | %d | %d\n", current.chk, current.size, (int) strlen(current.data));
+      printf("Last Packet Checksum: %d | %d | %d\n", current.chk, current.size, (int) strlen(current.data));
 
     }
     //printf("Offset: %d\n", offset);
@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
       packets = make_packets(size, file_ptr);
 
       while (base < num_packets) {
-				printf("While Loop Params %d | %d | %d\n", next_frame, base, window);
+        printf("While Loop Params %d | %d | %d\n", next_frame, base, window);
         while (next_frame < base + window && next_frame < num_packets) {
           printf("Sending packet #: %d\n", next_frame);
           //printf("----------PACKET DATA---------\n%s\n", packets[next_frame].data);

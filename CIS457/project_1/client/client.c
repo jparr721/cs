@@ -22,7 +22,7 @@ struct packet {
 unsigned short make_checksum(char* data, int length) {
   unsigned short chk = 0;
   unsigned int cur_length = length;
-	printf("---- CHECKSUM (%d, %d) ----\n", (int) strlen(data), length);
+  printf("---- CHECKSUM (%d, %d) ----\n", (int) strlen(data), length);
   while (cur_length != 0) {
     chk -= *data++;
     cur_length--;
@@ -43,7 +43,7 @@ int validate_args(int count) {
 int check_order(int len, struct packet* packets) {
   for (int i = 0; i < len; i++) {
     if (packets[i].packet_number != i + 1) {
-			printf("Packets are not in order...\n");
+      printf("Packets are not in order...\n");
       return 0;
     }
   }
@@ -113,6 +113,8 @@ int main(int argc, char** argv) {
   fgets(request, PACKET_SIZE, stdin);
 
   request[strlen(request)] = '\0';
+  char* file_to_save = request;
+  printf("%s", file_to_save);
 
   sendto(sockfd, request, strlen(request), 0, (struct sockaddr*)&server, sizeof(server));
 
@@ -132,6 +134,7 @@ int main(int argc, char** argv) {
   int packet_errno = -404;
   int expected_value = 0;
   clock_t begin;
+  int total_packets = packets_remaining;
   struct packet* packets = (struct packet*) malloc (packets_remaining * sizeof(struct packet));
 
   begin = clock();
@@ -151,22 +154,25 @@ int main(int argc, char** argv) {
     } else {
       int num = packet.packet_number;
       printf("Got packet number: %d\n", num);
-      char* data = packet.data;
+
       //printf("---------- PACKET DATA ----------\n%s\n", packet.data);
       printf("Expected packet %d and got %d\n", expected_value, num);
       if (num == expected_value) {
         if (validate_checksum(packet) == 1) {
           printf("Sending ack number: %d\n", expected_value);
-          //printf("Data: \n%s\n", packet.data);
+
+          printf("Data: \n%s\n", packet.data);
           printf("Size: %d\n", (int) sizeof(server));
           int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
           if (req == -1) {
             printf("Error in packet ack: %d sending\n", expected_value);
             sleep(1/1000);
           } else {
+            printf("Saving to packet struct");
+            printf("%d", expected_value);
             packets[expected_value] = packet;
             expected_value += 1;
-						packets_remaining--;
+            packets_remaining--;
           }
           begin = clock();
         } else {
@@ -185,25 +191,19 @@ int main(int argc, char** argv) {
   }
 
   printf("All packets have been received.\n");
-
-  char* dest = (char*) malloc(sizeof(char));
-  printf("Enter your desired file destination: ");
-  fgets(dest, PACKET_SIZE, stdin);
-  dest[strlen(dest)] = '\0';
-  printf("Saving to %s...", dest);
-  FILE* clear = fopen(dest, "w");
-  fclose(clear);
+  printf("Saving to: %s", file_to_save);
 
   FILE* fp;
-  fp = fopen(dest, "a");
+  fp = fopen("sample.txt", "a");
 
-  if (check_order(packets_remaining, packets) == -1) {
-		printf("Reordering packets...");
-    reorder_packets(packets_remaining, packets);
-	}
-	
-	for (int i = 0; i < packets_remaining; i++) {
-	  fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
+  if (check_order(total_packets, packets) == -1) {
+    printf("Reordering packets...");
+    reorder_packets(total_packets, packets);
+  }
+
+  for (int i = 0; i < total_packets; i++) {
+    printf("%s", packets[i].data);
+    fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
   }
 
   fclose(fp);
