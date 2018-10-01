@@ -201,17 +201,17 @@ int main(int argc, char** argv) {
   printf("All packets have been received.\n");
   close(sockfd);
 
-	printf("Please enter desired file location: ");
-	char* dest = (char*) malloc(sizeof(char));
+  printf("Please enter desired file location: ");
+  char* dest = (char*) malloc(sizeof(char));
   scanf("%s", dest);
   dest[strlen(dest)] = '\0';
-	printf("Saving to: %s...\n", dest);
- 
-  FILE* clear;
-	clear = fopen(dest, "w");
-	fclose(clear);
+  printf("Saving to: %s...\n", dest);
 
-	FILE* fp;
+  FILE* clear;
+  clear = fopen(dest, "w");
+  fclose(clear);
+
+  FILE* fp;
   fp = fopen(dest, "a");
 
   if (check_order(total_packets, packets) == -1) {
@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
   }
 
   fclose(fp);
-	free(dest);
+  free(dest);
   free(packets);
 
   return EXIT_SUCCESS;
