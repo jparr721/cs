@@ -113,13 +113,19 @@ int main(int argc, char** argv) {
   fgets(request, PACKET_SIZE, stdin);
 
   request[strlen(request)] = '\0';
-  char* file_to_save = request;
-  printf("%s", file_to_save);
 
   sendto(sockfd, request, strlen(request), 0, (struct sockaddr*)&server, sizeof(server));
 
-  int packets_remaining;
+  int packets_remaining = -1;
   recv(sockfd, &packets_remaining, (int) sizeof(struct packet), MSG_CONFIRM);
+
+  // Packets remaining is critical...
+  if (packets_remaining == -1) {
+    while (packets_remaining == -1) {
+      recv(sockfd, &packets_remaining, (int) sizeof(struct packet), MSG_CONFIRM);
+    }
+  }
+  sendto(sockfd, &packets_remaining, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
 
   if (packets_remaining < 0) {
     printf("The server could not find the desired file.\n\nExiting...\n");
@@ -191,10 +197,10 @@ int main(int argc, char** argv) {
   }
 
   printf("All packets have been received.\n");
-  printf("Saving to: %s", file_to_save);
+  printf("Saving to: %s", request);
 
   FILE* fp;
-  fp = fopen("sample.txt", "a");
+  fp = fopen(request, "ae");
 
   if (check_order(total_packets, packets) == -1) {
     printf("Reordering packets...");

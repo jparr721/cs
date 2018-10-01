@@ -232,8 +232,17 @@ int main(int argc, char** argv) {
 
       //Send number of incoming packets
       int num_packets = ceil(size / PACKET_SIZE) + 1;
+      int packet_number_ack = -1;
       printf("Packets to send: %d\n", num_packets);
       sendto(sockfd, &num_packets, sizeof(int), 0, (struct sockaddr*) &client, sizeof client);
+      recvfrom(sockfd, &packet_number_ack, sizeof(int), MSG_CONFIRM, (struct sockaddr*) &client, &len);
+
+      // Make sure packets remaining gets sent...
+      if (packet_number_ack != num_packets) {
+        while(packet_number_ack != num_packets) {
+          sendto(sockfd, &num_packets, sizeof(int), 0, (struct sockaddr*) &client, sizeof client);
+        }
+      }
 
       int next_frame = 0;
       int base = 0;
