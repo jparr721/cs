@@ -116,6 +116,8 @@ int main(int argc, char** argv) {
 
   sendto(sockfd, request, strlen(request), 0, (struct sockaddr*)&server, sizeof(server));
 
+  free(request);
+
   int packets_remaining = -1;
   recv(sockfd, &packets_remaining, (int) sizeof(struct packet), MSG_CONFIRM);
 
@@ -167,15 +169,15 @@ int main(int argc, char** argv) {
         if (validate_checksum(packet) == 1) {
           printf("Sending ack number: %d\n", expected_value);
 
-          printf("Data: \n%s\n", packet.data);
-          printf("Size: %d\n", (int) sizeof(server));
+          //printf("Data: \n%s\n", packet.data);
+          //printf("Size: %d\n", (int) sizeof(server));
           int req = sendto(sockfd, &expected_value, sizeof(int), 0, (struct sockaddr*) &server, sizeof(server));
           if (req == -1) {
             printf("Error in packet ack: %d sending\n", expected_value);
             sleep(1/1000);
           } else {
-            printf("Saving to packet struct");
-            printf("%d", expected_value);
+            //printf("Saving to packet struct");
+            //printf("%d", expected_value);
             packets[expected_value] = packet;
             expected_value += 1;
             packets_remaining--;
@@ -197,10 +199,20 @@ int main(int argc, char** argv) {
   }
 
   printf("All packets have been received.\n");
-  printf("Saving to: %s", request);
+  close(sockfd);
+
+  printf("Please enter desired file location: ");
+  char* dest = (char*) malloc(sizeof(char));
+  scanf("%s", dest);
+  dest[strlen(dest)] = '\0';
+  printf("Saving to: %s...\n", dest);
+
+  FILE* clear;
+  clear = fopen(dest, "w");
+  fclose(clear);
 
   FILE* fp;
-  fp = fopen(request, "ae");
+  fp = fopen(dest, "a");
 
   if (check_order(total_packets, packets) == -1) {
     printf("Reordering packets...");
@@ -208,14 +220,12 @@ int main(int argc, char** argv) {
   }
 
   for (int i = 0; i < total_packets; i++) {
-    printf("%s", packets[i].data);
     fwrite(packets[i].data, sizeof(char), packets[i].size, fp);
   }
 
   fclose(fp);
-  free(request);
+  free(dest);
   free(packets);
-  close(sockfd);
 
   return EXIT_SUCCESS;
 }
