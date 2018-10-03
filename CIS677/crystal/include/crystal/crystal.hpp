@@ -20,7 +20,7 @@ namespace crystal {
     void Run(int64_t);
     void end_simulation(const std::vector<std::vector<int>>&);
     std::tuple<int64_t, int64_t> insert_particle(const std::vector<std::vector<int>>&, int);
-    void random_walk(const int64_t&, const int64_t&, std::vector<std::vector<int>>&);
+    void random_walk(int64_t&, int64_t&, std::vector<std::vector<int>>&);
     bool collision(int64_t, int64_t, const std::vector<std::vector<int>>&);
     void print(const std::vector<std::vector<int>>&);
   };

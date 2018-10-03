@@ -59,15 +59,14 @@ namespace crystal {
     auto now = std::chrono::high_resolution_clock::now();
     #pragma omp parallel
     {
-      std::cout << omp_get_num_threads() << std::endl;
       for (int i = 0; i < particles; ++i) {
         if (read_radius(radius) >= this->SIMULATION_SIZE / 2) {
-          break;
+          continue;;
         }
 
         const auto point_location = this->insert_particle(simulation_space, radius);
-        const int64_t x = std::get<0>(point_location);
-        const int64_t y = std::get<1>(point_location);
+        int64_t x = std::get<0>(point_location);
+        int64_t y = std::get<1>(point_location);
         this->random_walk(x, y, simulation_space);
 
         if (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
@@ -77,9 +76,9 @@ namespace crystal {
             write_radius(radius, distance);
           }
         }
-      }
 
-      this->end_simulation(simulation_space);
+        this->end_simulation(simulation_space);
+      }
     }
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -91,11 +90,11 @@ namespace crystal {
 
     the_goods.open("output.txt");
 
-    for (const auto& i : simulation_space) {
-      for (const auto& j : i) {
+    for (uint64_t i = 0; i < simulation_space.size(); ++i) {
+      for (uint64_t j = 0; j < simulation_space[i].size(); ++j) {
         int current = 0;
 
-        if (j == 1) {
+        if (simulation_space[i][j] == 1) {
           current = 1;
         }
 
@@ -124,26 +123,24 @@ namespace crystal {
   }
 
   void Crystal::random_walk(
-      const int64_t &x,
-      const int64_t &y,
+      int64_t &x,
+      int64_t &y,
       std::vector<std::vector<int>> &simulation_space
       ) {
     std::random_device rd;
     std::mt19937 g(rd());
-    int64_t new_x = x;
-    int64_t new_y = y;
 
-    while (new_x >= 0 && new_x < this->SIMULATION_SIZE && new_y >= 0 && new_y < this->SIMULATION_SIZE) {
-      if (this->collision(new_x, new_y, simulation_space)) {
+    while (x >= 0 && x < this->SIMULATION_SIZE && y >= 0 && y < this->SIMULATION_SIZE) {
+      if (this->collision(x, y, simulation_space)) {
         std::cout << "Writing to simulation space!" << std::endl;
-        write_simulation_space(new_x, new_y, simulation_space, 1);
+        write_simulation_space(x, y, simulation_space, 1);
         return;
       }
 
-      new_x += g() % 2;
-      new_y += g() % 2;
+      x += g() % 2;
+      y += g() % 2;
     }
-  }
+}
 
   bool Crystal::collision(int64_t x, int64_t y, const std::vector<std::vector<int>>& simulation_space) {
     for (int i = -1; i <= 1; i++) {
@@ -154,9 +151,7 @@ namespace crystal {
         if (t_x >= 0 && t_x < this->SIMULATION_SIZE &&
             t_y >= 0 && t_y < this->SIMULATION_SIZE &&
             read_simulation_space(t_x, t_y, simulation_space) == 1) {
-          if (read_simulation_space(t_x, t_y, simulation_space) == 1) {
             return true;
-          }
         }
       }
     }
@@ -170,12 +165,15 @@ namespace crystal {
       ) {
     std::random_device rd;
     std::mt19937 g(rd());
-    long int random_row = 0;
-    long int random_col = 0;
+    std::uniform_int_distribution<int64_t> uni(0, this->SIMULATION_SIZE - 1);
+    int64_t random_row = 0;
+    int64_t random_col = 0;
 
     do {
-      random_row = g() % this->ROWS;
-      random_col = g() % this->COLS;
+      random_row = uni(g);
+      random_col = uni(g);
+      std::cout << random_row << std::endl;
+      std::cout << random_col << std::endl;
     } while ((abs(this->CENTER - random_row) <= radius + 1 &&
               abs(this->CENTER - random_col) <= radius - 1) ||
               read_simulation_space(random_row, random_col, simulation_space) != 0);
