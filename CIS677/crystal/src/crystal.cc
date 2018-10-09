@@ -61,7 +61,7 @@ namespace crystal {
     {
       for (int i = 0; i < particles; ++i) {
         if (read_radius(radius) >= this->SIMULATION_SIZE / 2) {
-          continue;;
+          continue;
         }
 
         const auto point_location = this->insert_particle(simulation_space, radius);
