@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
     printf("Received a %d byte packet, first byte is %02hhx\n", res, buf[0]);
     print_ip_header(buf, len);
     parse_ethernet_header(buf, len);
+    printf("\n\n");
   }
 
   return 0;
