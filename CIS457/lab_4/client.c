@@ -74,6 +74,7 @@ int main(int argc, char** argv) {
 
     int fdmax = sockfd;
     FD_SET(sockfd, &read_fd);
+    FD_SET(STDIN_FILENO, &read_fd);
 
     if(select(fdmax + 1, &read_fd, NULL, NULL, &timeout) == -1) {
       fprintf(stderr, "Unable to modify the file descriptor\n");
