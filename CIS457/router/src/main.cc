@@ -1,9 +1,12 @@
-#include <arpa/inet.h>
-#include <errno.h>
+/* #include <router/Router.hpp> */
+
+#include "../include/router/Router.hpp"
 #include <iostream>
-#include <net/ethernet.h>
-#include <netpacket/packet.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <string>
-#include <unistd.h>
+
+int main(int argc, char** argv) {
+  router::Router r;
+  int rt = r.Start();
+  if (rt < 0) {
+    std::cout << "router machine broke" << std::endl;
+  }
+}
