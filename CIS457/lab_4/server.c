@@ -58,8 +58,7 @@ int main(int argc, char** argv) {
   char response[MAXDATASIZE];
   char* input;
 
-  /* socklen_t sin_size = sizeof client; */
-  int sin_size = sizeof(client);
+  socklen_t sin_size = sizeof client;
 
   while (1) {
     fd_set read_fd;
@@ -83,20 +82,11 @@ int main(int argc, char** argv) {
     }
 
     if (clientfd > -1 && FD_ISSET(clientfd, &read_fd)) {
-      /* int r = recv(clientfd, response, MAXDATASIZE, 0); */
-      /* if (r < 0) { */
-      /*   fprintf(stderr, "Bruh, we couldn't get that message"); */
-      /* } else { */
-      /*   if (strcmp("Quit", response) == 0) { */
-      /*     printf("Client closed the connection"); */
-      /*     break; */
-      /*   } */
-      /*   printf("< %s\n", response); */
-      /* } */
       recv(clientfd, response, MAXDATASIZE, 0);
 
-      if (strcmp("Quit", response) == 0) {
+      if (strcmp("Quit\n", response) == 0) {
         printf("Client ended the connection");
+        break;
       } else {
         printf("< %s\n", response);
       }
@@ -104,10 +94,9 @@ int main(int argc, char** argv) {
 
     if (FD_ISSET(STDIN_FILENO, &read_fd)) {
       input = input_handler();
-      send(clientfd, input, strlen(input) + 1, 0);
+      send(clientfd, input, strlen(input), 0);
 
-      if (strcmp("Quit", input) == 0) {
-        printf("Ending connection\n");
+      if (strcmp("Quit\n", input) == 0) {
         break;
       }
       free(input);

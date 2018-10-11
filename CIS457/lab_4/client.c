@@ -79,20 +79,10 @@ int main(int argc, char** argv) {
     }
 
     if (FD_ISSET(sockfd, &read_fd)) {
-      /* int r = recv(sockfd, response, MAXDATASIZE, 0); */
-      /* if (r < 0) { */
-      /*   fprintf(stderr, "Failed to receive response, dawg"); */
-      /* } else { */
-      /*   if (strcmp("Quit", response) == 0) { */
-      /*     printf("Server has ended the connection"); */
-      /*     break; */
-      /*   } */
-      /*   printf("< %s\n", response); */
-      /* } */
       recv(sockfd, response, MAXDATASIZE, 0);
 
-      if (strcmp("Quit", response) == 0) {
-        printf("Server has ended the connection");
+      if (strcmp("Quit\n", response) == 0) {
+        printf("Server ended the connection");
         break;
       } else {
         printf("< %s\n", response);
@@ -101,13 +91,13 @@ int main(int argc, char** argv) {
 
     if (FD_ISSET(STDIN_FILENO, &read_fd)) {
       input = input_handler();
-      int s = send(sockfd, input, strlen(input) + 1, 0);
+      int s = send(sockfd, input, strlen(input), 0);
       if (s < 0) {
         fprintf(stderr, "Failed to send message, sorry bruh");
       }
 
-      if (strcmp("Quit", input) == 0) {
-        printf("Ended the connection");
+      if (strcmp("Quit\n", input) == 0) {
+        printf("You ended the connection");
         break;
       }
     }
