@@ -54,12 +54,12 @@ int main(int argc, char** argv) {
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
 
-  int clientfd;
+  int clientfd = -1;
   char response[MAXDATASIZE];
   char* input;
 
-  socklen_t sin_size = sizeof client;
-  clientfd = accept(sockfd, (struct sockaddr*) &client, &sin_size);
+  /* socklen_t sin_size = sizeof client; */
+  int sin_size = sizeof(client);
 
   while (1) {
     fd_set read_fd;
@@ -68,30 +68,50 @@ int main(int argc, char** argv) {
     int fdmax = sockfd;
     FD_SET(sockfd, &read_fd);
     FD_SET(STDIN_FILENO, &read_fd);
-    FD_SET(clientfd, &read_fd);
 
-    if (select(fdmax +1, &read_fd, NULL, NULL, &timeout) == -1) {
-      printf("Unable to modify sockfd OOOO\n");
+    if (clientfd > -1) {
+      FD_SET(clientfd, &read_fd);
     }
 
-    int r = recv(clientfd, response, MAXDATASIZE, 0);
-    if (r < 0) {
-      fprintf(stderr, "Bruh, we couldn't get that message");
-    } else {
+    if (select(fdmax + 2, &read_fd, NULL, NULL, &timeout) == -1) {
+      printf("Unable to modify sockfd\n");
+    }
+
+    if (FD_ISSET(sockfd, &read_fd)) {
+      clientfd = accept(sockfd, (struct sockaddr*) &client, &sin_size);
+      printf("New connection\n");
+    }
+
+    if (clientfd > -1 && FD_ISSET(clientfd, &read_fd)) {
+      /* int r = recv(clientfd, response, MAXDATASIZE, 0); */
+      /* if (r < 0) { */
+      /*   fprintf(stderr, "Bruh, we couldn't get that message"); */
+      /* } else { */
+      /*   if (strcmp("Quit", response) == 0) { */
+      /*     printf("Client closed the connection"); */
+      /*     break; */
+      /*   } */
+      /*   printf("< %s\n", response); */
+      /* } */
+      recv(clientfd, response, MAXDATASIZE, 0);
+
       if (strcmp("Quit", response) == 0) {
-        printf("Client closed the connection");
+        printf("Client ended the connection");
+      } else {
+        printf("< %s\n", response);
+      }
+    }
+
+    if (FD_ISSET(STDIN_FILENO, &read_fd)) {
+      input = input_handler();
+      send(clientfd, input, strlen(input) + 1, 0);
+
+      if (strcmp("Quit", input) == 0) {
+        printf("Ending connection\n");
         break;
       }
-      printf("< %s\n", response);
+      free(input);
     }
-
-    input = input_handler();
-    send(clientfd, input, strlen(input) + 1, 0);
-    if (strcmp("Quit", input) == 0) {
-      printf("Ending connection\n");
-      break;
-    }
-    free(input);
   }
 
   close(clientfd);

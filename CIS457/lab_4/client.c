@@ -52,9 +52,7 @@ int main(int argc, char** argv) {
   server.sin_port = htons(port);
   server.sin_addr.s_addr = host;
 
-  int c = connect(sockfd,
-      (struct sockaddr*) &server,
-      sizeof(server));
+  int c = connect(sockfd, (struct sockaddr*) &server, sizeof(server));
 
   if (c == -1) {
     fprintf(stderr, "There was an error connecting to the server!\n");
@@ -80,26 +78,38 @@ int main(int argc, char** argv) {
       fprintf(stderr, "Unable to modify the file descriptor\n");
     }
 
-    input = input_handler();
-    int s = send(sockfd, input, strlen(input) + 1, 0);
-    if (s < 0) {
-      fprintf(stderr, "Failed to send message, sorry bruh");
-    }
+    if (FD_ISSET(sockfd, &read_fd)) {
+      /* int r = recv(sockfd, response, MAXDATASIZE, 0); */
+      /* if (r < 0) { */
+      /*   fprintf(stderr, "Failed to receive response, dawg"); */
+      /* } else { */
+      /*   if (strcmp("Quit", response) == 0) { */
+      /*     printf("Server has ended the connection"); */
+      /*     break; */
+      /*   } */
+      /*   printf("< %s\n", response); */
+      /* } */
+      recv(sockfd, response, MAXDATASIZE, 0);
 
-    if (strcmp("Quit", input) == 0) {
-      printf("Ended the connection");
-      break;
-    }
-
-    int r = recv(sockfd, response, MAXDATASIZE, 0);
-    if (r < 0) {
-      fprintf(stderr, "Failed to receive response, dawg");
-    } else {
       if (strcmp("Quit", response) == 0) {
         printf("Server has ended the connection");
         break;
+      } else {
+        printf("< %s\n", response);
       }
-      printf("< %s\n", response);
+    }
+
+    if (FD_ISSET(STDIN_FILENO, &read_fd)) {
+      input = input_handler();
+      int s = send(sockfd, input, strlen(input) + 1, 0);
+      if (s < 0) {
+        fprintf(stderr, "Failed to send message, sorry bruh");
+      }
+
+      if (strcmp("Quit", input) == 0) {
+        printf("Ended the connection");
+        break;
+      }
     }
   }
 
