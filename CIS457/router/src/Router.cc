@@ -14,10 +14,40 @@
 #include <unistd.h>
 
 namespace router {
+  ARPHeader Router::build_arp_reply(
+      struct ether_header *eh,
+      struct ether_arp *arp_frame,
+      uint8_t destination_mac
+      ) {
+    ARPHeader r;
+    // SOURCE MAC FORMAT
+    r.ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
+    // SOURCE MAC LENGTH
+    r.ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
+    // TARGET MAC
+    std::memcpy(r.ea.arp_tha, &arp_frame->arp_sha, 6);
+    // TARGET PROTOCOL
+    std::memcpy(r.ea.arp_tpa, &arp_frame->arp_spa, 4);
+    // SOURCE MAC ADDRESS
+    std::memcpy(static_cast<uint8_t*>(r.ea.arp_sha), &destination_mac, 6);
+    // PROTOCOL
+    r.ea.ea_hdr.ar_pro = htons(ETH_P_IP);
+    // PROTOCOL LENGT
+    r.ea.ea_hdr.ar_pln = sizeof(in_addr_t);
+    // OP
+    r.ea.ea_hdr.ar_op = htons(ARPOP_REPLY);
+    // ETHERNET HEADER
+    r.eh = *eh;
+
+    return r;
+  }
+
   int Router::Start() {
     int packet_socket;
 
     struct ifaddrs *ifaddr, *tmp;
+    fd_set interfaces;
+    FD_ZERO(&interfaces);
 
     if (getifaddrs(&ifaddr) == -1) {
       std::cerr << "getifaddrs machine broke" << std::endl;
