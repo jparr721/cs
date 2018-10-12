@@ -19,18 +19,17 @@ class Router {
       struct ether_header *eh,
       struct ether_arp *arp_frame,
       uint8_t hop_ip);
-    void get_dest_mac(
-      std::vector<struct ifaddrs> ifaddr,
-      std::vector<struct ifaddrs> tmp,
-      uint8_t arp_tpa[4],
+    uint8_t get_dest_mac(
+      struct ifaddrs *ifaddr,
+      struct ifaddrs *tmp,
+      uint8_t arp_tpa,
+      int socket);
+    uint8_t get_src_mac(
+      struct ifaddrs *ifaddr,
+      struct ifaddrs *tmp,
+      uint8_t if_ip,
       int socket,
-      uint8_t dmac[6]);
-    void get_src_mac(
-      std::vector<struct ifaddrs> ifaddr,
-      std::vector<struct ifaddrs> tmp,
-      uint8_t if_ip[4],
-      int socket,
-      uint8_t dmac[6]);
+      uint8_t destination_mac);
 
     int Start();
 };

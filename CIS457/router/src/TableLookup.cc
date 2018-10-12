@@ -1,3 +1,4 @@
+/* #include <router/TableLookup.hpp> */
 #include "../include/router/TableLookup.hpp"
 
 #include <string>
@@ -7,37 +8,36 @@
 #include <vector>
 
 namespace router {
-    TableLookup::TableLookup(const std::string& filename) {
-        std::ifstream tableFile(filename);
-        std::string line;
-        if (tableFile.is_open()) {
-            while (std::getline(tableFile, line)) {
-                std::vector<std::string> columns;
-                std::stringstream stream(line);
-                std::string column;
-                while (std::getline(stream, column, ' ')) {
-                    columns.push_back(column);
-                }
-
-                this->prefixInterfaceTable.insert(std::pair<std::string, std::string>(columns[0], columns[2]));
-
-                if (columns[1] != "-") {
-                    this->hopDeviceTable.insert(std::pair<std::string, std::string>(columns[0], columns[1]));
-                }
-
-                columns.clear();
-            }
+  TableLookup::TableLookup(const std::string& filename) {
+    std::ifstream tableFile(filename);
+    std::string line;
+    if (tableFile.is_open()) {
+      while (std::getline(tableFile, line)) {
+        std::vector<std::string> columns;
+        std::stringstream stream(line);
+        std::string column;
+        while (std::getline(stream, column, ' ')) {
+            columns.push_back(column);
         }
 
-        tableFile.close();
-    }
+        this->prefix_interface_table.insert(std::pair<std::string, std::string>(columns[0], columns[2]));
 
-    std::string TableLookup::getRoute(const std::string& route) {
-        return this->prefixInterfaceTable.find(route)->second;
-    }
+        if (columns[1] != "-") {
+            this->hop_device_table.insert(std::pair<std::string, std::string>(columns[0], columns[1]));
+        }
 
-    bool TableLookup::hasHopDevice(const std::string& route) {
-        auto it = this->hopDeviceTable.begin();
-        return it != this->hopDeviceTable.end();
+        columns.clear();
+      }
     }
-}
+    tableFile.close();
+  }
+
+  std::string TableLookup::get_route(const std::string& route) {
+    return this->prefix_interface_table.find(route)->second;
+  }
+
+  bool TableLookup::has_hop_device(const std::string& route) {
+    auto it = this->hop_device_table.find(route);
+    return it != this->hop_device_table.end();
+  }
+} // namespace router
