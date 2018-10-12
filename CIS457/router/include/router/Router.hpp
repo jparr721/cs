@@ -16,10 +16,9 @@ class Router {
       struct ether_arp *arp_frame,
       uint8_t destination_mac);
     ARPHeader build_arp_request(
-      std::vector<ARPHeader> r,
-      std::vector<struct ether_header> eh,
-      std::vector<struct ether_arp> arp_frame,
-      uint8_t hop_ip[4]);
+      struct ether_header *eh,
+      struct ether_arp *arp_frame,
+      uint8_t hop_ip);
     void get_dest_mac(
       std::vector<struct ifaddrs> ifaddr,
       std::vector<struct ifaddrs> tmp,

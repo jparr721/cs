@@ -7,6 +7,7 @@
 namespace router {
 class ARPHeader {
   public:
+    ARPHeader() = default;
     struct ether_header eh;
     struct ether_arp ea;
 };

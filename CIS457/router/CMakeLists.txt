@@ -12,6 +12,7 @@ add_executable(router
   "${PROJECT_SOURCE_DIR}/src/main.cc"
   "${PROJECT_SOURCE_DIR}/src/Router.cc"
   "${PROJECT_SOURCE_DIR}/src/TableLookup.cc"
+  "${PROJECT_SOURCE_DIR}/src/ARPHeader.cc"
 )
 
 target_link_libraries(router)
