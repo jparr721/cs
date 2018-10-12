@@ -33,10 +33,32 @@ namespace router {
     std::memcpy(static_cast<uint8_t*>(r.ea.arp_sha), &destination_mac, 6);
     // PROTOCOL
     r.ea.ea_hdr.ar_pro = htons(ETH_P_IP);
-    // PROTOCOL LENGT
+    // PROTOCOL LENGTH
     r.ea.ea_hdr.ar_pln = sizeof(in_addr_t);
     // OP
     r.ea.ea_hdr.ar_op = htons(ARPOP_REPLY);
+    // ETHERNET HEADER
+    r.eh = *eh;
+
+    return r;
+  }
+
+  ARPHeader Router::build_arp_request(
+      struct ether_header *eh,
+      struct ether_arp *arp_fame,
+      uint8_t hop_ip
+      ){
+    ARPHeader r;
+    // SOURCE MAC FORMAT
+    r.ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
+    // PROTOCOL
+    r.ea.ea_hdr.ar_pro = htons(ETH_P_IP);
+    // SOURCE MAC LENGTH
+    r.ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
+    // SOURCE PROTOCOL LENGTH
+    r.ea.ea_hdr.ar_pln = sizeof(in_addr_t);
+    // OP
+    r.ea.ea_hdr.ar_op = htons(ARPOP_REQUEST);
     // ETHERNET HEADER
     r.eh = *eh;
 
