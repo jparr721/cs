@@ -1,6 +1,6 @@
 /* #include <router/Router.hpp> */
 #include "../include/router/Router.hpp"
-#include "../include/router/TableLookup.hpp
+#include "../include/router/TableLookup.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -44,7 +44,7 @@ namespace router {
   }
 
   int Router::Start() {
-    router::TableLookup routeTable("r1-table.txt");
+    TableLookup routeTable("r1-table.txt");
 
 //    routeTable.getRoute("10.0.0.0/16");
 
