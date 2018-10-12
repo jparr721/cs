@@ -1,5 +1,6 @@
 /* #include <router/Router.hpp> */
 #include "../include/router/Router.hpp"
+#include "../include/router/TableLookup.hpp
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -43,6 +44,10 @@ namespace router {
   }
 
   int Router::Start() {
+    router::TableLookup routeTable("r1-table.txt");
+
+//    routeTable.getRoute("10.0.0.0/16");
+
     int packet_socket;
 
     struct ifaddrs *ifaddr, *tmp;
@@ -53,7 +58,6 @@ namespace router {
       std::cerr << "getifaddrs machine broke" << std::endl;
       return EXIT_FAILURE;
     }
-
 
     for (tmp = ifaddr; tmp != nullptr; tmp=tmp->ifa_next) {
       if (tmp->ifa_addr->sa_family == AF_PACKET) {

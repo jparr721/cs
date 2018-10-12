@@ -11,6 +11,7 @@ set(LIBRARY_OUTOUT_PATH ${CMAKE_BINARY_DIR})
 add_executable(router
   "${PROJECT_SOURCE_DIR}/src/main.cc"
   "${PROJECT_SOURCE_DIR}/src/Router.cc"
+  "${PROJECT_SOURCE_DIR}/src/TableLookup.cc"
 )
 
 target_link_libraries(router)
