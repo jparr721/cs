@@ -1,19 +1,13 @@
-/* #include <router/Router.hpp> */
-/* #include <router/TableLookup.hpp> */
-// Commmented out to avoid compiler warnings
-#include "../include/router/Router.hpp"
-#include "../include/router/TableLookup.hpp"
+#include <router/Router.hpp>
+#include <router/TableLookup.hpp>
 
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
-#include <ifaddrs.h>
 #include <iostream>
-#include <net/if.h>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 namespace router {

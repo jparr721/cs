@@ -3,11 +3,10 @@
 
 #include <netinet/ether.h>
 
-
 namespace router {
 class ARPHeader {
   public:
-    ARPHeader() = default;
+    ARPHeader();
     struct ether_header eh;
     struct ether_arp ea;
 };

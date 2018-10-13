@@ -2,8 +2,10 @@
 #define INCLUDE_ROUTER_ROUTER_HPP
 
 #include <vector>
-/* #include <router/ARPHeader.hpp> */
-#include "./ARPHeader.hpp"
+#include <router/ARPHeader.hpp>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <sys/types.h>
 
 namespace router {
 class Router {
