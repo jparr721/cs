@@ -2,9 +2,11 @@
 #define INCLUDE_ROUTER_ROUTER_HPP
 
 #include <vector>
-#include <router/ARPHeader.hpp>
 #include <ifaddrs.h>
 #include <net/if.h>
+#include <netinet/ether.h>
+#include <router/ARPHeader.hpp>
+#include <string>
 #include <sys/types.h>
 
 namespace router {
@@ -24,7 +26,7 @@ class Router {
     uint8_t get_dest_mac(
       struct ifaddrs *ifaddr,
       struct ifaddrs *tmp,
-      uint8_t arp_tpa,
+      uint8_t *arp_tpa,
       int socket);
     uint8_t get_src_mac(
       struct ifaddrs *ifaddr,
@@ -33,7 +35,7 @@ class Router {
       int socket,
       uint8_t destination_mac);
 
-    int Start();
+    int Start(std::string routing_table);
 };
 } // namespace router
 
