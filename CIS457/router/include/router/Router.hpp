@@ -15,11 +15,11 @@ class Router {
     Router() = default;
     ~Router() = default;
 
-    ARPHeader build_arp_reply(
+    ARPHeader* build_arp_reply(
       struct ether_header *eh,
       struct ether_arp *arp_frame,
       uint8_t destination_mac);
-    ARPHeader build_arp_request(
+    ARPHeader* build_arp_request(
       struct ether_header *eh,
       struct ether_arp *arp_frame,
       uint8_t hop_ip);
@@ -34,6 +34,7 @@ class Router {
       uint8_t if_ip,
       int socket,
       uint8_t destination_mac);
+    uint16_t checksum(const unsigned char* addr, int len);
 
     int Start(std::string routing_table);
 };

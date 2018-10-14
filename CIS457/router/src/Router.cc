@@ -1,62 +1,68 @@
+#include <router/Router.hpp>
+#include <router/TableLookup.hpp>
+#include <router/ARPHeader.hpp>
+#include <router/ETHHeader.hpp>
+#include <router/ICMPHeader.hpp>
+#include <router/IPHeader.hpp>
+
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
 #include <linux/if_packet.h>
 #include <net/ethernet.h>
-#include <router/Router.hpp>
-#include <router/TableLookup.hpp>
+#include <netinet/if_ether.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 namespace router {
-  ARPHeader Router::build_arp_reply(
+  ARPHeader* Router::build_arp_reply(
       struct ether_header *eh,
       struct ether_arp *arp_frame,
       uint8_t destination_mac
       ) {
-    ARPHeader r;
+    ARPHeader *r;
     // SOURCE MAC FORMAT
-    r.ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
+    r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
     // SOURCE MAC LENGTH
-    r.ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
+    r->ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
     // TARGET MAC
-    std::memcpy(r.ea.arp_tha, &arp_frame->arp_sha, 6);
+    std::memcpy(r->ea.arp_tha, &arp_frame->arp_sha, 6);
     // TARGET PROTOCOL
-    std::memcpy(r.ea.arp_tpa, &arp_frame->arp_spa, 4);
+    std::memcpy(r->ea.arp_tpa, &arp_frame->arp_spa, 4);
     // SOURCE MAC ADDRESS
-    std::memcpy(static_cast<uint8_t*>(r.ea.arp_sha), &destination_mac, 6);
+    std::memcpy(static_cast<uint8_t*>(r->ea.arp_sha), &destination_mac, 6);
     // PROTOCOL
-    r.ea.ea_hdr.ar_pro = htons(ETH_P_IP);
+    r->ea.ea_hdr.ar_pro = htons(ETH_P_IP);
     // PROTOCOL LENGTH
-    r.ea.ea_hdr.ar_pln = sizeof(in_addr_t);
+    r->ea.ea_hdr.ar_pln = sizeof(in_addr_t);
     // OP
-    r.ea.ea_hdr.ar_op = htons(ARPOP_REPLY);
+    r->ea.ea_hdr.ar_op = htons(ARPOP_REPLY);
     // ETHERNET HEADER
-    r.eh = *eh;
+    r->eh = *eh;
 
     return r;
   }
 
-  ARPHeader Router::build_arp_request(
+  ARPHeader* Router::build_arp_request(
       struct ether_header *eh,
       struct ether_arp *arp_fame,
       uint8_t hop_ip
       ){
-    ARPHeader r;
+    ARPHeader *r;
     // SOURCE MAC FORMAT
-    r.ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
+    r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
     // PROTOCOL
-    r.ea.ea_hdr.ar_pro = htons(ETH_P_IP);
+    r->ea.ea_hdr.ar_pro = htons(ETH_P_IP);
     // SOURCE MAC LENGTH
-    r.ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
+    r->ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
     // SOURCE PROTOCOL LENGTH
-    r.ea.ea_hdr.ar_pln = sizeof(in_addr_t);
+    r->ea.ea_hdr.ar_pln = sizeof(in_addr_t);
     // OP
-    r.ea.ea_hdr.ar_op = htons(ARPOP_REQUEST);
+    r->ea.ea_hdr.ar_op = htons(ARPOP_REQUEST);
     // ETHERNET HEADER
-    r.eh = *eh;
+    r->eh = *eh;
 
     return r;
   }
@@ -96,6 +102,41 @@ namespace router {
     return *destination_mac_addr;
   }
 
+  /*
+ * Checksum calculation.
+ * Taken from: https://github.com/kohler/ipsumdump/blob/master/libclick-2.1/libsrc/in_cksum.c
+ */
+  uint16_t Router::checksum(const unsigned char *addr, int len) {
+      int nleft = len;
+      const uint16_t *w = (const uint16_t *)addr;
+      uint32_t sum = 0;
+      uint16_t answer = 0;
+
+      /*
+       * Our algorithm is simple, using a 32 bit accumulator (sum), we add
+       * sequential 16 bit words to it, and at the end, fold back all the
+       * carry bits from the top 16 bits into the lower 16 bits.
+       */
+      while (nleft > 1)  {
+    sum += *w++;
+    nleft -= 2;
+      }
+
+      /* mop up an odd byte, if necessary */
+      if (nleft == 1) {
+    *(unsigned char *)(&answer) = *(const unsigned char *)w ;
+    sum += answer;
+      }
+
+      /* add back carry outs from top 16 bits to low 16 bits */
+      sum = (sum & 0xffff) + (sum >> 16);
+      sum += (sum >> 16);
+      /* guaranteed now that the lower 16 bits of sum are correct */
+
+      answer = ~sum;              /* truncate to 16 bits */
+      return answer;
+  }
+
   uint8_t router::Router::get_src_mac(
     struct ifaddrs *ifaddr,
     struct ifaddrs *tmp,
@@ -110,6 +151,7 @@ namespace router {
     TableLookup routeTable(routing_table);
 
     int packet_socket;
+    uint8_t local_addr[6];
 
     struct ifaddrs *ifaddr, *tmp;
     fd_set interfaces;
@@ -127,6 +169,15 @@ namespace router {
         if (!strncmp(&(tmp->ifa_name[3]), "eth1", 4)) {
           std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
 
+          //Get our mac
+          struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
+          std::memcpy(local_addr, local_mac->sll_addr, 6);
+          std::cout << "Mac addr: " << std::flush;
+          for (int i = 0; i < 5; ++i)
+            std::cout << local_addr[i] << ":" << std::flush;
+
+          std::cout << local_addr[5] << std::endl;
+
           packet_socket = socket(AF_INET, SOCK_RAW, htons(ETH_P_ALL));
           if (packet_socket < 0) {
             std::cerr << "socket machine broke" << std::endl;
@@ -136,6 +187,7 @@ namespace router {
           if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
             std::cerr << "bind machine broke" << std::endl;
           }
+          FD_SET(packet_socket, &interfaces);
         }
       }
     }
@@ -143,19 +195,86 @@ namespace router {
     std::cout << "My body is ready" << std::endl;
 
     while (1) {
-      char buffer[1500];
+      char buf[1500], send_buffer[1500];
       struct sockaddr_ll recvaddr;
+      struct ether_header *eh_incoming, *eh_outgoing;
+      struct ether_arp *arp_frame;
+      ARPHeader *rp_incoming, *rp_outgoing;
+      IPHeader *ip_incoming, *ip_outgoing;
+      ICMPHeader *icmp_incoming, *icmp_outgoing;
       socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
 
-      int n = recvfrom(packet_socket, buffer, 1500, 0, (struct sockaddr*) &recvaddr, &recvaddrlen);
-      if (n < 0) {
-        std::cerr << "recvfrom machine broke" << std::endl;
+      fd_set tmp_set = interfaces;
+      select(FD_SETSIZE, &tmp_set, NULL, NULL, NULL);
+
+      for (int i = 0; i < FD_SETSIZE; ++i) {
+        if (FD_ISSET(i, &tmp_set)) {
+          int n = recvfrom(packet_socket, buf, 1500, 0, (struct sockaddr*) &recvaddr, &recvaddrlen);
+          if (n < 0) {
+            std::cerr << "recvfrom machine broke" << std::endl;
+          }
+
+          if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
+
+          std::cout << "Got a " << n << " byte packet" << std::endl;
+
+          eh_incoming = (struct ether_header*) buf;
+          rp_incoming = (ARPHeader*) (buf + sizeof(struct ether_header));
+          ip_incoming = (IPHeader*) (buf + sizeof(struct ether_header));
+          arp_frame = (struct ether_arp*) (buf + 14);
+
+          eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
+          std::cout << "Type: " << eh_incoming->ether_type << std::endl;
+
+          //If ARP request handled, build an arp reply
+          if (eh_incoming->ether_type == ETHERTYPE_ARP) {
+            std::cout << "Arp packet found" << std::endl;
+            // Building arp reply here and storing into outgoing arp reply header
+            rp_outgoing = build_arp_reply(eh_incoming, arp_frame, htons(1));
+
+            // Move data into Ethernet struct too
+            std::cout << "Making ethernet header" << std::endl;
+            eh_outgoing = (struct ether_header*) send_buffer;
+            std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
+            std::memcpy(eh_outgoing->ether_shost, eh_outgoing->ether_dhost, 6);
+            eh_outgoing->ether_type = htons(0x0806);
+
+            // Send the damn thing
+            std::cout << "Sending ARP reply" << std::endl;
+            if(send(i, send_buffer, 42, 0) == -1) {
+              std::cout << "Error sending arp reply" << std::endl;
+            }
+          } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
+            std::cout << "IP/ICMP packet found" << std::endl;
+
+            if (icmp_incoming->type == 8) {
+              std::cout << "ICMP Echo request detected" << std::endl;
+
+              std::memcpy(send_buffer, buf, 1500);
+
+              // Copy data into the ICMP header
+              std::cout << "Building the ICMP header" << std::endl;
+              icmp_outgoing = (struct ICMPHeader*) (send_buffer + sizeof(struct ether_header) + sizeof(struct IPHeader));
+              icmp_outgoing->type = 0;
+              icmp_outgoing->checksum = 0;
+              icmp_outgoing->checksum = this->checksum((unsigned char*) ip_outgoing, (1500 - sizeof(struct ether_header)));
+              std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
+              std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
+
+              // Move data into the ether_header
+              std::cout << "Building ICMP ethernet header" << std::endl;
+              eh_outgoing = (struct ether_header*) send_buffer;
+              memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
+              memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
+
+              std::cout << "Sending ICMP response" << std::endl;
+              if (send(i, send_buffer, 98, 0) == -1) {
+                std::cout << "There was an error sending the ICMP echo packet" << std::endl;
+              }
+            }
+          }
+        }
       }
-
-      if (recvaddr.sll_pkttype == PACKET_OUTGOING)
-        continue;
-
-      std::cout << "Got a " << n << " byte packet" << std::endl;
     }
 
     freeifaddrs(ifaddr);
