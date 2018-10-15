@@ -2,17 +2,11 @@
 #include <iostream>
 #include <tuple>
 
-__global__ void Run(
-    unsigned int *force,
-    unsigned int *distance,
-    unsigned int *product,
-    unsigned int n
-    ) {
+__global__ void Run(unsigned int *d_force, unsigned int *d_distance, unsigned int *d_output, unsigned int n) {
   int id = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (id < n) {
-    product += force[id] * distance[id];
-  }
+  if (id < n)
+    *d_output = d_force[id] * d_distance[id];
 }
 
 int main(int argc, char** argv) {
