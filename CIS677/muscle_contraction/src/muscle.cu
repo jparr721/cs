@@ -6,30 +6,7 @@ namespace muscle {
     this->vector_size = vector_size;
   }
 
-  __global__
-  void Muscle::Run(
-      std::vector<unsigned int> force,
-      std::vector<unsigned int> distance,
-      unsigned long long *product
-      ) {
-
-    *product = compute(force, distance);
-  }
-
-  __host__ __device__ unsigned long long Muscle::compute(
-      const std::vector<unsigned int>& v1,
-      const std::vector<unsigned int>& v2
-      ) {
-    unsigned long long product = 0;
-
-    for (int i = 0; i < this->vector_size; ++i) {
-      product += v1[i] * v2[i];
-    }
-
-    return product;
-  }
-
-  __host__ __device__ std::tuple<std::vector<unsigned int>, std::vector<unsigned int>> create_vectors(
+  std::tuple<std::vector<unsigned int>, std::vector<unsigned int>> create_vectors(
       int vector_size
       ) {
     int force_vector_range = vector_size / 2;

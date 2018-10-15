@@ -3,6 +3,18 @@
 #include <cstdlib>
 #include <iostream>
 
+__global__ void Run(
+    unsigned int* force,
+    unsigned int* distance,
+    unsigned int vector_size
+    ) {
+  unsigned long long product;
+
+  for (int i = 0; i < vector_size; ++i) {
+    product += force[i] * distance[i];
+  }
+}
+
 int main(int argc, char** argv) {
   if (argc < 2) {
     std::cerr << "usage: muscle vector_size threads_per_block " << std::endl;
@@ -10,7 +22,6 @@ int main(int argc, char** argv) {
 
   unsigned int vector_size = atoi(argv[1]);
   unsigned int threads_per_block = atoi(argv[2]);
-  unsigned long long *product;
 
   cudaError_t error = cudaGetLastError();
   if (error != cudaSuccess) {
@@ -22,8 +33,15 @@ int main(int argc, char** argv) {
   const auto vecs = m.create_vectors(vector_size);
   const std::vector<unsigned int> force = std::get<0>(vecs);
   const std::vector<unsigned int> distance = std::get<1>(vecs);
+  unsigned int *force_data;
+  unsigned int *distance_data;
+  cudaMalloc((void**) &force_data, sizeof(unsigned int) * force.size());
+  cudaMalloc((void**) &distance_data, sizeof(unsigned int) * distance.size());
 
-  m.Run <<<ceil((float) vector_size / threads_per_block), threads_per_block>>>(force, distance, product);
+  std::copy(force.begin(), force.end(), force_data);
+  std::copy(distance.begin(), distance.end(), distance_data);
+
+  Run <<<ceil((float) vector_size / threads_per_block), threads_per_block>>>(force_data, distance_data, vector_size);
 
   error = cudaGetLastError();
   if (error != cudaSuccess) {
