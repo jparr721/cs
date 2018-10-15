@@ -1,4 +1,3 @@
-#include "muscle.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <tuple>
@@ -67,9 +66,6 @@ int main(int argc, char** argv) {
   cudaMemcpy(d_force, h_force, bytes, cudaMemcpyHostToDevice);
   cudaMemcpy(d_distance, h_distance, bytes, cudaMemcpyHostToDevice);
 
-  for (int i = 0; i < 100; ++i) {
-    std::cout << d_distance[i] << std::endl;
-  }
   int g = (int)ceil((float) vector_size / threads_per_block);
 
   Run <<< g, threads_per_block>>>(d_force, d_distance, d_output, vector_size);
