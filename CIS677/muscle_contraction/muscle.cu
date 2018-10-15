@@ -1,4 +1,4 @@
-#include "../include/muscle/muscle.h"
+#include "muscle.hpp"
 
 
 namespace muscle {
