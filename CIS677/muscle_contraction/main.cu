@@ -58,6 +58,8 @@ int main(int argc, char** argv) {
   for (unsigned int i = 0; i < vector_size; ++i) {
     h_distance[i] = ((i % 10) + 1);
   }
+  for (int i = 0; i < 300; ++i)
+    std::cout << h_distance[i] << std::endl;
 
   cudaMemcpy(d_force, h_force, bytes, cudaMemcpyHostToDevice);
   cudaMemcpy(d_distance, h_distance, bytes, cudaMemcpyHostToDevice);
@@ -75,10 +77,11 @@ int main(int argc, char** argv) {
 
   unsigned int sum = 0;
   for (int i = 0; i < vector_size; ++i) {
+    std::cout << h_output[i] << std::endl;
     sum += h_output[i];
   }
 
-  std::cout << "Final result: " << sum / vector_size << std::endl;
+  std::cout << "Final result: " << sum << std::endl;
 
   cudaFree(d_force);
   cudaFree(d_distance);
