@@ -22,7 +22,7 @@ namespace router {
       struct ether_arp *arp_frame,
       uint8_t destination_mac
       ) {
-    ARPHeader *r;
+    ARPHeader *r = new ARPHeader();
     // SOURCE MAC FORMAT
     r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
     // SOURCE MAC LENGTH
@@ -41,7 +41,6 @@ namespace router {
     r->ea.ea_hdr.ar_op = htons(ARPOP_REPLY);
     // ETHERNET HEADER
     r->eh = *eh;
-
     return r;
   }
 
@@ -172,16 +171,17 @@ namespace router {
           //Get our mac
           struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
           std::memcpy(local_addr, local_mac->sll_addr, 6);
-          std::cout << "Mac addr: " << std::flush;
+					std::cout << local_mac->sll_addr << std::endl;
+          std::cout << "Mac addr: ";
           for (int i = 0; i < 5; ++i)
-            std::cout << local_addr[i] << ":" << std::flush;
+            std::cout << local_addr[i] << ":";
 
           std::cout << local_addr[5] << std::endl;
 
-          packet_socket = socket(AF_INET, SOCK_RAW, htons(ETH_P_ALL));
+          packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
           if (packet_socket < 0) {
-            std::cerr << "socket machine broke" << std::endl;
-            return EXIT_FAILURE;
+            std::cerr << "socket machine broke [" << packet_socket << "]" << std::endl;
+            return errno;
           }
 
           if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
@@ -236,11 +236,13 @@ namespace router {
             std::cout << "Making ethernet header" << std::endl;
             eh_outgoing = (struct ether_header*) send_buffer;
             std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
-            std::memcpy(eh_outgoing->ether_shost, eh_outgoing->ether_dhost, 6);
+            std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
             eh_outgoing->ether_type = htons(0x0806);
 
             // Send the damn thing
             std::cout << "Sending ARP reply" << std::endl;
+						std::cout << eh_outgoing->ether_dhost << std::endl;
+						std::cout << eh_outgoing->ether_shost << std::endl;
             if(send(i, send_buffer, 42, 0) == -1) {
               std::cout << "Error sending arp reply" << std::endl;
             }
