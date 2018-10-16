@@ -148,7 +148,7 @@ namespace router {
 
   int Router::Start(std::string routing_table) {
     TableLookup routeTable(routing_table);
-    
+
 		int packet_socket;
     uint8_t local_addr[6];
 
@@ -165,7 +165,7 @@ namespace router {
       if (tmp->ifa_addr->sa_family == AF_PACKET) {
         std::cout << "Interface: " << tmp->ifa_name << std::endl;
 
-        if (!strncmp(&(tmp->ifa_name[3]), "eth1", 4)) {
+        if (!strncmp(&(tmp->ifa_name[3]), "eth", 3)) {
           std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
 
           //Get our mac
@@ -187,6 +187,7 @@ namespace router {
           if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
             std::cerr << "bind machine broke" << std::endl;
           }
+          listen(packet_socket, 10);
           FD_SET(packet_socket, &interfaces);
         }
       }
@@ -270,7 +271,7 @@ namespace router {
               memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
 
               std::cout << "Sending ICMP response" << std::endl;
-              if (send(i, send_buffer, 98, 0) == -1) {
+              if (send(i, send_buffer, n, 0) == -1) {
                 std::cout << "There was an error sending the ICMP echo packet" << std::endl;
               }
             }
