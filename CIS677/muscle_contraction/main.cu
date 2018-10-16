@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cmath>
 #include <iostream>
 #include <tuple>
 
@@ -50,8 +51,9 @@ int main(int argc, char** argv) {
   for (unsigned int i = 0; i < vector_size / 2; ++i) {
     h_force[i] = (i + 1);
   }
-  for (unsigned int i = vector_size / 2; i > 0; --i) {
-    h_force[i] = (i + 1);
+  int val = vector_size / 2;
+  for (unsigned int i = vector_size / 2; i < vector_size; ++i) {
+    h_force[i] = --val + 1;
   }
   for (unsigned int i = 0; i < vector_size; ++i) {
     h_distance[i] = ((i % 10) + 1);
