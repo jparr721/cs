@@ -1,0 +1,3 @@
+/home/flynnky/github/cs/CIS457/router/CMakeFiles/rebuild_cache.dir
+/home/flynnky/github/cs/CIS457/router/CMakeFiles/router.dir
+/home/flynnky/github/cs/CIS457/router/CMakeFiles/edit_cache.dir

@@ -33,6 +33,8 @@ namespace router {
     std::memcpy(r->ea.arp_tpa, &arp_frame->arp_spa, 4);
     // SOURCE MAC ADDRESS
     std::memcpy(static_cast<uint8_t*>(r->ea.arp_sha), &destination_mac, 6);
+		// SOURCE PROTOCOL ACCRESS
+		std::memcpy(r->ea.arp_spa, &arp_frame->arp_tpa, 4);
     // PROTOCOL
     r->ea.ea_hdr.ar_pro = htons(ETH_P_IP);
     // PROTOCOL LENGTH
@@ -200,8 +202,10 @@ namespace router {
       struct ether_header *eh_incoming, *eh_outgoing;
       struct ether_arp *arp_frame;
       ARPHeader *rp_incoming, *rp_outgoing;
-      IPHeader *ip_incoming, *ip_outgoing;
-      ICMPHeader *icmp_incoming, *icmp_outgoing;
+      IPHeader *ip_incoming; 
+			IPHeader *ip_outgoing = new IPHeader();
+      ICMPHeader *icmp_incoming;
+		  ICMPHeader *icmp_outgoing = new ICMPHeader();
       socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
 
       fd_set tmp_set = interfaces;
@@ -231,6 +235,7 @@ namespace router {
             std::cout << "Arp packet found" << std::endl;
             // Building arp reply here and storing into outgoing arp reply header
             rp_outgoing = build_arp_reply(eh_incoming, arp_frame, htons(1));
+						std::memcpy(send_buffer, rp_outgoing, 1500);
 
             // Move data into Ethernet struct too
             std::cout << "Making ethernet header" << std::endl;
@@ -248,7 +253,8 @@ namespace router {
             }
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
             std::cout << "IP/ICMP packet found" << std::endl;
-
+            icmp_incoming = (ICMPHeader*) (buf + 34);
+						std::cout << "IP/ICMP Type: " << icmp_incoming->type << std::endl;
             if (icmp_incoming->type == 8) {
               std::cout << "ICMP Echo request detected" << std::endl;
 
@@ -260,8 +266,18 @@ namespace router {
               icmp_outgoing->type = 0;
               icmp_outgoing->checksum = 0;
               icmp_outgoing->checksum = this->checksum((unsigned char*) ip_outgoing, (1500 - sizeof(struct ether_header)));
+							// CHANGE THIS TO IP_HEADER
+							icmp_outgoing = (IPHeader*) (send_buffer + sizeof(ETHHeader));
+							std::memcpy(icmp_outgoing->ihl_ver, icmp_incoming->ihl_ver, 8);
+						  icmp_outgoing->dif_services = icmp_incoming->dif_services;
+						  icmp_outgoing->len = hons(icmp_incoming->len);
+						  icmp_outgoing->id = htons(icmp_icoming->id);
+					    icmp_outgoing->flag_offset = htons(icmp_incoming->flag_offset);
+							icmp_outgoing->ttl = icmp_incoming->ttl;
+							icmp_outgoing->protocol = icmp_incoming->protocol;
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
+							// CHANGE TO IP HEADER
 
               // Move data into the ether_header
               std::cout << "Building ICMP ethernet header" << std::endl;
