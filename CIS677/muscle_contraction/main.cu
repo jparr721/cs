@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     h_distance[i] = ((i % 10) + 1);
   }
   for (int i = 0; i < 300; ++i)
-    std::cout << h_distance[i] << std::endl;
+    std::cout << h_distance[i] << std::flush;
 
   cudaMemcpy(d_force, h_force, bytes, cudaMemcpyHostToDevice);
   cudaMemcpy(d_distance, h_distance, bytes, cudaMemcpyHostToDevice);
