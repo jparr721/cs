@@ -22,7 +22,7 @@ namespace router {
       struct ether_arp *arp_frame,
       uint8_t destination_mac
       ) {
-    ARPHeader *r = new ARPHeader();
+    auto *r = new ARPHeader();
     // SOURCE MAC FORMAT
     r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
     // SOURCE MAC LENGTH
@@ -171,13 +171,13 @@ namespace router {
           std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
 
           //Get our mac
-          struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
+          struct sockaddr_ll *local_mac = reinterpret_cast<sockaddr_ll*>(tmp->ifa_addr);
           std::memcpy(local_addr, local_mac->sll_addr, 6);
 					std::cout << local_mac->sll_addr << std::endl;
           std::cout << "Mac addr: ";
-          for (int i = 0; i < 5; ++i)
+          for (int i = 0; i < 5; ++i) {
             std::cout << local_addr[i] << ":";
-
+          }
           std::cout << local_addr[5] << std::endl;
 
           packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
@@ -186,11 +186,11 @@ namespace router {
             return errno;
           }
 
-          if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
+          if (bind(packet_socket, tmp->ifa_addr, sizeof(sockaddr_ll)) == -1) {
             std::cerr << "bind machine broke" << std::endl;
           }
-          listen(packet_socket, 10);
-          FD_SET(packet_socket, &interfaces);
+          /* listen(packet_socket, 10); */
+          /* FD_SET(packet_socket, &interfaces); */
         }
       }
     }
@@ -207,7 +207,7 @@ namespace router {
 			IPHeader *ip_outgoing = new IPHeader();
       ICMPHeader *icmp_incoming;
 		  ICMPHeader *icmp_outgoing = new ICMPHeader();
-      socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
+      socklen_t recvaddrlen = sizeof(sockaddr_ll);
 
       fd_set tmp_set = interfaces;
       select(FD_SETSIZE, &tmp_set, NULL, NULL, NULL);
@@ -223,10 +223,10 @@ namespace router {
 
           std::cout << "Got a " << n << " byte packet" << std::endl;
 
-          eh_incoming = (ether_header*) buf;
-          rp_incoming = (ARPHeader*) (buf + sizeof(ether_header));
-          ip_incoming = (IPHeader*) (buf + sizeof(ether_header));
-          arp_frame = (ether_arp*) (buf + 14);
+          eh_incoming = reinterpret_cast<ether_header*>(buf);
+          rp_incoming = reinterpret_cast<ARPHeader*>(buf + sizeof(ether_header));
+          ip_incoming = reinterpret_cast<IPHeader*>(buf + sizeof(ether_header));
+          arp_frame = reinterpret_cast<ether_arp*>(buf + 14);
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
           std::cout << "Type: " << eh_incoming->ether_type << std::endl;
