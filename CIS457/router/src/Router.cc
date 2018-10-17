@@ -48,63 +48,6 @@ namespace router {
     return r;
   }
 
-  ARPHeader* Router::build_arp_request(
-      struct ether_header *eh,
-      struct ether_arp *arp_fame,
-      uint8_t hop_ip
-      ){
-    ARPHeader *r;
-    // SOURCE MAC FORMAT
-    r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
-    // PROTOCOL
-    r->ea.ea_hdr.ar_pro = htons(ETH_P_IP);
-    // SOURCE MAC LENGTH
-    r->ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
-    // SOURCE PROTOCOL LENGTH
-    r->ea.ea_hdr.ar_pln = sizeof(in_addr_t);
-    // OP
-    r->ea.ea_hdr.ar_op = htons(ARPOP_REQUEST);
-    // ETHERNET HEADER
-    r->eh = *eh;
-
-    return r;
-  }
-
-  // Adapted from here: http://www.microhowto.info/howto/get_the_ip_address_of_a_network_interface_in_c_using_siocgifaddr.html
-  uint8_t router::Router::get_dest_mac(
-    struct ifaddrs *ifaddr,
-    struct ifaddrs *tmp,
-    uint8_t *arp_tpa,
-    int socket
-    ){
-    struct ifreq ifr;
-    uint8_t destination_mac_addr[6];
-
-    for (tmp = ifaddr; tmp != nullptr; tmp = tmp->ifa_next) {
-      if (tmp->ifa_addr->sa_family == AF_INET) {
-        struct sockaddr_in* sa = (struct sockaddr_in*) tmp->ifa_addr;
-        // Extract IP of captured packet
-        char* ip_addr = inet_ntoa(sa->sin_addr);
-        char arp_addr[50];
-        // Build arp target IP to compare
-        sprintf(arp_addr, "%d.%d.%d.%d", arp_tpa[0], arp_tpa[1], arp_tpa[2], arp_tpa[3]);
-
-        if (std::strcmp(ip_addr, arp_addr) == 0) {
-          // prepare our ifreq struct to use ioctl
-          ifr.ifr_addr.sa_family = AF_INET;
-          strcpy(ifr.ifr_name, tmp->ifa_name);
-          if (ioctl(socket, SIOCGIFADDR, &ifr) == -1) {
-            std::cerr << "Failed to run ioctl" << std::endl;
-            return -1;
-          }
-          std::memcpy(destination_mac_addr, ifr.ifr_hwaddr.sa_data, 6);
-        }
-      }
-    }
-
-    return *destination_mac_addr;
-  }
-
   /*
  * Checksum calculation.
  * Taken from: https://github.com/kohler/ipsumdump/blob/master/libclick-2.1/libsrc/in_cksum.c
@@ -140,15 +83,9 @@ namespace router {
       return answer;
   }
 
-  uint8_t router::Router::get_src_mac(
-    struct ifaddrs *ifaddr,
-    struct ifaddrs *tmp,
-    uint8_t if_ip,
-    int socket,
-    uint8_t destination_mac
-    ){
-    return destination_mac;
-  }
+  std::string Router::get_ip_str(unsigned char ip[4]) {
+	  return "";
+	}
 
   int Router::Start(std::string routing_table) {
     TableLookup routeTable(routing_table);
@@ -219,17 +156,16 @@ namespace router {
 
       for (int i = 0; i < interfaces.size(); ++i) {
         if (FD_ISSET(interfaces[i], &read_fds)) {
-						printf("Detected something on %d\n", interfaces[i]);
-	  char buf[1500], send_buffer[1500];
-	  struct sockaddr_ll recvaddr;
-	  struct ether_header *eh_incoming, *eh_outgoing;
-	  struct ether_arp *arp_frame;
-	  ARPHeader *rp_incoming, *rp_outgoing;
-	  IPHeader *ip_incoming;
-	  IPHeader *ip_outgoing;
-	  ICMPHeader *icmp_incoming;
-	  ICMPHeader *icmp_outgoing;
-	  socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
+	  			char buf[1500], send_buffer[1500];
+					struct sockaddr_ll recvaddr;
+					struct ether_header *eh_incoming, *eh_outgoing;
+					struct ether_arp *arp_frame;
+					ARPHeader *rp_incoming, *rp_outgoing;
+				  IPHeader *ip_incoming;
+				  IPHeader *ip_outgoing;
+				  ICMPHeader *icmp_incoming;
+				  ICMPHeader *icmp_outgoing;
+				  socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
 
           int n = recvfrom(interfaces[i], buf, 1500, 0, (sockaddr*) &recvaddr, &recvaddrlen);
           if (n < 0) {
@@ -238,25 +174,24 @@ namespace router {
 
           if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
 
-          std::cout << "Got a " << n << " byte packet" << std::endl;
-
           eh_incoming = (ether_header*) buf;
           rp_incoming = (ARPHeader*) (buf + sizeof(ether_header));
           ip_incoming = (IPHeader*) (buf + sizeof(ether_header));
           arp_frame = (ether_arp*) (buf + 14);
 
-          eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
-          std::cout << "Type: " << eh_incoming->ether_type << std::endl;
+          printf("Incoming packet from %i.%i.%i.%i\n", ip_incoming->src_ip[0], ip_incoming->src_ip[1], ip_incoming->src_ip[2], ip_incoming->src_ip[3]);
 
-          //If ARP request handled, build an arp reply
+          eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
+          
+					//If ARP request handled, build an arp reply
           if (eh_incoming->ether_type == ETHERTYPE_ARP) {
-            std::cout << "Arp packet found" << std::endl;
+            //std::cout << "Arp packet found" << std::endl;
             // Building arp reply here and storing into outgoing arp reply header
             rp_outgoing = build_arp_reply(eh_incoming, arp_frame, addresses[i]);
 						std::memcpy(send_buffer, rp_outgoing, 1500);
 
             // Move data into Ethernet struct too
-            std::cout << "Making ethernet header" << std::endl;
+            //std::cout << "Making ethernet header" << std::endl;
             eh_outgoing = (ether_header*) send_buffer;
             std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
             std::memcpy(eh_outgoing->ether_shost, addresses[i], 6);
@@ -264,22 +199,21 @@ namespace router {
 
             // Send the damn thing
             std::cout << "Sending ARP reply" << std::endl;
-						printf("%s\n", eh_outgoing->ether_dhost);
-						std::cout << eh_outgoing->ether_shost << std::endl;
-            if(send(interfaces[i], send_buffer, 42, 0) == -1) {
+            
+						if(send(interfaces[i], send_buffer, 42, 0) == -1) {
               std::cout << "Error sending arp reply" << std::endl;
             }
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
-            std::cout << "IP/ICMP packet found" << std::endl;
+            //std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);
-						std::cout << "IP/ICMP Type: " << icmp_incoming->type << std::endl;
+						//std::cout << "IP/ICMP Type: " << icmp_incoming->type << std::endl;
             if (icmp_incoming->type == 8) {
-              std::cout << "ICMP Echo request detected" << std::endl;
+              //std::cout << "ICMP Echo request detected" << std::endl;
 
               std::memcpy(send_buffer, buf, 1500);
              
 						 	// Copy data into the ICMP header
-              std::cout << "Building the ICMP header" << std::endl;
+              //std::cout << "Building the ICMP header" << std::endl;
               icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
               icmp_outgoing->type = 0;
               icmp_outgoing->checksum = 0;
@@ -289,19 +223,16 @@ namespace router {
               ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
-							//printf("%s\n", ip_incoming->src_ip);
-							//printf("%s\n", ip_incoming->dest_ip);
-              //printf("%s\n", ip_outgoing->src_ip);
-							//printf("%s\n", ip_outgoing->dest_ip);
 
 							// Move data into the ether_header
-              std::cout << "Building ICMP ethernet header" << std::endl;
+              //std::cout << "Building ICMP ethernet header" << std::endl;
               eh_outgoing = (ether_header*) send_buffer;
               std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
               std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
               eh_outgoing->ether_type = htons(0x800);
-
-              std::cout << "Sending ICMP response" << std::endl;
+              std::string src_ip(reinterpret_cast<const char*>(ip_outgoing->src_ip), 6);
+							std::cout << src_ip << std::endl;
+              //std::cout << "Sending ICMP response (" << get_ip_str(&ip_outgoing->src_ip) << " - " << get_ip_str(&ip_outgoing->dest_ip) << ")" << std::endl;
               if (send(interfaces[i], send_buffer, n, 0) == -1) {
                 std::cout << "There was an error sending the ICMP echo packet" << std::endl;
               }
