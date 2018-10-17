@@ -152,7 +152,7 @@ namespace router {
     TableLookup routeTable(routing_table);
 
 		int packet_socket;
-    uint8_t local_addr[6];
+    unsigned char local_addr[6];
 
     struct ifaddrs *ifaddr, *tmp;
     fd_set interfaces;
@@ -174,11 +174,11 @@ namespace router {
           struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
           std::memcpy(local_addr, local_mac->sll_addr, 6);
 					std::cout << local_mac->sll_addr << std::endl;
-          std::cout << "Mac addr: ";
+          printf("Mac addr: ");
           for (int i = 0; i < 5; ++i)
-            std::cout << local_addr[i] << ":";
+            printf("%i:", local_addr[i]);
 
-          std::cout << local_addr[5] << std::endl;
+          printf("%i\n", local_addr[5]);
 
           packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
           if (packet_socket < 0) {
@@ -259,7 +259,7 @@ namespace router {
               std::cout << "ICMP Echo request detected" << std::endl;
 
               std::memcpy(send_buffer, buf, 1500);
-
+							std::cout << sizeof(IPHeader) << std::endl;
               // Copy data into the ICMP header
               std::cout << "Building the ICMP header" << std::endl;
               icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
@@ -267,11 +267,15 @@ namespace router {
               icmp_outgoing->checksum = 0;
               icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
 
-              // Copy data into the IP header
-              ip_outgoing = (IPHeader*) send_buffer + sizeof(ether_header);
+              // Copy data into the IP heade0r
+              ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
-              
+							//printf("%s\n", ip_incoming->src_ip);
+							//printf("%s\n", ip_incoming->dest_ip);
+              //printf("%s\n", ip_outgoing->src_ip);
+							//printf("%s\n", ip_outgoing->dest_ip);
+
 							// Move data into the ether_header
               std::cout << "Building ICMP ethernet header" << std::endl;
               eh_outgoing = (ether_header*) send_buffer;
