@@ -34,7 +34,7 @@ class Router {
       uint8_t if_ip,
       int socket,
       uint8_t destination_mac);
-    uint16_t checksum(const unsigned char* addr, int len);
+    uint16_t checksum(unsigned char* addr, int len);
 
     int Start(std::string routing_table);
 };

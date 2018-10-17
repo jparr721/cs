@@ -107,7 +107,7 @@ namespace router {
  * Checksum calculation.
  * Taken from: https://github.com/kohler/ipsumdump/blob/master/libclick-2.1/libsrc/in_cksum.c
  */
-  uint16_t Router::checksum(const unsigned char *addr, int len) {
+  uint16_t Router::checksum(unsigned char *addr, int len) {
       int nleft = len;
       const uint16_t *w = (const uint16_t *)addr;
       uint32_t sum = 0;
@@ -203,7 +203,7 @@ namespace router {
       struct ether_header *eh_incoming, *eh_outgoing;
       struct ether_arp *arp_frame;
       ARPHeader *rp_incoming, *rp_outgoing;
-      IPHeader *ip_incoming; 
+      IPHeader *ip_incoming;
 			IPHeader *ip_outgoing = new IPHeader();
       ICMPHeader *icmp_incoming;
 		  ICMPHeader *icmp_outgoing = new ICMPHeader();
@@ -214,7 +214,7 @@ namespace router {
 
       for (int i = 0; i < FD_SETSIZE; ++i) {
         if (FD_ISSET(i, &tmp_set)) {
-          int n = recvfrom(packet_socket, buf, 1500, 0, (struct sockaddr*) &recvaddr, &recvaddrlen);
+          int n = recvfrom(packet_socket, buf, 1500, 0, (sockaddr*) &recvaddr, &recvaddrlen);
           if (n < 0) {
             std::cerr << "recvfrom machine broke" << std::endl;
           }
@@ -223,10 +223,10 @@ namespace router {
 
           std::cout << "Got a " << n << " byte packet" << std::endl;
 
-          eh_incoming = (struct ether_header*) buf;
-          rp_incoming = (ARPHeader*) (buf + sizeof(struct ether_header));
-          ip_incoming = (IPHeader*) (buf + sizeof(struct ether_header));
-          arp_frame = (struct ether_arp*) (buf + 14);
+          eh_incoming = (ether_header*) buf;
+          rp_incoming = (ARPHeader*) (buf + sizeof(ether_header));
+          ip_incoming = (IPHeader*) (buf + sizeof(ether_header));
+          arp_frame = (ether_arp*) (buf + 14);
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
           std::cout << "Type: " << eh_incoming->ether_type << std::endl;
@@ -240,7 +240,7 @@ namespace router {
 
             // Move data into Ethernet struct too
             std::cout << "Making ethernet header" << std::endl;
-            eh_outgoing = (struct ether_header*) send_buffer;
+            eh_outgoing = (ether_header*) send_buffer;
             std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
             std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
             eh_outgoing->ether_type = htons(0x0806);
@@ -263,28 +263,22 @@ namespace router {
 
               // Copy data into the ICMP header
               std::cout << "Building the ICMP header" << std::endl;
-              icmp_outgoing = (struct ICMPHeader*) (send_buffer + sizeof(struct ether_header) + sizeof(struct IPHeader));
+              icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
               icmp_outgoing->type = 0;
               icmp_outgoing->checksum = 0;
-              icmp_outgoing->checksum = this->checksum((unsigned char*) ip_outgoing, (1500 - sizeof(struct ether_header)));
-							// CHANGE THIS TO IP_HEADER
-							icmp_outgoing = (IPHeader*) (send_buffer + sizeof(ETHHeader));
-							std::memcpy(icmp_outgoing->ihl_ver, icmp_incoming->ihl_ver, 8);
-						  icmp_outgoing->dif_services = icmp_incoming->dif_services;
-						  icmp_outgoing->len = hons(icmp_incoming->len);
-						  icmp_outgoing->id = htons(icmp_icoming->id);
-					    icmp_outgoing->flag_offset = htons(icmp_incoming->flag_offset);
-							icmp_outgoing->ttl = icmp_incoming->ttl;
-							icmp_outgoing->protocol = icmp_incoming->protocol;
+              icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
+
+              // Copy data into the IP header
+              ip_outgoing = reinterpret_cast<IPHeader*>(send_buffer + sizeof(ether_header));
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
-							// CHANGE TO IP HEADER
 
               // Move data into the ether_header
               std::cout << "Building ICMP ethernet header" << std::endl;
-              eh_outgoing = (struct ether_header*) send_buffer;
-              memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
-              memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
+              eh_outgoing = reinterpret_cast<ether_header*>(send_buffer);
+              std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
+              std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
+              eh_outgoing->ether_type = htons(0x800);
 
               std::cout << "Sending ICMP response" << std::endl;
               if (send(i, send_buffer, n, 0) == -1) {

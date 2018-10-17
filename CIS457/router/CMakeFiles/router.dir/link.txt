@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/router.dir/src/main.cc.o CMakeFiles/router.dir/src/Router.cc.o CMakeFiles/router.dir/src/TableLookup.cc.o  -o router 
