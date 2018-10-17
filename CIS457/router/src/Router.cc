@@ -20,7 +20,7 @@ namespace router {
   ARPHeader* Router::build_arp_reply(
       struct ether_header *eh,
       struct ether_arp *arp_frame,
-      uint8_t destination_mac
+      unsigned char local_addr[6]
       ) {
     ARPHeader *r = new ARPHeader();
     // SOURCE MAC FORMAT
@@ -28,12 +28,12 @@ namespace router {
     // SOURCE MAC LENGTH
     r->ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
     // TARGET MAC
-    std::memcpy(r->ea.arp_tha, &arp_frame->arp_sha, 6);
+    std::memcpy(r->ea.arp_tha, arp_frame->arp_sha, 6);
     // TARGET PROTOCOL
-    std::memcpy(r->ea.arp_tpa, &arp_frame->arp_spa, 4);
-    // SOURCE MAC ADDRESS
-    std::memcpy(static_cast<uint8_t*>(r->ea.arp_sha), &destination_mac, 6);
-		// SOURCE PROTOCOL ACCRESS
+    std::memcpy(r->ea.arp_tpa, arp_frame->arp_spa, 4);
+    // TARGET MAC
+		std::memcpy(r->ea.arp_sha, local_addr, 6);
+		// TARGET PROTOCOL ACCRESS
 		std::memcpy(r->ea.arp_spa, &arp_frame->arp_tpa, 4);
     // PROTOCOL
     r->ea.ea_hdr.ar_pro = htons(ETH_P_IP);
@@ -234,19 +234,19 @@ namespace router {
           if (eh_incoming->ether_type == ETHERTYPE_ARP) {
             std::cout << "Arp packet found" << std::endl;
             // Building arp reply here and storing into outgoing arp reply header
-            rp_outgoing = build_arp_reply(eh_incoming, arp_frame, htons(1));
+            rp_outgoing = build_arp_reply(eh_incoming, arp_frame, local_addr);
 						std::memcpy(send_buffer, rp_outgoing, 1500);
 
             // Move data into Ethernet struct too
             std::cout << "Making ethernet header" << std::endl;
             eh_outgoing = (ether_header*) send_buffer;
             std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
-            std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
+            std::memcpy(eh_outgoing->ether_shost, local_addr, 6);
             eh_outgoing->ether_type = htons(0x0806);
 
             // Send the damn thing
             std::cout << "Sending ARP reply" << std::endl;
-						std::cout << eh_outgoing->ether_dhost << std::endl;
+						printf("%s\n", eh_outgoing->ether_dhost);
 						std::cout << eh_outgoing->ether_shost << std::endl;
             if(send(i, send_buffer, 42, 0) == -1) {
               std::cout << "Error sending arp reply" << std::endl;
@@ -259,8 +259,8 @@ namespace router {
               std::cout << "ICMP Echo request detected" << std::endl;
 
               std::memcpy(send_buffer, buf, 1500);
-							std::cout << sizeof(IPHeader) << std::endl;
-              // Copy data into the ICMP header
+             
+						 	// Copy data into the ICMP header
               std::cout << "Building the ICMP header" << std::endl;
               icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
               icmp_outgoing->type = 0;
