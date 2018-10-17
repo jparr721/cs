@@ -22,7 +22,7 @@ namespace router {
       struct ether_arp *arp_frame,
       uint8_t destination_mac
       ) {
-    auto *r = new ARPHeader();
+    ARPHeader *r = new ARPHeader();
     // SOURCE MAC FORMAT
     r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
     // SOURCE MAC LENGTH
@@ -167,17 +167,17 @@ namespace router {
       if (tmp->ifa_addr->sa_family == AF_PACKET) {
         std::cout << "Interface: " << tmp->ifa_name << std::endl;
 
-        if (!strncmp(&(tmp->ifa_name[3]), "eth", 3)) {
+        if (!strncmp(&(tmp->ifa_name[3]), "eth1", 4)) {
           std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
 
           //Get our mac
-          struct sockaddr_ll *local_mac = reinterpret_cast<sockaddr_ll*>(tmp->ifa_addr);
+          struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
           std::memcpy(local_addr, local_mac->sll_addr, 6);
 					std::cout << local_mac->sll_addr << std::endl;
           std::cout << "Mac addr: ";
-          for (int i = 0; i < 5; ++i) {
+          for (int i = 0; i < 5; ++i)
             std::cout << local_addr[i] << ":";
-          }
+
           std::cout << local_addr[5] << std::endl;
 
           packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
@@ -186,11 +186,10 @@ namespace router {
             return errno;
           }
 
-          if (bind(packet_socket, tmp->ifa_addr, sizeof(sockaddr_ll)) == -1) {
+          if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
             std::cerr << "bind machine broke" << std::endl;
           }
-          /* listen(packet_socket, 10); */
-          /* FD_SET(packet_socket, &interfaces); */
+          FD_SET(packet_socket, &interfaces);
         }
       }
     }
@@ -204,10 +203,10 @@ namespace router {
       struct ether_arp *arp_frame;
       ARPHeader *rp_incoming, *rp_outgoing;
       IPHeader *ip_incoming;
-			IPHeader *ip_outgoing = new IPHeader();
+			IPHeader *ip_outgoing;
       ICMPHeader *icmp_incoming;
-		  ICMPHeader *icmp_outgoing = new ICMPHeader();
-      socklen_t recvaddrlen = sizeof(sockaddr_ll);
+		  ICMPHeader *icmp_outgoing;
+      socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
 
       fd_set tmp_set = interfaces;
       select(FD_SETSIZE, &tmp_set, NULL, NULL, NULL);
@@ -223,10 +222,10 @@ namespace router {
 
           std::cout << "Got a " << n << " byte packet" << std::endl;
 
-          eh_incoming = reinterpret_cast<ether_header*>(buf);
-          rp_incoming = reinterpret_cast<ARPHeader*>(buf + sizeof(ether_header));
-          ip_incoming = reinterpret_cast<IPHeader*>(buf + sizeof(ether_header));
-          arp_frame = reinterpret_cast<ether_arp*>(buf + 14);
+          eh_incoming = (ether_header*) buf;
+          rp_incoming = (ARPHeader*) (buf + sizeof(ether_header));
+          ip_incoming = (IPHeader*) (buf + sizeof(ether_header));
+          arp_frame = (ether_arp*) (buf + 14);
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
           std::cout << "Type: " << eh_incoming->ether_type << std::endl;
@@ -269,13 +268,13 @@ namespace router {
               icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
 
               // Copy data into the IP header
-              ip_outgoing = reinterpret_cast<IPHeader*>(send_buffer + sizeof(ether_header));
+              ip_outgoing = (IPHeader*) send_buffer + sizeof(ether_header);
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
-
-              // Move data into the ether_header
+              
+							// Move data into the ether_header
               std::cout << "Building ICMP ethernet header" << std::endl;
-              eh_outgoing = reinterpret_cast<ether_header*>(send_buffer);
+              eh_outgoing = (ether_header*) send_buffer;
               std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
               std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
               eh_outgoing->ether_type = htons(0x800);
