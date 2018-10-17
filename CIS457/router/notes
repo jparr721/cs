@@ -1,0 +1,9 @@
+- When you connect via the lookup table if there is not a corresponding address, you can just find the requesting data from the packet and forward to there.
+- Never change IP address in IP hader when forwarding, but you do change the MAC, you can use the ip heder to match things in the table
+- Two things you change in IP header: time to live (subtract 1 each hop), checksum (remake and re add)
+
+- With router 1 you must mastch with destination address only, the table gives the appropritate interface etc. r1 ALWAYS knows prefixes, just not specific hosts
+- r1 knows the direction based on prefix, it will arp all of the hosts and if it gets an answer then sends to the right spot based on destination mac
+
+General:
+Get packet, see if IP packet, if not IP don't forward it
