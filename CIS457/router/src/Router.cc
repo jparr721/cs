@@ -192,7 +192,7 @@ namespace router {
             std::cerr << "bind machine broke" << std::endl;
           }
           interfaces.push_back(packet_socket);
-					addresses.push_back(local_addr);
+					addresses.push_back(local_mac->sll_addr);
 				}
       }
     }
