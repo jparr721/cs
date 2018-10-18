@@ -64,14 +64,14 @@ namespace router {
        * carry bits from the top 16 bits into the lower 16 bits.
        */
       while (nleft > 1)  {
-    sum += *w++;
-    nleft -= 2;
+        sum += *w++;
+        nleft -= 2;
       }
 
       /* mop up an odd byte, if necessary */
       if (nleft == 1) {
-    *(unsigned char *)(&answer) = *(const unsigned char *)w ;
-    sum += answer;
+        *(unsigned char *)(&answer) = *(const unsigned char *)w ;
+        sum += answer;
       }
 
       /* add back carry outs from top 16 bits to low 16 bits */

@@ -18,24 +18,9 @@ class Router {
     ARPHeader* build_arp_reply(
       struct ether_header *eh,
       struct ether_arp *arp_frame,
-      unsigned char local_addr[6]);
-    ARPHeader* build_arp_request(
-      struct ether_header *eh,
-      struct ether_arp *arp_frame,
-      uint8_t hop_ip);
-    uint8_t get_dest_mac(
-      struct ifaddrs *ifaddr,
-      struct ifaddrs *tmp,
-      uint8_t *arp_tpa,
-      int socket);
-    uint8_t get_src_mac(
-      struct ifaddrs *ifaddr,
-      struct ifaddrs *tmp,
-      uint8_t if_ip,
-      int socket,
-      uint8_t destination_mac);
+      unsigned char destination_mac[6]);
     uint16_t checksum(unsigned char* addr, int len);
-
+		std::string get_ip_str(unsigned char[4]);
     int Start(std::string routing_table);
 };
 } // namespace router
