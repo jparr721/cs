@@ -8,7 +8,10 @@ class ICMPHeader {
   public:
     uint8_t type;
     uint8_t code;
-    uint8_t checksum;
+    uint16_t checksum;
+		uint16_t id;
+		uint16_t seq;
+		uint32_t data;
 };
 } // namespace router
 
