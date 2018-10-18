@@ -18,7 +18,7 @@ class Router {
     ARPHeader* build_arp_reply(
       struct ether_header *eh,
       struct ether_arp *arp_frame,
-      uint8_t destination_mac);
+      unsigned char local_addr[6]);
     ARPHeader* build_arp_request(
       struct ether_header *eh,
       struct ether_arp *arp_frame,

@@ -10,10 +10,11 @@ namespace router {
     explicit TableLookup(const std::string&);
     std::string get_route(const std::string&);
     bool has_hop_device(const std::string&);
-  private:
-    const int MAX_COLUMNS = 3;
     std::unordered_map<std::string, std::string> prefix_interface_table;
     std::unordered_map<std::string, std::string> hop_device_table;
+
+  private:
+    const int MAX_COLUMNS = 3;
   };
 } // namespace router
 
