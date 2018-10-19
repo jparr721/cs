@@ -83,11 +83,10 @@ namespace router {
       return answer;
   }
 
-  int Router::Start(std::string routing_table) {
-    TableLookup routeTable(routing_table);
-    for (auto it = routeTable.hop_device_table.begin(); it != routeTable.hop_device_table.end(); ++it) {
-      std::cout << it->first << " - " << it->second << std::endl;
-    }
+  int Router::Start() {
+    // Load both tables so they are aware of their prefixes at all times
+    TableLookup route_table_one("r1-table.txt");
+    TableLookup route_table_two("r2-table.txt");
 
     int packet_socket;
     unsigned char local_addr[6];
@@ -179,6 +178,11 @@ namespace router {
           arp_frame = (ether_arp*) (buf + 14);
 
           printf("Incoming packet from %i.%i.%i.%i\n", ip_incoming->src_ip[0], ip_incoming->src_ip[1], ip_incoming->src_ip[2], ip_incoming->src_ip[3]);
+          // Build the IP string for comparing later on
+          std::string packet_ip = std::to_string(ip_incoming->src_ip[0]) +"." +
+            std::to_string(ip_incoming->src_ip[1]) + "." +
+            std::to_string(ip_incoming->src_ip[2]) + "." +
+            std::to_string(ip_incoming->src_ip[3]);
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
 
@@ -206,9 +210,15 @@ namespace router {
             std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);
 
-
             if (icmp_incoming->type == 8) {
-              std::cout << "ICMP Echo request detected" << std::endl;
+              std::cout << "ICMP Echo request detected, beginning forward" << std::endl;
+              // Since we have the potential to have variable length ip addresses, we
+              // can check the first few bits
+              if (packet_ip.substr(0, 4).compare("10.3")) {
+                std::cout << "This packet belongs to router one, forwarding" << std::endl;
+              } else if (packet_ip.substr(0, 4).compare("10.1")) {
+                std::cout << "This packet belongs to router two, forwarding" << std::endl;
+              }
 
               std::memcpy(send_buffer, buf, 1500);
 

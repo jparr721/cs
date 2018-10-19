@@ -21,7 +21,7 @@ class Router {
       unsigned char destination_mac[6]);
     uint16_t checksum(unsigned char* addr, int len);
 		std::string get_ip_str(unsigned char[4]);
-    int Start(std::string routing_table);
+    int Start();
 };
 } // namespace router
 

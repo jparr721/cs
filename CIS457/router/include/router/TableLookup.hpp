@@ -12,9 +12,6 @@ namespace router {
     bool has_hop_device(const std::string&);
     std::unordered_map<std::string, std::string> prefix_interface_table;
     std::unordered_map<std::string, std::string> hop_device_table;
-
-  private:
-    const int MAX_COLUMNS = 3;
   };
 } // namespace router
 
