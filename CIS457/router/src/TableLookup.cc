@@ -1,4 +1,3 @@
-/* #include <router/TableLookup.hpp> */
 #include "../include/router/TableLookup.hpp"
 
 #include <string>
@@ -12,7 +11,7 @@ namespace router {
 		std::cout << "Loading network table..." << std::endl;
     std::ifstream tableFile(filename);
     std::string line;
-    
+
 			while (!tableFile.eof()) {
 				getline(tableFile, line);
         std::vector<std::string> columns;

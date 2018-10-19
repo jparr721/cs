@@ -1,3 +1,32 @@
+only forward IP packets
+
+lets say we get a packet in r1, and its destination is 10.1.0.16
+compare the destination address in the packet, against the prefixes in the first column of the file
+	- we're looking for a prefix match, bits of address matching bits of prefix, for the number of bits (/16 or /24) specified
+
+once we find a match:
+	the third column is the port you want to forward the packet out of
+		(is an interface just a port?)
+
+	when it has a middle column:
+		its not directly connected, must use an intermediate node to get to it
+		link layer destination must be the IP address of the intermediate node (given in the middle column)
+
+		arp the interface (third column) with ip (second column), get mac address from intermediate
+		forward data packet to intermediate
+
+	intermediate receives data packet, which contains the final destination in the IP header
+
+	(only change mac addresses in link layer when forwarding, dont change ip header addresses)
+
+	in ip header, change time to live. timeToLive -= 1 every time you go through a router
+
+	ipheader also has checksum, which must be recalculated every hop
+
+	forwarding tells us what networks are out there and how to get to them
+	arp tell us mac address of an ip address
+
+
 - When you connect via the lookup table if there is not a corresponding address, you can just find the requesting data from the packet and forward to there.
 - Never change IP address in IP hader when forwarding, but you do change the MAC, you can use the ip heder to match things in the table
 - Two things you change in IP header: time to live (subtract 1 each hop), checksum (remake and re add)
