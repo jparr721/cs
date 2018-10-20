@@ -179,10 +179,13 @@ namespace router {
 
           printf("Incoming packet from %i.%i.%i.%i\n", ip_incoming->src_ip[0], ip_incoming->src_ip[1], ip_incoming->src_ip[2], ip_incoming->src_ip[3]);
           // Build the IP string for comparing later on
-          std::string packet_ip = std::to_string(ip_incoming->src_ip[0]) +"." +
-            std::to_string(ip_incoming->src_ip[1]) + "." +
-            std::to_string(ip_incoming->src_ip[2]) + "." +
-            std::to_string(ip_incoming->src_ip[3]);
+          std::string packet_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
+            std::to_string(ip_incoming->dest_ip[1]) + "." +
+            std::to_string(ip_incoming->dest_ip[2]) + "." +
+            std::to_string(ip_incoming->dest_ip[3]);
+
+          std::string router_one_address("10.0.0.1");
+          std::string router_two_address("10.0.0.2");
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
 
@@ -216,6 +219,18 @@ namespace router {
               // can check the first few bits
               if (packet_ip.substr(0, 4).compare("10.3")) {
                 std::cout << "This packet belongs to router one, forwarding" << std::endl;
+                std::memcpy(send_buffer, buf, 1500);
+                icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
+                icmp_outgoing->type = 0;
+                icmp_outgoing->checksum = 0;
+                icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
+
+                // Copy data into the ip header
+                ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
+                std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
+                std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4);
+                send(interfaces[i], send_buffer, n, 0);
+                continue;
               } else if (packet_ip.substr(0, 4).compare("10.1")) {
                 std::cout << "This packet belongs to router two, forwarding" << std::endl;
               }
