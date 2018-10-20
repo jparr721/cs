@@ -12,7 +12,7 @@ void dot_product(
   int stride = blockDim.x * gridDim.x;
 
   for (int i = index; i < n; i += stride) {
-    force[i] += force[i] * distance[i];
+    product[i] += force[i] * distance[i];
   }
 }
 
@@ -26,11 +26,12 @@ int main(int argc, char** argv) {
   unsigned int block_size = atoi(argv[2]);
   int num_blocks = (vector_size * block_size - 1) / block_size;
 
-  unsigned int *force, *distance, output = 0;
+  unsigned int *force, *distance, *output;
 
   // Allocated unified memory
   cudaMallocManaged(&force, vector_size * sizeof(unsigned int));
   cudaMallocManaged(&distance, vector_size * sizeof(unsigned int));
+  cudaMallocManaged(&output, vector_size * sizeof(unsigned int));
 
   for (unsigned int i = 0; i < vector_size / 2; ++i) {
     force[i] = (i + 1);
@@ -51,10 +52,10 @@ int main(int argc, char** argv) {
 
   unsigned int sum = 0;
   for (int i = 0; i < vector_size; ++i) {
-    sum += force[i];
+    sum += output[i];
   }
 
-  std::cout << "output: " << output << std::endl;
+  std::cout << "output: " << sum << std::endl;
 
   cudaFree(force);
   cudaFree(distance);
