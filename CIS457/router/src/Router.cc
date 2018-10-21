@@ -217,6 +217,7 @@ namespace router {
               std::cout << "ICMP Echo request detected, beginning forward" << std::endl;
               // Since we have the potential to have variable length ip addresses, we
               // can check the first few bits
+              std::cout << packet_ip << std::endl;
               if (packet_ip.substr(0, 4).compare("10.3")) {
                 std::cout << "This packet belongs to router one, forwarding" << std::endl;
                 std::memcpy(send_buffer, buf, 1500);
@@ -230,7 +231,6 @@ namespace router {
                 std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
                 std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4);
                 send(interfaces[i], send_buffer, n, 0);
-                continue;
               } else if (packet_ip.substr(0, 4).compare("10.1")) {
                 std::cout << "This packet belongs to router two, forwarding" << std::endl;
                 std::memcpy(send_buffer, buf, 1500);
@@ -244,7 +244,6 @@ namespace router {
                 std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
                 std::memcpy(ip_outgoing->dest_ip, router_two_address.c_str(), 4);
                 send(interfaces[i], send_buffer, n, 0);
-                continue;
               }
 
               std::memcpy(send_buffer, buf, 1500);
