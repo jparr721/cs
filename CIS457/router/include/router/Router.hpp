@@ -1,13 +1,14 @@
 #ifndef INCLUDE_ROUTER_ROUTER_HPP
 #define INCLUDE_ROUTER_ROUTER_HPP
 
-#include <vector>
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <netinet/ether.h>
 #include "ARPHeader.hpp"
 #include <string>
 #include <sys/types.h>
+#include <unordered_map>
+#include <vector>
 
 namespace router {
 class Router {
@@ -21,7 +22,8 @@ class Router {
       unsigned char destination_mac[6]);
     uint16_t checksum(unsigned char* addr, int len);
 		std::string get_ip_str(unsigned char[4]);
-    int Start();
+    bool host_in_lookup_table(std::string host, std::unordered_map<std::string, std::string>);
+    int Start(std::string lookup);
 };
 } // namespace router
 
