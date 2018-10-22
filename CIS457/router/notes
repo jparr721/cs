@@ -38,6 +38,15 @@ General:
 Get packet, see if IP packet, if not IP don't forward it
 
 Need to send an arp request to the router of choice
-MAKE A MAP of all the stuff waiting on a MAC for a particular IP
+MAKE A MAP of strings and vectors of all the stuff waiting on a MAC for a particular IP
+You can just continue as you need to on the router, so it might look to the affect of:
+
+if (needs an arp) {
+  add to queue map of other stuff waiting for an arp for a particular ip
+  continue
+} else {
+  build the headers and stuff as you were before since we have a mac address
+}
+
 Then when you get the Mac you can just fire all of the waiting packets off
 f.m.l
