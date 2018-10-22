@@ -240,7 +240,6 @@ namespace router {
             std::memcpy(send_buffer, rp_outgoing, 1500);
 
             // Move data into Ethernet struct too
-            //std::cout << "Making ethernet header" << std::endl;
             eh_outgoing = (ether_header*) send_buffer;
             std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
             std::memcpy(eh_outgoing->ether_shost, addresses[i], 6);
@@ -255,42 +254,49 @@ namespace router {
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
             std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);
-
+            if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
+              std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
+              // Add the normal forward code here
+            } else {
+              std::cout << "The requested ip is not in the prefix table, forwarding to the next router" << std::endl;
+              rp_outgoing = build_arp_request(eh_incoming, arp_frame, reinterpret_cast<const unsigned char*>(router_lookup_table.hop_device_table.begin()->second.c_str()));
+            }
 
             // Check if it's an ECHO packet
-            if (icmp_incoming->type == ICMP_ECHO) {
-              // First we build our ICMP goodies
-              icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
-              icmp_outgoing->type = 0;
-              icmp_outgoing->checksum = 0;
-              icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
+            /* if (icmp_incoming->type == ICMP_ECHO) { */
+            /*   // First we build our ICMP goodies */
+            /*   icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader)); */
+            /*   icmp_outgoing->type = 0; */
+            /*   icmp_outgoing->checksum = 0; */
+            /*   icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader))); */
 
-              // Now we take the ip packet and put it into our outgoing ip packet.
-              // This will enable us to add the new mac and reroute to the next router
-              // (if needed).
-              ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
-              // Copy in the new ip address we want, which will by default be the host,
-              // if it's not in lookup table though, we need to forward.
-              if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
-                // If our destination is in this set of hosts then forward normally
-                std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
-                std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
+            /*   // Now we take the ip packet and put it into our outgoing ip packet. */
+            /*   // This will enable us to add the new mac and reroute to the next router */
+            /*   // (if needed). */
+            /*   ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header)); */
+            /*   // Copy in the new ip address we want, which will by default be the host, */
+            /*   // if it's not in lookup table though, we need to forward. */
+            /*   if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) { */
+            /*     // If our destination is in this set of hosts then forward normally */
+            /*     std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4); */
+            /*     std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4); */
 
-                // Now we build our new ethernet header since we are already on the
-                // right router in this case
-                std::cout << "Now building ICMP ethernet header" << std::endl;
-                eh_outgoing = (ether_header*) send_buffer;
-                std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
-                std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
-                eh_outgoing->ether_type = htons(0x800);
-              } else {
-                // Assign the router IP
-                std::memcpy(ip_outgoing->src_ip, router_lookup_table.hop_device_table.begin()->first.c_str(), 4);
-                std::memcpy(ip_outgoing->dest_ip, router_lookup_table.hop_device_table.begin()->second.c_str(), 4);
+            /*     // Now we build our new ethernet header since we are already on the */
+            /*     // right router in this case */
+            /*     std::cout << "Now building ICMP ethernet header" << std::endl; */
+            /*     eh_outgoing = (ether_header*) send_buffer; */
+            /*     std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6); */
+            /*     std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6); */
+            /*     eh_outgoing->ether_type = htons(0x800); */
+            /*   } else { */
+            /*     // Assign the router IP */
+            /*     std::memcpy(ip_outgoing->src_ip, router_lookup_table.hop_device_table.begin()->first.c_str(), 4); */
+            /*     std::memcpy(ip_outgoing->dest_ip, router_lookup_table.hop_device_table.begin()->second.c_str(), 4); */
 
-                // Now we build the new ethernet header from the mac address of the router
-              }
-            }
+            /*     // Now we build the new ethernet header from the mac address of the router */
+            /*   } */
+            /* } */
+            // This is the old code, leaving it here breaks compilation FYI
             if (icmp_incoming->type == 8) {
               std::cout << "ICMP Echo request detected, beginning forward" << std::endl;
 
