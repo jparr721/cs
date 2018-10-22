@@ -36,3 +36,8 @@ once we find a match:
 
 General:
 Get packet, see if IP packet, if not IP don't forward it
+
+Need to send an arp request to the router of choice
+MAKE A MAP of all the stuff waiting on a MAC for a particular IP
+Then when you get the Mac you can just fire all of the waiting packets off
+f.m.l
