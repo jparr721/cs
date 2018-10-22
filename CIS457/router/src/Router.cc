@@ -93,6 +93,41 @@ namespace router {
     return false;
   }
 
+  ARPHeader* Router::build_arp_request(struct ether_header *eh, struct ether_arp *rp_frame, const unsigned char hop_ip[4]) {
+    ARPHeader *r = new ARPHeader();
+    // SOURCE MAC FORMAT
+    r->ea.ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
+    // SET PROTOCOL
+    r->ea.ea_hdr.ar_pro = htons(ETH_P_IP);
+
+    // SET HARDWARE ADDRESS LENGTH
+    r->ea.ea_hdr.ar_hln = ETHER_ADDR_LEN;
+    // SET IP ADDRESS LENGTH
+    r->ea.ea_hdr.ar_pln = sizeof(in_addr_t);
+    // DELCARE AS AN ARP REQUEST
+    r->ea.ea_hdr.ar_op = htons(ARPOP_REQUEST);
+
+    uint8_t tmp_hw_addr[6];
+    for (int i = 0; i < 6; ++i) {
+      tmp_hw_addr[i] = 0;
+    }
+
+    // SET SOURCE HARDWARE ADDRESS
+    std::memcpy(&r->ea.arp_sha, &rp_frame->arp_sha, 6);
+    // SET TARGET HARDWARE PROTOCOL
+    std::memcpy(&r->ea.arp_spa, &rp_frame->arp_spa, 4);
+    // SET TARGET HARDWARE ADDRESS TO ALL ZERO
+    std::memcpy(&r->ea.arp_tha, tmp_hw_addr, 6);
+    // SET TARGET PROTOCOL ADDRESS AS THE HOP IP
+    std::memcpy(&r->ea.arp_tpa, hop_ip, 4);
+    // COPY ETHER HEADER
+    std::memcpy(&r->eh, eh, sizeof(ether_header));
+    // SETS ETHER TYPE TO ARP
+    r->eh.ether_type = ntohs(2054);
+
+   return r;
+  }
+
   int Router::Start(std::string lookup) {
     // Load the relevant table to do lookup only for itself
     TableLookup router_lookup_table(lookup);
@@ -142,6 +177,7 @@ namespace router {
     }
 
     printf("Listening for packets on %d interfaces\n", interfaces.size());
+    std::unordered_map<std::string, std::vector<std::string>> queue_map;
 
     while (1) {
       fd_set read_fds;
