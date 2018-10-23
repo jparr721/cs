@@ -1,4 +1,4 @@
-# JavaScript? The F*%k is a JavaScript?
+# A practical guide to modern JavaScript
 
 JavaScript is a weakly typed, dynamic, multi-paradigm language that is pretty much ubiquitous across all web-based software. It is so common actually, that every modern browser has a built in JavaScript REPL environment. Oh yeah, and it was built in only 1 week
 
@@ -22,7 +22,7 @@ let port = process.env.PORT || 3000; /*3*/
 app.set('port', port);
 
 app.use('/hi/:me', (req, res)/*4*/ => {
-    res.status(200).send(`<h1>Hey there ${me}</h1>`/*5*/);
+    res.status(200).send(`<h1>Hey there ${me}</h1>`);
 });
 
 app.listen(port, () => {
@@ -30,7 +30,7 @@ app.listen(port, () => {
 });
 ```
 
-Okay, so what does this code snippet here do? 
+### Okay, so what does this code snippet here do?
 
 1. This is commonly called a require statement, it is virtually the same as `import` in python or `#include` in C/C++. This is how you require external functionality defined outside of the file you're currently in
 
@@ -91,4 +91,29 @@ Okay, so what does this code snippet here do?
    console.log(outputs.map(f => f())); // output [0, 1, 2, 3, 4]
    ```
 
-   This produces the output just like we expected it to. Now we see in this case the let is only declared as a member of the entire anonymous function 1 and when it gets down to function two it is using the.
+   This produces the output just like we expected it to. Now we see in this case the let is only declared as a member of the entire anonymous function 1 and when it gets down to function 2 it is using the *same* reference instead of being a custom scoped reference that is not able to be mutated until the for loop exits and holds the final value. Since the for loop in our previous example shows the var being actually pulled out of the context of the for loop, it's scope broadens as well, in this case,  the let allows it to be block scoped and stay within the context it was initially intended to be placed in. This keeps the same reference when passed into the function.
+
+4. This is called a function **callback** and these are CRITICAL to any JavaScript engineer's toolkit. Callbacks are functionality that occurs after the main purpose of the function has been completed. To understand this, we must follow one cardinal law of JavaScript: it is an **EVENT DRIVEN** language. Let that sink in and help shape your understanding of how it behaves in the wild wild web. In our referenced example above, our function sets up a route handler, then as a callback allows us to send data along the Request and Response objects.
+
+## Event Driven, Async Architecture? Okay I get it, but how I run it?
+
+JavaScript has the unique ability to run across many platforms and is supported on nearly any system that can run the v8 browser engine. As a result, we are capable of running it either in the browser via use of html to serve up the results, or we can just install **node js** (or deno if you're particularly savvy), a JavaScript runtime that lets you execute your JavaScript code as if it were a command line tool like any other language such as Python. 
+
+Nodejs is important because it allows us to make and run JavaScript programs without needing to embed it into a web-page and do any extra garbage to see our results. It also compiles cleanly down to C++ code so it is high performance and great for building distributed architecture.
+
+The nodejs REPL is almost the same as Python's REPL. It can read the files top to bottom and execute them in a script fashion. An example program looks like any old JavaScript code you've seen:
+
+```js
+// sample3.js
+function say_hi(name) {
+    return `Hi! ${name}`
+}
+
+console.log(say_hi('Jarred'))
+```
+
+Then you just have to run `node sample3.js` and voila, your code will run no problem!
+
+## Every language sucks at something, what about JavaScript?
+
+heh.. well....
