@@ -62,3 +62,17 @@ then it's done
 if it is in the prefix table then it's buisness as usual
 just send to the proper host after ARP-ing for the MAC
 
+Changing TTL in IPHeader:
+Subtract 1 from TTL, put new value in and change the checksum in the header to match.
+
+IP Header checksum calculated with IP header as its input
+ICMP Header checksum calculated with ICMP header and ICMP data as its input
+
+Needs to handle 3 error conditions -- Must always be sent to the packet sender
+All errors will need to be the same format etc except for the type and code values.
+1. TTL, type 11, code 0 -- If router ever gets a packet where TTL is 1 or less, do not forward the packet. Also report that as an error and send it back. Take the packet that caused the error to happen, copy ip header + next 8 bytes. So you're left with eth, ip, icmp header plus the old ip header and another 8 bytes. Basically find the ip header of the packet and copy 28 bytes from it. When the error is sent back to the sender, it will let it know which one caused the problem. The 28 bytes are our ICMP data and must be used to calculate the checksum for ICMP.
+2. Destination Unreachable. Type 3, code 0 -- Address in packet doesn't match the one in our routing table, therefore we have no way to reach it  
+3. Destination Unreachable. Type 3, code 1 -- Knew how to get to the network, but we can't get to the host. Have an entry on our table, but we can't arp for the MAC address, so if we don't get an arp response, we have no way of getting to this host. (Can use a timeout for this, anything longer than like 2 seconds will count as invalid and we can drop and send the error over).
+
+How to test this:
+All of these can be tested with ping. Ping will print all of the errors to the console.

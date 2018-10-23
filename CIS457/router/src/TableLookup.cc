@@ -42,22 +42,32 @@ namespace router {
   }
 
   std::string TableLookup::get_route(std::string route) {
-    route = route.substr(0, 7) + "0";
-		std::unordered_map<std::string, std::string>::const_iterator index = prefix_interface_table.find(route);
-		if (index == prefix_interface_table.end()) {
-			return "";
-		} else {
-			return index->second;
+		std::string route_1 = route.substr(0, 7) + "0";
+		std::string route_2 = route.substr(0, 5) + "0.0";
+		std::unordered_map<std::string, std::string>::const_iterator index_1 = prefix_interface_table.find(route_1);
+		if (index_1 != prefix_interface_table.end()) {
+			return index_1->second;
 		}
+		std::unordered_map<std::string, std::string>::const_iterator index_2 =
+prefix_interface_table.find(route_2);
+		if (index_2 != prefix_interface_table.end()) {
+			return index_2->second;				
+		}
+		return "";
   }
 
 	std::string TableLookup::get_hop_device(std::string route) {
-		route = route.substr(0, 7) + "0";
-		std::unordered_map<std::string, std::string>::const_iterator index = hop_device_table.find(route);
-		if (index == hop_device_table.end()) {
-			return "";
-		} else {
-			return index->second;
+		std::string route_1 = route.substr(0, 7) + "0";
+		std::string route_2 = route.substr(0, 5) + "0.0";
+		std::unordered_map<std::string, std::string>::const_iterator index_1 = hop_device_table.find(route_1);
+		if (index_1 != hop_device_table.end()) {
+			return index_1->second;
 		}
+		std::unordered_map<std::string, std::string>::const_iterator index_2 =
+hop_device_table.find(route_2);
+		if (index_2 != hop_device_table.end()) {
+			return index_2->second;				
+		}
+		return "";
   }
 } // namespace router
