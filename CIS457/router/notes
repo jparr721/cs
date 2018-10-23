@@ -36,3 +36,29 @@ once we find a match:
 
 General:
 Get packet, see if IP packet, if not IP don't forward it
+
+Need to send an arp request to the router of choice
+MAKE A MAP of strings and vectors of all the stuff waiting on a MAC for a particular IP
+You can just continue as you need to on the router, so it might look to the affect of:
+
+if (needs an arp) {
+  add to queue map of other stuff waiting for an arp for a particular ip
+  continue
+} else {
+  build the headers and stuff as you were before since we have a mac address
+}
+
+Then when you get the Mac you can just fire all of the waiting packets off
+
+Basically the code needs to work as follows:
+Receive IP packet
+check if table has it
+if not, forrward it after ARP-ing for the MAC of the next hop
+then send it
+Once it gets to the new router it must ARP again to get the mac of
+the host to then complete the forward operation
+then it's done
+
+if it is in the prefix table then it's buisness as usual
+just send to the proper host after ARP-ing for the MAC
+
