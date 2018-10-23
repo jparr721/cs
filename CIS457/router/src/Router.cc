@@ -84,6 +84,16 @@ namespace router {
       return answer;
   }
 
+	NetworkInterface Router::get_inef(const std::string inef_name, std::vector<NetworkInterface> net_inefs) {
+		for (int i = 0; i < net_inefs.size(); ++i) {
+			if (net_inefs.at(i).name == inef_name) {
+				std::cout << "found it" << std::endl;
+				return net_inefs.at(i);
+			}
+		}
+		return NetworkInterface();
+	}
+
   int Router::Start() {
     // Load both tables so they are aware of their prefixes at all times
     TableLookup route_table_one("r1-table.txt");
@@ -181,17 +191,23 @@ namespace router {
           ip_incoming = (IPHeader*) (buf + sizeof(ether_header));
           arp_frame = (ether_arp*) (buf + 14);
 
-          printf("\nIncoming packet from %i.%i.%i.%i\n", ip_incoming->src_ip[0], ip_incoming->src_ip[1], ip_incoming->src_ip[2], ip_incoming->src_ip[3]);
-          // Build the IP string for comparing later on
-          std::string packet_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
+					std::string src_ip = std::to_string(ip_incoming->src_ip[0]) + "." +
+						std::to_string(ip_incoming->src_ip[1]) + "." +
+						std::to_string(ip_incoming->src_ip[2]) + "." +
+						std::to_string(ip_incoming->src_ip[3]);
+
+          std::string dest_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
             std::to_string(ip_incoming->dest_ip[1]) + "." +
             std::to_string(ip_incoming->dest_ip[2]) + "." +
             std::to_string(ip_incoming->dest_ip[3]);
+          
+					std::string fwd_inef = route_table_one.get_route(dest_ip);
 
-          std::string fwd_inef = route_table_one.get_route(packet_ip);
+					std::cout << "SOURCE: " << src_ip << std::endl;
+					std::cout << "DESTINATION: " << dest_ip << std::endl;
 
 					if (fwd_inef.length() > 0) {
-						std::cout << "Found " << packet_ip << " in routing table. Forwaring to " << fwd_inef << std::endl;
+						std::cout << "Found " << dest_ip << " in routing table. Forwaring to " << fwd_inef << std::endl;
 					}
 
           std::string router_one_address("10.0.0.1");
@@ -202,7 +218,17 @@ namespace router {
           //If ARP request handled, build an arp reply
           if (eh_incoming->ether_type == ETHERTYPE_ARP) {
             //std::cout << "Arp packet found" << std::endl;
-            // Building arp reply here and storing into outgoing arp reply header
+
+						//NetworkInterface dest_inef = get_inef(fwd_inef, net_inefs);
+						//std::cout << dest_inef.name << std::endl;
+						for (int j = 0; j < net_inefs.size(); ++j) {
+							std::cout << net_inefs[j].name << "|" << fwd_inef << std::endl;
+							if (net_inefs[j].name == fwd_inef) {
+								std::cout << net_inefs[j].name << " was found" << std::endl;
+							}
+						}
+            
+						// Building arp reply here and storing into outgoing arp reply header
             rp_outgoing = build_arp_reply(eh_incoming, arp_frame, net_inefs[i].mac_addr);
             std::memcpy(send_buffer, rp_outgoing, 1500);
 
@@ -228,7 +254,7 @@ namespace router {
               // Since we have the potential to have variable length ip addresses, we
               // can check the first few bits
               //std::cout << packet_ip << std::endl;
-              if (packet_ip.substr(0, 4).compare("10.3")) {
+              if (dest_ip.substr(0, 4).compare("10.3")) {
                 std::cout << "This packet belongs to router one, forwarding" << std::endl;
                 std::memcpy(send_buffer, buf, 1500);
                 icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
@@ -241,7 +267,7 @@ namespace router {
                 std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
                 std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4);
                 send(net_inefs[i].descr, send_buffer, n, 0);
-              } else if (packet_ip.substr(0, 4).compare("10.1")) {
+              } else if (dest_ip.substr(0, 4).compare("10.1")) {
                 std::cout << "This packet belongs to router two, forwarding" << std::endl;
                 std::memcpy(send_buffer, buf, 1500);
                 icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
