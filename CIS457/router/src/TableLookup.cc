@@ -51,8 +51,13 @@ namespace router {
 		}
   }
 
-  bool TableLookup::has_hop_device(const std::string& route) {
-    auto it = this->hop_device_table.find(route);
-    return it != this->hop_device_table.end();
+	std::string TableLookup::get_hop_device(std::string route) {
+		route = route.substr(0, 7) + "0";
+		std::unordered_map<std::string, std::string>::const_iterator index = hop_device_table.find(route);
+		if (index == hop_device_table.end()) {
+			return "";
+		} else {
+			return index->second;
+		}
   }
 } // namespace router

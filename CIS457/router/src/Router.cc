@@ -292,43 +292,11 @@ namespace router {
             icmp_incoming = (ICMPHeader*) (buf + 34);
             // If the host is in the lookup table we can just forward the packet like normal
             // Thisis from PART 2 BRANCH
-            //if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
-              //std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
+            if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
+              std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
 
             if (icmp_incoming->type == 8) {
               std::cout << "ICMP Echo request detected, beginning forward" << std::endl;
-              // Since we have the potential to have variable length ip addresses, we
-              // can check the first few bits
-              //std::cout << packet_ip << std::endl;
-              if (dest_ip.substr(0, 4).compare("10.3")) {
-                std::cout << "This packet belongs to router one, forwarding" << std::endl;
-                std::memcpy(send_buffer, buf, 1500);
-                icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
-                icmp_outgoing->type = 0;
-                icmp_outgoing->checksum = 0;
-                icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
-
-                // Copy data into the ip header
-                ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
-                std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
-                /* std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4); */
-                send(net_inefs[i].descr, send_buffer, n, 0);
-              } else if (dest_ip.substr(0, 4).compare("10.1")) {
-                std::cout << "This packet belongs to router two, forwarding" << std::endl;
-                std::memcpy(send_buffer, buf, 1500);
-                icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
-                icmp_outgoing->type = 0;
-                icmp_outgoing->checksum = 0;
-                icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
-
-                // Copy data into the ip header
-                ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
-                std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
-                /* std::memcpy(ip_outgoing->dest_ip, router_two_address.c_str(), 4); */
-                send(net_inefs[i].descr, send_buffer, n, 0);
-              }
-
-              std::memcpy(send_buffer, buf, 1500);
 
               // Copy data into the ICMP header
               icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
@@ -351,26 +319,38 @@ namespace router {
               if (send(net_inefs[i].descr, send_buffer, n, 0) == -1) {
                 std::cout << "There was an error sending the ICMP echo packet" << std::endl;
               }
+						}
             } else {
               // If it's not in the table we need to send to the next router, but to do that we need to first ARP
               std::cout << "The requested ip is not in the prefix table, forwarding to the next router" << std::endl;
               struct sockaddr_in arp_socket;
               std::memcpy(&arp_socket.sin_addr.s_addr, ip_incoming->dest_ip, 4);
               char* addr = inet_ntoa(arp_socket.sin_addr);
-
+							std::string ip_dest = addr;
+							std::string fwd_inef = router_lookup_table.get_route(ip_dest);
+							std::string hop_dest = router_lookup_table.get_hop_device(ip_dest);
               std::cout << "Beginning packet forward process" << std::endl;
               char buffer[98];
               std::memcpy(&buffer, &buf[0], 98);
 
-              std::cout << "Hopping to router ip: " << addr << std::endl;
-
+              std::cout << "Hopping to router ip: " << hop_dest << " through " << fwd_inef << std::endl;
+							
               unsigned char broadcast[6];
               for (int i = 0; i < 6; ++i)
                 broadcast[i] = 0xFF;
 
               std::cout << "Building the arp request now..." << std::endl;
               rp_outgoing = build_arp_request(eh_incoming, arp_frame, reinterpret_cast<const unsigned char*>(router_lookup_table.hop_device_table.begin()->second.c_str()));
-
+							
+							// Get the interface information
+							NetworkInterface dest_inef;
+							for (int j = 0; j < net_inefs.size(); ++j) {
+								if (net_inefs[j].name == fwd_inef) {
+									dest_inef = net_inefs[j];
+									break;
+								}
+							}
+							
               // This part may be the cause of some issues
               std::cout << "Building the ethernet header now..." << std::endl;
               eh_outgoing = (ether_header*) send_buffer;
@@ -378,7 +358,7 @@ namespace router {
               std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
               // Issue might be line above this, eh_incoming->ether_dhost seems wrong...
 
-              send(net_inefs[i].descr, send_buffer, n, 0);
+              send(dest_inef.descr, send_buffer, n, 0);
               int reply = 1;
               struct sockaddr_ll recvaddr;
               socklen_t sin_size = sizeof(sockaddr_ll);
@@ -389,7 +369,7 @@ namespace router {
               char arp_buffer[42];
 
               while(reply) {
-                recvfrom(net_inefs[i].descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
+                recvfrom(dest_inef.descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
                 if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
                 reply = 0;
                 std::cout << "Got the mac" << std::endl;
