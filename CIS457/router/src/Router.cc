@@ -123,7 +123,7 @@ namespace router {
     // COPY ETHER HEADER
     std::memcpy(&r->eh, eh, sizeof(ether_header));
     // SETS ETHER TYPE TO ARP
-    r->eh.ether_type = ntohs(2054);
+    r->eh.ether_type = ntohs(2048);
 
    return r;
   }
@@ -254,76 +254,81 @@ namespace router {
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
             std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);
+            // If the host is in the lookup table we can just forward the packet like normal
             if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
               std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
-              // Add the normal forward code here
-            } else {
-              std::cout << "The requested ip is not in the prefix table, forwarding to the next router" << std::endl;
-              rp_outgoing = build_arp_request(eh_incoming, arp_frame, reinterpret_cast<const unsigned char*>(router_lookup_table.hop_device_table.begin()->second.c_str()));
-            }
-
-            // Check if it's an ECHO packet
-            /* if (icmp_incoming->type == ICMP_ECHO) { */
-            /*   // First we build our ICMP goodies */
-            /*   icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader)); */
-            /*   icmp_outgoing->type = 0; */
-            /*   icmp_outgoing->checksum = 0; */
-            /*   icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader))); */
-
-            /*   // Now we take the ip packet and put it into our outgoing ip packet. */
-            /*   // This will enable us to add the new mac and reroute to the next router */
-            /*   // (if needed). */
-            /*   ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header)); */
-            /*   // Copy in the new ip address we want, which will by default be the host, */
-            /*   // if it's not in lookup table though, we need to forward. */
-            /*   if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) { */
-            /*     // If our destination is in this set of hosts then forward normally */
-            /*     std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4); */
-            /*     std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4); */
-
-            /*     // Now we build our new ethernet header since we are already on the */
-            /*     // right router in this case */
-            /*     std::cout << "Now building ICMP ethernet header" << std::endl; */
-            /*     eh_outgoing = (ether_header*) send_buffer; */
-            /*     std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6); */
-            /*     std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6); */
-            /*     eh_outgoing->ether_type = htons(0x800); */
-            /*   } else { */
-            /*     // Assign the router IP */
-            /*     std::memcpy(ip_outgoing->src_ip, router_lookup_table.hop_device_table.begin()->first.c_str(), 4); */
-            /*     std::memcpy(ip_outgoing->dest_ip, router_lookup_table.hop_device_table.begin()->second.c_str(), 4); */
-
-            /*     // Now we build the new ethernet header from the mac address of the router */
-            /*   } */
-            /* } */
-            // This is the old code, leaving it here breaks compilation FYI
-            if (icmp_incoming->type == 8) {
-              std::cout << "ICMP Echo request detected, beginning forward" << std::endl;
-
-              std::memcpy(send_buffer, buf, 1500);
-
-              // Copy data into the ICMP header
               icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
               icmp_outgoing->type = 0;
               icmp_outgoing->checksum = 0;
-              icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
+              icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) + sizeof(IPHeader)));
 
-              // Copy data into the IP heade0r
               ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
 
-              // Move data into the ether_header
-              std::cout << "Building ICMP ethernet header" << std::endl;
+              std::cout << "Building the ICMP ethernet header" << std::endl;
               eh_outgoing = (ether_header*) send_buffer;
               std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
               std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
               eh_outgoing->ether_type = htons(0x800);
               std::string src_ip(reinterpret_cast<const char*>(ip_outgoing->src_ip), 6);
-              std::cout << src_ip << std::endl;
               if (send(interfaces[i], send_buffer, n, 0) == -1) {
                 std::cout << "There was an error sending the ICMP echo packet" << std::endl;
               }
+            } else {
+              // If it's not in the table we need to send to the next router, but to do that we need to first ARP
+              std::cout << "The requested ip is not in the prefix table, forwarding to the next router" << std::endl;
+              struct sockaddr_in arp_socket;
+              std::memcpy(&arp_socket.sin_addr.s_addr, ip_incoming->dest_ip, 4);
+              char* addr = inet_ntoa(arp_socket.sin_addr);
+
+              std::cout << "Beginning packet forward process" << std::endl;
+              char buffer[98];
+              std::memcpy(&buffer, &buf[0], 98);
+
+              std::cout << "Hopping to router ip: " << addr << std::endl;
+
+              unsigned char broadcast[6];
+              for (int i = 0; i < 6; ++i)
+                broadcast[i] = 0xFF;
+
+              std::cout << "Building the arp request now..." << std::endl;
+              rp_outgoing = build_arp_request(eh_incoming, arp_frame, reinterpret_cast<const unsigned char*>(router_lookup_table.hop_device_table.begin()->second.c_str()));
+
+              // This part may be the cause of some issues
+              std::cout << "Building the ethernet header now..." << std::endl;
+              eh_outgoing = (ether_header*) send_buffer;
+              std::memcpy(eh_outgoing->ether_dhost, &broadcast, 6);
+              std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
+              // Issue might be line above this, eh_incoming->ether_dhost seems wrong...
+
+              send(interfaces[i], send_buffer, n, 0);
+              int reply = 1;
+              struct sockaddr_ll recvaddr;
+              socklen_t sin_size = sizeof(sockaddr_ll);
+              std::cout << "BLocking until we get the MAC back" << std::endl;
+
+              // Get ready to get the contents
+              char temp_buffer[1500];
+              char arp_buffer[42];
+
+              while(reply) {
+                recvfrom(interfaces[i], temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
+                if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
+                reply = 0;
+                std::cout << "Got the mac" << std::endl;
+              }
+
+              std::memcpy(arp_buffer, temp_buffer, 42);
+              struct ether_header* eh_forward = (ether_header*) arp_buffer;
+              std::memcpy(eh_forward->ether_dhost, eh_forward->ether_shost, 6);
+              std::memcpy(eh_forward->ether_shost, eh_forward->ether_dhost, 6);
+              eh_forward->ether_type = htons(0x0800);
+
+              std::memcpy(&buffer[0], eh_forward, 14);
+
+              // Send here
+              send(interfaces[i], buffer, sizeof(buffer), 0);
             }
           }
         }
