@@ -84,19 +84,9 @@ namespace router {
       return answer;
   }
 
-	NetworkInterface Router::get_inef(const std::string inef_name, std::vector<NetworkInterface> net_inefs) {
-		for (int i = 0; i < net_inefs.size(); ++i) {
-			if (net_inefs.at(i).name == inef_name) {
-				std::cout << "found it" << std::endl;
-				return net_inefs.at(i);
-			}
-		}
-		return NetworkInterface();
-	}
-
-  int Router::Start() {
+  int Router::Start(std::string table) {
     // Load both tables so they are aware of their prefixes at all times
-    TableLookup route_table_one("r1-table.txt");
+    TableLookup route_table_one(table);
 
     int packet_socket;
 		int i = 0;
@@ -203,8 +193,8 @@ namespace router {
           
 					std::string fwd_inef = route_table_one.get_route(dest_ip);
 
-					std::cout << "SOURCE: " << src_ip << std::endl;
-					std::cout << "DESTINATION: " << dest_ip << std::endl;
+					//std::cout << "SOURCE: " << src_ip << std::endl;
+					//std::cout << "DESTINATION: " << dest_ip << std::endl;
 
 					if (fwd_inef.length() > 0) {
 						std::cout << "Found " << dest_ip << " in routing table. Forwaring to " << fwd_inef << std::endl;
@@ -217,17 +207,22 @@ namespace router {
 
           //If ARP request handled, build an arp reply
           if (eh_incoming->ether_type == ETHERTYPE_ARP) {
-            //std::cout << "Arp packet found" << std::endl;
+						if (ntohs(arp_frame->ea_hdr.ar_op) == 1) {
+						std::string arp_src = std::to_string(arp_frame->arp_spa[0]) + "." + 
+							std::to_string(arp_frame->arp_spa[1]) + "." +
+							std::to_string(arp_frame->arp_spa[2]) + "." +
+							std::to_string(arp_frame->arp_spa[3]);
 
-						//NetworkInterface dest_inef = get_inef(fwd_inef, net_inefs);
-						//std::cout << dest_inef.name << std::endl;
-						for (int j = 0; j < net_inefs.size(); ++j) {
-							std::cout << net_inefs[j].name << "|" << fwd_inef << std::endl;
-							if (net_inefs[j].name == fwd_inef) {
-								std::cout << net_inefs[j].name << " was found" << std::endl;
-							}
-						}
-            
+						std::string arp_dst = std::to_string(arp_frame->arp_tpa[0]) + "." +
+							std::to_string(arp_frame->arp_tpa[1]) + "." +
+							std::to_string(arp_frame->arp_tpa[2]) + "." +
+							std::to_string(arp_frame->arp_tpa[3]);
+
+						std::cout << "ARP Source: " << arp_src << std::endl;
+						std::cout << "ARP Destination: " << arp_dst << std::endl;
+           
+						if (std::memcmp(arp_frame->arp_tpa, net_inefs[i].ip_addr, 4) == 0) {	
+						std::cout << "It would appear that I am this packet's destination!" << std::endl;
 						// Building arp reply here and storing into outgoing arp reply header
             rp_outgoing = build_arp_reply(eh_incoming, arp_frame, net_inefs[i].mac_addr);
             std::memcpy(send_buffer, rp_outgoing, 1500);
@@ -245,6 +240,8 @@ namespace router {
             if(send(net_inefs[i].descr, send_buffer, 42, 0) == -1) {
               std::cout << "Error sending arp reply" << std::endl;
             }
+						}
+						}
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
             std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);

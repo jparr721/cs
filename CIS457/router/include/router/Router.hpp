@@ -20,8 +20,7 @@ class Router {
       struct ether_arp *arp_frame,
       unsigned char destination_mac[6]);
     uint16_t checksum(unsigned char* addr, int len);
-		std::string get_ip_str(unsigned char[4]);
-    int Start();
+    int Start(std::string);
 };
 } // namespace router
 
