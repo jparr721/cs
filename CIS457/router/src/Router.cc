@@ -363,13 +363,13 @@ namespace router {
 	      std::strcpy(raw_ip, hop_dest.c_str());
 	      unsigned char ip[4];
 	      inet_pton(AF_INET, raw_ip, &ip);
-
-              std::cout << "Building the arp request now..." << std::endl;
+              //std::cout << "Building the arp request now for " << std::to_string(ip) << std::endl;
               rp_outgoing = build_arp_request(eh_incoming, arp_frame, ip);
 	      std::memcpy(rp_outgoing->ea.arp_spa, net_inefs[i].ip_addr, 4);
-	      std::memcpy(rp_outgoing->ea.arp_tpa, raw_ip, 4);
+	      std::memcpy(rp_outgoing->ea.arp_tpa, ip, 4);
 	      std::memcpy(rp_outgoing->ea.arp_tha, broadcast, 6);
 	      std::memcpy(rp_outgoing->ea.arp_sha, net_inefs[i].mac_addr, 6);
+	      std::memcpy(send_buffer, rp_outgoing, 1500);
               // This part may be the cause of some issues
               std::cout << "Building the ethernet header now..." << std::endl;
               eh_outgoing = (ether_header*) send_buffer;
