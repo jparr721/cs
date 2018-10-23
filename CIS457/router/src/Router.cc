@@ -83,7 +83,7 @@ namespace router {
       answer = ~sum;              /* truncate to 16 bits */
       return answer;
   }
-  
+
   bool Router::host_in_lookup_table(std::string host, std::unordered_map<std::string, std::string> lookup_table) {
     for (auto it = lookup_table.begin(); it != lookup_table.end(); ++it) {
       if (it->first.compare(host) == 0) {
@@ -131,12 +131,12 @@ namespace router {
 
   int Router::Start(std::string lookup) {
     // Load the relevant table to do lookup only for itself
-    TableLookup router_lookup_table(lookup)
+    TableLookup router_lookup_table(lookup);
 
     int packet_socket;
-		int i = 0;
+    int i = 0;
     struct ifaddrs *ifaddr, *tmp;
-		std::vector<NetworkInterface> net_inefs;
+    std::vector<NetworkInterface> net_inefs;
 
     if (getifaddrs(&ifaddr) == -1) {
       std::cerr << "getifaddrs machine broke" << std::endl;
@@ -144,7 +144,7 @@ namespace router {
     }
 
     for (tmp = ifaddr; tmp != nullptr; tmp = tmp->ifa_next) {
-			NetworkInterface net_if;
+      NetworkInterface net_if;
       if (tmp->ifa_addr->sa_family == AF_PACKET) {
         std::cout << "Interface: " << tmp->ifa_name << std::endl;
 
@@ -152,7 +152,7 @@ namespace router {
           //std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
           //Get our mac
           struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
-					struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
+          struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
 
           packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
           if (packet_socket < 0) {
@@ -164,24 +164,24 @@ namespace router {
             std::cerr << "bind machine broke" << std::endl;
           }
 
-					net_if.name = tmp->ifa_name;
-					net_if.descr = packet_socket;
-					std::memcpy(&net_if.mac_addr, local_mac->sll_addr, 6);
-					net_inefs.push_back(net_if);
-					printf("%s mac addr: %i:%i:%i:%i:%i:%i\n", net_if.name, net_if.mac_addr[0], net_if.mac_addr[1], net_if.mac_addr[2], net_if.mac_addr[3], net_if.mac_addr[4], net_if.mac_addr[5]);
+          net_if.name = tmp->ifa_name;
+          net_if.descr = packet_socket;
+          std::memcpy(&net_if.mac_addr, local_mac->sll_addr, 6);
+          net_inefs.push_back(net_if);
+          printf("%s mac addr: %i:%i:%i:%i:%i:%i\n", net_if.name, net_if.mac_addr[0], net_if.mac_addr[1], net_if.mac_addr[2], net_if.mac_addr[3], net_if.mac_addr[4], net_if.mac_addr[5]);
         }
       }
-			if (tmp->ifa_addr->sa_family == AF_INET) {
-				if (!strncmp(&(tmp->ifa_name[3]), "eth", 3)) {
-					struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
-					std::memcpy(&net_inefs[i].ip_addr, &(local_add->sin_addr.s_addr), 4);
-					printf("%s ip addr: %i.%i.%i.%i\n", net_inefs[i].name, net_inefs[i].ip_addr[0], net_inefs[i].ip_addr[1], net_inefs[i].ip_addr[2], net_inefs[i].ip_addr[3]);
-					i++;
-				}
-			}
+      if (tmp->ifa_addr->sa_family == AF_INET) {
+        if (!strncmp(&(tmp->ifa_name[3]), "eth", 3)) {
+          struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
+          std::memcpy(&net_inefs[i].ip_addr, &(local_add->sin_addr.s_addr), 4);
+          printf("%s ip addr: %i.%i.%i.%i\n", net_inefs[i].name, net_inefs[i].ip_addr[0], net_inefs[i].ip_addr[1], net_inefs[i].ip_addr[2], net_inefs[i].ip_addr[3]);
+          i++;
+        }
+      }
     }
 
-    printf("Listening for packets on %d interfaces\n", interfaces.size());
+    printf("Listening for packets on %d net_inefs\n", net_inefs.size());
     std::unordered_map<std::string, std::vector<std::string>> queue_map;
 
     while (1) {
@@ -230,47 +230,46 @@ namespace router {
           printf("Incoming packet from %i.%i.%i.%i\n", ip_incoming->src_ip[0], ip_incoming->src_ip[1], ip_incoming->src_ip[2], ip_incoming->src_ip[3]);
           std::cout << "This packet is trying to reach: " << ip_incoming->dest_ip << std::endl;
           // Build the IP string for comparing later on
-          std::string packet_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
-					std::string src_ip = std::to_string(ip_incoming->src_ip[0]) + "." +
-						std::to_string(ip_incoming->src_ip[1]) + "." +
-						std::to_string(ip_incoming->src_ip[2]) + "." +
-						std::to_string(ip_incoming->src_ip[3]);
+          std::string src_ip = std::to_string(ip_incoming->src_ip[0]) + "." +
+            std::to_string(ip_incoming->src_ip[1]) + "." +
+            std::to_string(ip_incoming->src_ip[2]) + "." +
+            std::to_string(ip_incoming->src_ip[3]);
 
           std::string dest_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
             std::to_string(ip_incoming->dest_ip[1]) + "." +
             std::to_string(ip_incoming->dest_ip[2]) + "." +
             std::to_string(ip_incoming->dest_ip[3]);
-          
-					std::string fwd_inef = route_table_one.get_route(dest_ip);
 
-					//std::cout << "SOURCE: " << src_ip << std::endl;
-					//std::cout << "DESTINATION: " << dest_ip << std::endl;
+          std::string fwd_inef = router_lookup_table.get_route(dest_ip);
 
-					if (fwd_inef.length() > 0) {
-						std::cout << "Found " << dest_ip << " in routing table. Forwaring to " << fwd_inef << std::endl;
-					}
+          //std::cout << "SOURCE: " << src_ip << std::endl;
+          //std::cout << "DESTINATION: " << dest_ip << std::endl;
+
+          if (fwd_inef.length() > 0) {
+            std::cout << "Found " << dest_ip << " in routing table. Forwaring to " << fwd_inef << std::endl;
+          }
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
 
           //If ARP request handled, build an arp reply
           if (eh_incoming->ether_type == ETHERTYPE_ARP) {
-						if (ntohs(arp_frame->ea_hdr.ar_op) == 1) {
-						std::string arp_src = std::to_string(arp_frame->arp_spa[0]) + "." + 
-							std::to_string(arp_frame->arp_spa[1]) + "." +
-							std::to_string(arp_frame->arp_spa[2]) + "." +
-							std::to_string(arp_frame->arp_spa[3]);
+            if (ntohs(arp_frame->ea_hdr.ar_op) == 1) {
+            std::string arp_src = std::to_string(arp_frame->arp_spa[0]) + "." +
+              std::to_string(arp_frame->arp_spa[1]) + "." +
+              std::to_string(arp_frame->arp_spa[2]) + "." +
+              std::to_string(arp_frame->arp_spa[3]);
 
-						std::string arp_dst = std::to_string(arp_frame->arp_tpa[0]) + "." +
-							std::to_string(arp_frame->arp_tpa[1]) + "." +
-							std::to_string(arp_frame->arp_tpa[2]) + "." +
-							std::to_string(arp_frame->arp_tpa[3]);
+            std::string arp_dst = std::to_string(arp_frame->arp_tpa[0]) + "." +
+              std::to_string(arp_frame->arp_tpa[1]) + "." +
+              std::to_string(arp_frame->arp_tpa[2]) + "." +
+              std::to_string(arp_frame->arp_tpa[3]);
 
-						std::cout << "ARP Source: " << arp_src << std::endl;
-						std::cout << "ARP Destination: " << arp_dst << std::endl;
-           
-						if (std::memcmp(arp_frame->arp_tpa, net_inefs[i].ip_addr, 4) == 0) {	
-						std::cout << "It would appear that I am this packet's destination!" << std::endl;
-						// Building arp reply here and storing into outgoing arp reply header
+            std::cout << "ARP Source: " << arp_src << std::endl;
+            std::cout << "ARP Destination: " << arp_dst << std::endl;
+
+            if (std::memcmp(arp_frame->arp_tpa, net_inefs[i].ip_addr, 4) == 0) {
+            std::cout << "It would appear that I am this packet's destination!" << std::endl;
+            // Building arp reply here and storing into outgoing arp reply header
             rp_outgoing = build_arp_reply(eh_incoming, arp_frame, net_inefs[i].mac_addr);
             std::memcpy(send_buffer, rp_outgoing, 1500);
 
@@ -286,14 +285,14 @@ namespace router {
             if(send(net_inefs[i].descr, send_buffer, 42, 0) == -1) {
               std::cout << "Error sending arp reply" << std::endl;
             }
-						}
-						}
+            }
+            }
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
             std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);
             // If the host is in the lookup table we can just forward the packet like normal
             // Thisis from PART 2 BRANCH
-            //if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) { 
+            //if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
               //std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
 
             if (icmp_incoming->type == 8) {
@@ -312,7 +311,7 @@ namespace router {
                 // Copy data into the ip header
                 ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
                 std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
-                std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4);
+                /* std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4); */
                 send(net_inefs[i].descr, send_buffer, n, 0);
               } else if (dest_ip.substr(0, 4).compare("10.1")) {
                 std::cout << "This packet belongs to router two, forwarding" << std::endl;
@@ -325,7 +324,7 @@ namespace router {
                 // Copy data into the ip header
                 ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
                 std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
-                std::memcpy(ip_outgoing->dest_ip, router_two_address.c_str(), 4);
+                /* std::memcpy(ip_outgoing->dest_ip, router_two_address.c_str(), 4); */
                 send(net_inefs[i].descr, send_buffer, n, 0);
               }
 
@@ -379,7 +378,7 @@ namespace router {
               std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
               // Issue might be line above this, eh_incoming->ether_dhost seems wrong...
 
-              send(interfaces[i], send_buffer, n, 0);
+              send(net_inefs[i].descr, send_buffer, n, 0);
               int reply = 1;
               struct sockaddr_ll recvaddr;
               socklen_t sin_size = sizeof(sockaddr_ll);
@@ -390,7 +389,7 @@ namespace router {
               char arp_buffer[42];
 
               while(reply) {
-                recvfrom(interfaces[i], temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
+                recvfrom(net_inefs[i].descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
                 if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
                 reply = 0;
                 std::cout << "Got the mac" << std::endl;
@@ -405,7 +404,7 @@ namespace router {
               std::memcpy(&buffer[0], eh_forward, 14);
 
               // Send here
-              send(interfaces[i], buffer, sizeof(buffer), 0);
+              send(net_inefs[i].descr, buffer, sizeof(buffer), 0);
             }
           }
         }
