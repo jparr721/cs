@@ -4,6 +4,7 @@
 #include "../include/router/ETHHeader.hpp"
 #include "../include/router/ICMPHeader.hpp"
 #include "../include/router/IPHeader.hpp"
+#include "../include/router/NetworkInterface.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -82,7 +83,7 @@ namespace router {
       answer = ~sum;              /* truncate to 16 bits */
       return answer;
   }
-
+  
   bool Router::host_in_lookup_table(std::string host, std::unordered_map<std::string, std::string> lookup_table) {
     for (auto it = lookup_table.begin(); it != lookup_table.end(); ++it) {
       if (it->first.compare(host) == 0) {
@@ -130,14 +131,12 @@ namespace router {
 
   int Router::Start(std::string lookup) {
     // Load the relevant table to do lookup only for itself
-    TableLookup router_lookup_table(lookup);
+    TableLookup router_lookup_table(lookup)
 
     int packet_socket;
-    unsigned char local_addr[6];
-
+		int i = 0;
     struct ifaddrs *ifaddr, *tmp;
-    std::vector<int> interfaces;
-    std::vector<unsigned char*> addresses;
+		std::vector<NetworkInterface> net_inefs;
 
     if (getifaddrs(&ifaddr) == -1) {
       std::cerr << "getifaddrs machine broke" << std::endl;
@@ -145,19 +144,15 @@ namespace router {
     }
 
     for (tmp = ifaddr; tmp != nullptr; tmp = tmp->ifa_next) {
+			NetworkInterface net_if;
       if (tmp->ifa_addr->sa_family == AF_PACKET) {
         std::cout << "Interface: " << tmp->ifa_name << std::endl;
 
         if (!strncmp(&(tmp->ifa_name[3]), "eth", 3)) {
-          std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
+          //std::cout << "Creating socket on interface: " << tmp->ifa_name << std::endl;
           //Get our mac
           struct sockaddr_ll *local_mac = (struct sockaddr_ll*) tmp->ifa_addr;
-          std::memcpy(local_addr, local_mac->sll_addr, 6);
-          printf("Mac addr: ");
-          for (int i = 0; i < 5; ++i)
-            printf("%i:", local_addr[i]);
-
-          printf("%i\n", local_addr[5]);
+					struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
 
           packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
           if (packet_socket < 0) {
@@ -165,15 +160,25 @@ namespace router {
             return errno;
           }
 
-          std::cout << "Created on descriptor " << packet_socket << std::endl;
-
           if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
             std::cerr << "bind machine broke" << std::endl;
           }
-          interfaces.push_back(packet_socket);
-          addresses.push_back(local_mac->sll_addr);
+
+					net_if.name = tmp->ifa_name;
+					net_if.descr = packet_socket;
+					std::memcpy(&net_if.mac_addr, local_mac->sll_addr, 6);
+					net_inefs.push_back(net_if);
+					printf("%s mac addr: %i:%i:%i:%i:%i:%i\n", net_if.name, net_if.mac_addr[0], net_if.mac_addr[1], net_if.mac_addr[2], net_if.mac_addr[3], net_if.mac_addr[4], net_if.mac_addr[5]);
         }
       }
+			if (tmp->ifa_addr->sa_family == AF_INET) {
+				if (!strncmp(&(tmp->ifa_name[3]), "eth", 3)) {
+					struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
+					std::memcpy(&net_inefs[i].ip_addr, &(local_add->sin_addr.s_addr), 4);
+					printf("%s ip addr: %i.%i.%i.%i\n", net_inefs[i].name, net_inefs[i].ip_addr[0], net_inefs[i].ip_addr[1], net_inefs[i].ip_addr[2], net_inefs[i].ip_addr[3]);
+					i++;
+				}
+			}
     }
 
     printf("Listening for packets on %d interfaces\n", interfaces.size());
@@ -184,11 +189,11 @@ namespace router {
       FD_ZERO(&read_fds);
       int fd_max = 0;
 
-      for (int i = 0; i < interfaces.size(); ++i) {
-        if (interfaces[i] > fd_max) {
-          fd_max = interfaces[i];
+      for (int i = 0; i < net_inefs.size(); ++i) {
+        if (net_inefs[i].descr > fd_max) {
+          fd_max = net_inefs[i].descr;
         }
-        FD_SET(interfaces[i], &read_fds);
+        FD_SET(net_inefs[i].descr, &read_fds);
       }
 
       int activity = select(fd_max + 1, &read_fds, NULL, NULL, NULL);
@@ -197,8 +202,8 @@ namespace router {
         printf("Unable to modify socket file descriptor.\n");
       }
 
-      for (int i = 0; i < interfaces.size(); ++i) {
-        if (FD_ISSET(interfaces[i], &read_fds)) {
+      for (int i = 0; i < net_inefs.size(); ++i) {
+        if (FD_ISSET(net_inefs[i].descr, &read_fds)) {
           char buf[1500], send_buffer[1500];
           struct sockaddr_ll recvaddr;
           struct ether_header *eh_incoming, *eh_outgoing;
@@ -210,7 +215,7 @@ namespace router {
           ICMPHeader *icmp_outgoing;
           socklen_t recvaddrlen = sizeof(struct sockaddr_ll);
 
-          int n = recvfrom(interfaces[i], buf, 1500, 0, (sockaddr*) &recvaddr, &recvaddrlen);
+          int n = recvfrom(net_inefs[i].descr, buf, 1500, 0, (sockaddr*) &recvaddr, &recvaddrlen);
           if (n < 0) {
             std::cerr << "recvfrom machine broke" << std::endl;
           }
@@ -226,37 +231,107 @@ namespace router {
           std::cout << "This packet is trying to reach: " << ip_incoming->dest_ip << std::endl;
           // Build the IP string for comparing later on
           std::string packet_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
+					std::string src_ip = std::to_string(ip_incoming->src_ip[0]) + "." +
+						std::to_string(ip_incoming->src_ip[1]) + "." +
+						std::to_string(ip_incoming->src_ip[2]) + "." +
+						std::to_string(ip_incoming->src_ip[3]);
+
+          std::string dest_ip = std::to_string(ip_incoming->dest_ip[0]) +"." +
             std::to_string(ip_incoming->dest_ip[1]) + "." +
             std::to_string(ip_incoming->dest_ip[2]) + "." +
             std::to_string(ip_incoming->dest_ip[3]);
+          
+					std::string fwd_inef = route_table_one.get_route(dest_ip);
+
+					//std::cout << "SOURCE: " << src_ip << std::endl;
+					//std::cout << "DESTINATION: " << dest_ip << std::endl;
+
+					if (fwd_inef.length() > 0) {
+						std::cout << "Found " << dest_ip << " in routing table. Forwaring to " << fwd_inef << std::endl;
+					}
 
           eh_incoming->ether_type = ntohs(eh_incoming->ether_type);
 
           //If ARP request handled, build an arp reply
           if (eh_incoming->ether_type == ETHERTYPE_ARP) {
-            //std::cout << "Arp packet found" << std::endl;
-            // Building arp reply here and storing into outgoing arp reply header
-            rp_outgoing = build_arp_reply(eh_incoming, arp_frame, addresses[i]);
+						if (ntohs(arp_frame->ea_hdr.ar_op) == 1) {
+						std::string arp_src = std::to_string(arp_frame->arp_spa[0]) + "." + 
+							std::to_string(arp_frame->arp_spa[1]) + "." +
+							std::to_string(arp_frame->arp_spa[2]) + "." +
+							std::to_string(arp_frame->arp_spa[3]);
+
+						std::string arp_dst = std::to_string(arp_frame->arp_tpa[0]) + "." +
+							std::to_string(arp_frame->arp_tpa[1]) + "." +
+							std::to_string(arp_frame->arp_tpa[2]) + "." +
+							std::to_string(arp_frame->arp_tpa[3]);
+
+						std::cout << "ARP Source: " << arp_src << std::endl;
+						std::cout << "ARP Destination: " << arp_dst << std::endl;
+           
+						if (std::memcmp(arp_frame->arp_tpa, net_inefs[i].ip_addr, 4) == 0) {	
+						std::cout << "It would appear that I am this packet's destination!" << std::endl;
+						// Building arp reply here and storing into outgoing arp reply header
+            rp_outgoing = build_arp_reply(eh_incoming, arp_frame, net_inefs[i].mac_addr);
             std::memcpy(send_buffer, rp_outgoing, 1500);
 
             // Move data into Ethernet struct too
             eh_outgoing = (ether_header*) send_buffer;
             std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
-            std::memcpy(eh_outgoing->ether_shost, addresses[i], 6);
+            std::memcpy(eh_outgoing->ether_shost, net_inefs[i].mac_addr, 6);
             eh_outgoing->ether_type = htons(0x0806);
 
             // Send the damn thing
             std::cout << "Sending ARP reply" << std::endl;
 
-            if(send(interfaces[i], send_buffer, 42, 0) == -1) {
+            if(send(net_inefs[i].descr, send_buffer, 42, 0) == -1) {
               std::cout << "Error sending arp reply" << std::endl;
             }
+						}
+						}
           } else if (eh_incoming->ether_type == ETHERTYPE_IP) {
             std::cout << "IP/ICMP packet found" << std::endl;
             icmp_incoming = (ICMPHeader*) (buf + 34);
             // If the host is in the lookup table we can just forward the packet like normal
-            if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) {
-              std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
+            // Thisis from PART 2 BRANCH
+            //if (host_in_lookup_table(std::string(reinterpret_cast<char*>(ip_incoming->dest_ip)), router_lookup_table.prefix_interface_table)) { 
+              //std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
+
+            if (icmp_incoming->type == 8) {
+              std::cout << "ICMP Echo request detected, beginning forward" << std::endl;
+              // Since we have the potential to have variable length ip addresses, we
+              // can check the first few bits
+              //std::cout << packet_ip << std::endl;
+              if (dest_ip.substr(0, 4).compare("10.3")) {
+                std::cout << "This packet belongs to router one, forwarding" << std::endl;
+                std::memcpy(send_buffer, buf, 1500);
+                icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
+                icmp_outgoing->type = 0;
+                icmp_outgoing->checksum = 0;
+                icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
+
+                // Copy data into the ip header
+                ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
+                std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
+                std::memcpy(ip_outgoing->dest_ip, router_one_address.c_str(), 4);
+                send(net_inefs[i].descr, send_buffer, n, 0);
+              } else if (dest_ip.substr(0, 4).compare("10.1")) {
+                std::cout << "This packet belongs to router two, forwarding" << std::endl;
+                std::memcpy(send_buffer, buf, 1500);
+                icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
+                icmp_outgoing->type = 0;
+                icmp_outgoing->checksum = 0;
+                icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) - sizeof(IPHeader)));
+
+                // Copy data into the ip header
+                ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
+                std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
+                std::memcpy(ip_outgoing->dest_ip, router_two_address.c_str(), 4);
+                send(net_inefs[i].descr, send_buffer, n, 0);
+              }
+
+              std::memcpy(send_buffer, buf, 1500);
+
+              // Copy data into the ICMP header
               icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
               icmp_outgoing->type = 0;
               icmp_outgoing->checksum = 0;
@@ -271,8 +346,10 @@ namespace router {
               std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
               std::memcpy(eh_outgoing->ether_shost, eh_incoming->ether_dhost, 6);
               eh_outgoing->ether_type = htons(0x800);
-              std::string src_ip(reinterpret_cast<const char*>(ip_outgoing->src_ip), 6);
-              if (send(interfaces[i], send_buffer, n, 0) == -1) {
+
+              //std::string src_ip(reinterpret_cast<const char*>(ip_outgoing->src_ip), 6);
+              //std::cout << src_ip << std::endl;
+              if (send(net_inefs[i].descr, send_buffer, n, 0) == -1) {
                 std::cout << "There was an error sending the ICMP echo packet" << std::endl;
               }
             } else {

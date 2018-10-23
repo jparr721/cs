@@ -17,8 +17,11 @@ int main(int argc, char** argv) {
   std::string lookup_table = argv[1];
 
   router::Router r;
-  int router = r.Start(lookup_table);
+  
+	std::string routing_table = argv[1];
+  int router = r.Start(routing_table);
 	std::cout << router << std::endl;
+  
   if (router < 0) {
     std::cerr << "Failed to intialize routing interface... " << router  << std::endl;
     return router;

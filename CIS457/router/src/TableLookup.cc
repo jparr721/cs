@@ -23,11 +23,14 @@ namespace router {
 				}
 
         while (std::getline(stream, column, ' ')) {
+						if (column.find("/") > 0) {
+							column = column.substr(0, column.find("/"));
+						}
             columns.push_back(column);
         }
 
         this->prefix_interface_table.insert(std::pair<std::string, std::string>(columns[0], columns[2]));
-        std::cout << "Adding " << columns[0] << " to network table..." << std::endl;
+        std::cout << "Adding " << columns[0] << " (" << columns[2]  << ") to network table..." << std::endl;
         if (columns[1] != "-") {
             this->hop_device_table.insert(std::pair<std::string, std::string>(columns[0], columns[1]));
 						std::cout << "Adding " << columns[0] << " - " << columns[1] << " to hop table..." << std::endl;
@@ -38,8 +41,14 @@ namespace router {
 		tableFile.close();
   }
 
-  std::string TableLookup::get_route(const std::string& route) {
-    return this->prefix_interface_table.find(route)->second;
+  std::string TableLookup::get_route(std::string route) {
+    route = route.substr(0, 7) + "0";
+		std::unordered_map<std::string, std::string>::const_iterator index = prefix_interface_table.find(route);
+		if (index == prefix_interface_table.end()) {
+			return "";
+		} else {
+			return index->second;
+		}
   }
 
   bool TableLookup::has_hop_device(const std::string& route) {
