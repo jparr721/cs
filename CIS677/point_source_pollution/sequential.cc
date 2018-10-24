@@ -9,8 +9,8 @@ class PointSourcePollution {
   private:
     std::vector<uint64_t> simulation_space;
     uint64_t heat_distribution;
-    double central_difference_theorem(double left, double right);
-    void diffuse(
+    double central_difference_theorem(double left, double right) const;
+    std::vector<double> diffuse(
         std::vector<uint64_t> *space,
         uint64_t cylinder_size,
         uint64_t slice_size,
@@ -19,7 +19,7 @@ class PointSourcePollution {
         uint64_t contaminant_concentration);
 };
 
-void PointSourcePollution::diffuse(
+std::vector<double> PointSourcePollution::diffuse(
     std::vector<uint64_t> *space,
     uint64_t cylinder_size,
     uint64_t slice_size,
@@ -27,9 +27,25 @@ void PointSourcePollution::diffuse(
     uint64_t diffusion_time,
     uint64_t contaminant_concentration
     ) {
-  for (uint64_t i = 0; i < diffusion_time; ++i) {
+  std::vector<double> cylinder(cylinder_size, 0);
+  std::vector<double> copy_cylinder(cylinder_size, 0);
+  double lef,t right;
 
+  cylinder[0] = contaminant_concentration;
+
+  for (uint64_t i = 1; i < diffusion_time; ++i) {
+    for (uint64_t j = 1; j < cylinder_size; ++j) {
+      left = cylinder[j - 1];
+      right = cylinder[j + 1];
+
+      copy_cylinder[j] = this->central_difference_theorem(left, right);
+    }
+    std::vector<double> temp(cylinder);
+    cylinder = copy_cylinder;
+    copy_cylinder = temp;
   }
+
+  return cylinder;
 }
 
 double PointSourcePollution::central_difference_theorem(double left, double right) {
