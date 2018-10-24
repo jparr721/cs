@@ -170,3 +170,78 @@ return result; // 3
 The add function was able to be wrapped up as a module, moved around to wherever it is needed, and invoked on command. When the module is something we have imported from our local file structure, then we must use the relative path.
 
 There is also newer syntax, but node.js doesn't support it and we still need polyfills in the browser, so we don't use it quite yet.
+
+### Promises
+
+As stated previously, callback functions are utilized when we have a piece of code in a function that calls another function once it has finished the work it had to do. In some cases, we may want to extract values form this, or return from this chain, but this is actually pretty hard to do in JavaScript with callbacks since the data is scoped how it is. This also blocks on the thread (since nodejs runs on a single thread). Promises were introduced and the name is pretty indicative of what functionality it performs. It is a "promise" that the piece of asynchronous functionality will return the value eventually, and follows the following syntax:
+
+```javascript
+function asyncData(input) {
+    return new Promise((resolve, reject) => {
+       // some promise magic
+    })
+}
+
+// Then you can call it
+asyncData('oh yeah').then((result) => {
+    // do some stuff here
+}).catch(error) => {
+    console.log(`ERROR ${error}`);
+}
+
+asyncData('oh no').then((result) => {
+    // do some stuff here
+}).catch(error) => {
+    console.log(`ERROR ${error}`);
+}
+// These are called and executed at the same time
+```
+
+Promises give us a convenient and easy way to call functionality asynchronously without needing to worry about blocking on the main thread. If we had multiple promise-based functions or even if we called the same one multiple times, it would allow for them to be executed all at once.
+
+One more advanced feature of promises is the concept of async-await. It is a wrapper to promises that makes functionality a little easier to handle without needing to handle explicitly doing .then()'s and .catch()'s. Right now, the syntax seems simple, but we can easily run into a concept called "callback hell". Here's an example taken from [callbackhell.com](callbackhell.com):
+
+```javascript
+fs.readdir(source, function (err, files) {
+  if (err) {
+    console.log('Error finding files: ' + err)
+  } else {
+    files.forEach(function (filename, fileIndex) {
+      console.log(filename)
+      gm(source + filename).size(function (err, values) {
+        if (err) {
+          console.log('Error identifying file size: ' + err)
+        } else {
+          console.log(filename + ' : ' + values)
+          aspect = (values.width / values.height)
+          widths.forEach(function (width, widthIndex) {
+            height = Math.round(width / aspect)
+            console.log('resizing ' + filename + 'to ' + height + 'x' + height)
+            this.resize(width, height).write(dest + 'w' + width + '_' + filename, function(err) {
+              if (err) console.log('Error writing file: ' + err)
+            })
+          }.bind(this))
+        }
+      })
+    })
+  }
+})
+```
+
+As you can see, if we need to call new functions every time we get the response from a previously async function call, then it will slowly build onto our overall function chain because those functions will also be async when they're called. Async await allows us to minimize this into a sequence of calls:
+
+```javascript
+// async-await.js
+async function magic(source) {
+    const files = await fs.readdir(source);
+    files.forEach(fileName => {
+        const widths = await gm(source + filename).size();
+        widths.forEach((width, widthIndex) => {
+            height//
+            await this.resize(width, height).write('truncated');
+        })
+    })
+}
+```
+
+This code has been truncated to save re-typing, but as you can see, it shrinks the number of lines considerably by being able to `await` the return of a given function call. It's absolute magic and makes writing code with promises much easier. It's typically a good practice to default to these, but you don't always need them when code is simple.
