@@ -32,7 +32,7 @@ app.listen(port, () => {
 
 ### Okay, so what does this code snippet here do?
 
-1. This is commonly called a require statement, it is virtually the same as `import` in python or `#include` in C/C++. This is how you require external functionality defined outside of the file you're currently in
+1. This is commonly called a require statement, it is virtually the same as `import` in python. This is how you require external functionality defined outside of the file you're currently in via the use of modules (covered below).
 
 2. `const` is a keyword to define constant, immutable variables in JavaScript.
 
@@ -116,4 +116,57 @@ Then you just have to run `node sample3.js` and voila, your code will run no pro
 
 ## Every language sucks at something, what about JavaScript?
 
-heh.. well....
+JavaScript handles a lot of things in ways that make your head scratch. In a broad sense, this is just due to how JavaScript handles things like implicit type conversion and other type handling. The most important though, is its super weird comparisons. 
+
+If you've ever written JavaScript in any capacity, you will find that there are two ways to check for equality among values. First, we have the identity operator `===` and `!==`, and the equality operator `==` and `!=`. The identity operator works almost the same as the equality operator, but it performs no type conversion. As a common practice, it is almost never advised to use the equality operator. The equality operators can be seen as the evil twins of the identity operators. Equality operators lead to code that is weird and may not do what you want. Here's an example:
+
+```javascript
+'' == '0'           // false
+0 == ''             // true
+0 == '0'            // true
+
+false == 'false'    // false
+false == '0'        // true
+
+false == undefined  // false
+false == null       // false
+null == undefined   // true
+
+2 < "12" 	 		// true
+
+' \t\r\n ' == 0     // true
+
+[] == ![]; // -> true
+```
+
+JavaScript also has a 3 different kinds of true/false operators: `true, truthy, 1` and `false, falsy, 0`. And they are not always equal. As a common practice it is best to just use true and false values. The truthy value applies typically to the conversion of data structures like arrays down to their lowest form. For example, an empty array `[]` is considered truthy, but it is not `true`. Weird, right?
+
+There are many best practices that can solve a lot of these issues, but they still come up and they are one of the things the JavaScript community gripes about most heavily.
+
+## Modern JavaScript
+
+Modern JavaScript is represented in my first code segment above, but it is largely the collection of standards brought about in ES6. This also includes new functional programming paradigms like `map`, `reduce`, and `forEach` and allows for much more readable and bulletproof code. But it also introduces some neat patterns in the form of the following:
+
+### Modules
+
+Modules allow functionality to be passed around in the form of inputs (as shown above). This allows for someone to export functionality from its current file and have it be exported into whatever file they want to use it in via the use of encapsulation. Here's an example:
+
+```javascript
+// calculate.js
+function add(a, b) {
+    return a + b;
+}
+
+module.exports = add;
+
+// otherfunction.js
+const add = require('./calculate'); //'calculate' is the function name (imports don't need the js extention)
+
+const result = add(1, 2);
+
+return result; // 3
+```
+
+The add function was able to be wrapped up as a module, moved around to wherever it is needed, and invoked on command. When the module is something we have imported from our local file structure, then we must use the relative path.
+
+There is also newer syntax, but node.js doesn't support it and we still need polyfills in the browser, so we don't use it quite yet.
