@@ -184,6 +184,8 @@ namespace router {
     printf("Listening for packets on %d net_inefs\n", net_inefs.size());
     std::unordered_map<std::string, std::vector<std::string>> queue_map;
 
+    std::unordered_map<std::string, std::string> mac_cache;
+
     while (1) {
       fd_set read_fds;
       FD_ZERO(&read_fds);
@@ -370,44 +372,61 @@ namespace router {
               std::strcpy(raw_ip, hop_dest.c_str());
               inet_pton(AF_INET, raw_ip, &target_ip);
             }
-
-            //std::cout << "Building the arp request now for " << std::to_string(ip) << std::endl;
-            rp_outgoing = build_arp_request(eh_incoming, arp_frame, target_ip);
-            std::memcpy(rp_outgoing->ea.arp_spa, net_inefs[i].ip_addr, 4);
-            std::memcpy(rp_outgoing->ea.arp_tpa, target_ip, 4);
-            std::memcpy(rp_outgoing->ea.arp_tha, broadcast, 6);
-            std::memcpy(rp_outgoing->ea.arp_sha, net_inefs[i].mac_addr, 6);
-            std::memcpy(send_buffer, rp_outgoing, 1500);
-            // This part may be the cause of some issues
-            std::cout << "Building the ethernet header now for " << dest_inef.name << std::endl;
-            eh_outgoing = (ether_header*) send_buffer;
-            std::memcpy(eh_outgoing->ether_dhost, &broadcast, 6);
-            std::memcpy(eh_outgoing->ether_shost, dest_inef.mac_addr, 6);
-            eh_outgoing->ether_type = htons(0x0806);
-
-                  // Issue might be line above this, eh_incoming->ether_dhost seems wrong...
-
-            if (send(dest_inef.descr, send_buffer, 42, 0) == -1) {
-              std::cout << "There was an error sending the ICMP echo packet" << std::endl;
-            }
-
-            int reply = 1;
-            struct sockaddr_ll recvaddr;
-            socklen_t sin_size = sizeof(sockaddr_ll);
-            std::cout << "BLocking until we get the MAC back from " << dest_inef.name << std::endl;
-
-            // Get ready to get the contents
+	    
             char temp_buffer[1500];
             char arp_buffer[42];
 
-            while(reply) {
-              recvfrom(dest_inef.descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
-              if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
-              reply = 0;
-              std::cout << "Got the mac" << std::endl;
-            }
+	    std::string string_target_ip = (std::string) reinterpret_cast<char*>(target_ip);
+	    
+	    // Check if we already know the MAC for this target_ip
+	    if (mac_cache.find(string_target_ip) != mac_cache.end()) {
 
-            std::memcpy(arp_buffer, temp_buffer, 42);
+	      std::cout << "Cached mac found" << std::endl;
+	      memcpy(arp_buffer, (mac_cache.find(string_target_ip)->second.c_str()), 42);
+
+	    } else {
+
+              //std::cout << "Building the arp request now for " << std::to_string(ip) << std::endl;
+              rp_outgoing = build_arp_request(eh_incoming, arp_frame, target_ip);
+              std::memcpy(rp_outgoing->ea.arp_spa, net_inefs[i].ip_addr, 4);
+              std::memcpy(rp_outgoing->ea.arp_tpa, target_ip, 4);
+              std::memcpy(rp_outgoing->ea.arp_tha, broadcast, 6);
+              std::memcpy(rp_outgoing->ea.arp_sha, net_inefs[i].mac_addr, 6);
+              std::memcpy(send_buffer, rp_outgoing, 1500);
+              // This part may be the cause of some issues
+              std::cout << "Building the ethernet header now for " << dest_inef.name << std::endl;
+              eh_outgoing = (ether_header*) send_buffer;
+              std::memcpy(eh_outgoing->ether_dhost, &broadcast, 6);
+              std::memcpy(eh_outgoing->ether_shost, dest_inef.mac_addr, 6);
+              eh_outgoing->ether_type = htons(0x0806);
+
+                    // Issue might be line above this, eh_incoming->ether_dhost seems wrong...
+
+              if (send(dest_inef.descr, send_buffer, 42, 0) == -1) {
+                std::cout << "There was an error sending the ICMP echo packet" << std::endl;
+              }
+
+              int reply = 1;
+              struct sockaddr_ll recvaddr;
+              socklen_t sin_size = sizeof(sockaddr_ll);
+              std::cout << "BLocking until we get the MAC back from " << dest_inef.name << std::endl;
+
+              // Get ready to get the contents
+
+              while(reply) {
+                recvfrom(dest_inef.descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
+                if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
+                reply = 0;
+                std::cout << "Got the mac" << std::endl;
+              }
+
+              std::memcpy(arp_buffer, temp_buffer, 42);
+
+	      // Store the mac in cache
+  	      mac_cache[string_target_ip] = (std::string) reinterpret_cast<char*>(arp_buffer);
+
+	    }
+
             struct ether_header* eh_forward = (ether_header*) arp_buffer;
             std::memcpy(eh_forward->ether_dhost, eh_forward->ether_shost, 6);
             std::memcpy(eh_forward->ether_shost, dest_inef.mac_addr, 6);
