@@ -466,8 +466,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "zoomjoystrong.lex"
-#line 2 "zoomjoystrong.lex"
+#line 1 "zjs.lex"
+#line 2 "zjs.lex"
   #include <stdio.h>
 #line 472 "lex.yy.c"
 #line 473 "lex.yy.c"
@@ -687,7 +687,7 @@ YY_DECL
 		}
 
 	{
-#line 7 "zoomjoystrong.lex"
+#line 7 "zjs.lex"
 
 
 #line 693 "lex.yy.c"
@@ -749,63 +749,63 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 9 "zoomjoystrong.lex"
+#line 9 "zjs.lex"
 { printf("END"); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 10 "zoomjoystrong.lex"
+#line 10 "zjs.lex"
 { printf("END_STATEMENT"); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 11 "zoomjoystrong.lex"
+#line 11 "zjs.lex"
 { printf("LINE"); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 12 "zoomjoystrong.lex"
+#line 12 "zjs.lex"
 { printf("POINT"); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 13 "zoomjoystrong.lex"
+#line 13 "zjs.lex"
 { printf("CIRCLE"); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 14 "zoomjoystrong.lex"
+#line 14 "zjs.lex"
 { printf("RECTANGLE"); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 15 "zoomjoystrong.lex"
+#line 15 "zjs.lex"
 { printf("SET_COLOR"); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 16 "zoomjoystrong.lex"
+#line 16 "zjs.lex"
 { printf("INTEGER"); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 17 "zoomjoystrong.lex"
+#line 17 "zjs.lex"
 { printf("FLOATING POINT"); }
 	YY_BREAK
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 18 "zoomjoystrong.lex"
+#line 18 "zjs.lex"
 ;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 19 "zoomjoystrong.lex"
-{ printf("This aint it chief"); }
+#line 19 "zjs.lex"
+{ printf("Error on line: %d\n", yylineno); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 21 "zoomjoystrong.lex"
+#line 21 "zjs.lex"
 ECHO;
 	YY_BREAK
 #line 811 "lex.yy.c"
@@ -1813,7 +1813,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 21 "zoomjoystrong.lex"
+#line 21 "zjs.lex"
 
 
 int main(int argc, char** argv) {

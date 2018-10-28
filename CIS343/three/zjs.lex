@@ -16,7 +16,7 @@ set_color       { printf("SET_COLOR"); }
 [0-9]+          { printf("INTEGER"); }
 [0-9]+\.[0-9]+  { printf("FLOATING POINT"); }
 [' '\t\n]       ;
-.               { printf("This aint it chief"); }
+.               { printf("Error on line: %d\n", yylineno); }
 
 %%
 
