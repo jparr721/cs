@@ -61,7 +61,6 @@ void diffuse(
     double* cylinder,
     double* copy_cylinder,
     double* temp,
-    double* output,
     uint64_t cylinder_size,
     uint64_t diffusion_time,
     uint64_t contaminant_concentration
@@ -107,7 +106,7 @@ int main(int argc, char** argv) {
   diffusion_time = atoi(argv[3]);
   contaminant_concentration = atoi(argv[4]);
   cudaError_t e;
-  double *cylinder, *copy_cylinder, *output, *temp;
+  double *cylinder, *copy_cylinder, *temp;
 
   e = cudaMalloc((void**) &cylinder, cylinder_size * sizeof(double));
   if (e != cudaSuccess) {
@@ -127,33 +126,19 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  e = cudaMalloc((void**) &output, cylinder_size * sizeof(double));
-  if (e != cudaSuccess) {
-    std::cerr << "Erro performaing cuda malloc for output" << std::endl;
-    return EXIT_FAILURE;
-  }
-
   const uint64_t GRID_SIZE = cylinder_size / BLOCK_SIZE;
   make_array<<<GRID_SIZE, BLOCK_SIZE>>>(cylinder, copy_cylinder, cylinder_size, contaminant_concentration);
   diffuse<<<GRID_SIZE, BLOCK_SIZE>>>(
       cylinder,
       copy_cylinder,
       temp,
-      output,
       cylinder_size,
       diffusion_time,
       contaminant_concentration);
 
-  std::vector<double> data(output, output + cylinder_size);
-  std::cout << "Answer at slice location: " << slice_location << " is " << output[slice_location] << std::endl;
+  std::cout << "Answer at slice location: " << slice_location << " is " << cylinder[slice_location] << std::endl;
   std::cout << "Now visualizing results..." << std::endl;
-  psp.end(output, cylinder_size);
-
-  e = cudaFree(output);
-  if (e != cudaSuccess) {
-    std::cerr << "Error performing memory free on output" << std::endl;
-    return EXIT_FAILURE;
-  }
+  psp.end(cylinder, cylinder_size);
 
   e = cudaFree(cylinder);
   if (e != cudaSuccess) {
