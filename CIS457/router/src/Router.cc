@@ -5,6 +5,7 @@
 #include "../include/router/ICMPHeader.hpp"
 #include "../include/router/IPHeader.hpp"
 #include "../include/router/NetworkInterface.hpp"
+#include "../include/router/Error.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -317,12 +318,11 @@ namespace router {
               if (memcmp(ip_incoming->dest_ip, &net_inefs[j].ip_addr, 4) == 0) {
                 is_end_device = true;
                 break;
+              }
             }
-          }
 
         if (is_end_device) {
           std::cout << "The requested ip is in the lookup table, forwarding normally" << std::endl;
-
           // Copy data into the ICMP header
           icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
           icmp_outgoing->type = 0;
@@ -347,8 +347,39 @@ namespace router {
         } else {
             // If it's not in the table we need to send to the next router, but to do that we need to first ARP
             std::cout << "Beginning packet forward process" << std::endl;
-            char buffer[98];
+	    ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
+	    ip_outgoing->ttl = ip_outgoing->ttl - 1;
+	    if ((int) ip_outgoing->ttl <= 0) {
+	      router:Error err;
+	      std::cout << "Packet TTL is 0. Sending error..." << std::endl;
+	      icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
+              icmp_outgoing->type = err.TYPE_TTL;
+	      icmp_outgoing->code = err.CODE_ZERO;
+              icmp_outgoing->checksum = 0;
+              icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) + sizeof(IPHeader)));
+
+	      ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
+              std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
+              std::memcpy(ip_outgoing->dest_ip, net_inefs[i].ip_addr, 4);
+
+              std::cout << "Building the ICMP ethernet header" << std::endl;
+              eh_outgoing = (ether_header*) send_buffer;
+              std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
+              std::memcpy(eh_outgoing->ether_shost, net_inefs[i].mac_addr, 6);
+              eh_outgoing->ether_type = htons(0x800);
+
+	      if (send(net_inefs[i].descr, send_buffer, n, 0) == -1) {
+    	        std::cout << "There was an error sending the ICMP echo packet" << std::endl;
+              }
+	    } else {
+	    ip_outgoing->checksum = 0;
+	    ip_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(ip_outgoing), (sizeof(IPHeader)));
+            std::cout << "IP TTL: " << (int) ip_outgoing->ttl << std::endl;
+	    unsigned char buffer[98];
             std::memcpy(&buffer, &buf[0], 98);
+	    // idk why this doesn't work
+	    //uint16_t checksum_verify = checksum(buffer, (sizeof(IPHeader));
+	    //std::cout << "IP Incoming Checksum: " << (int) ip_incoming->checksum << " | " << (int) checksum_verify << std::endl;
 
             unsigned char broadcast[6];
             for (int i = 0; i < 6; ++i)
@@ -438,6 +469,7 @@ namespace router {
             std::cout << "Sending ICMP response to " << dest_inef.name << std::endl;
             send(dest_inef.descr, buffer, sizeof(buffer), 0);
           }
+	    }
         }
       }
     }

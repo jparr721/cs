@@ -18,7 +18,7 @@ unsigned char* Error::time_to_live(unsigned char* icmp_buffer) {
 
     std::memcpy(&csum, icmp_buffer + 50, sizeof(uint8_t));
     // Bug on this line
-    icmp_buffer = this->create_error(this->TYPE_TTL, this->CODE_ZERO, csum, data);
+    icmp_buffer = this->create_error((unsigned char*) this->TYPE_TTL, (unsigned char*) this->CODE_ZERO, csum, data);
     return icmp_buffer;
   } else {
     // remake the checksum
