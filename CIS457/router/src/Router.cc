@@ -349,8 +349,9 @@ namespace router {
             std::cout << "Beginning packet forward process" << std::endl;
 	    ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
 	    ip_outgoing->ttl = ip_outgoing->ttl - 1;
+	    router::Error err;
 	    if ((int) ip_outgoing->ttl <= 0) {
-	      router:Error err;
+	      // Send error if our TTL is 0
 	      std::cout << "Packet TTL is 0. Sending error..." << std::endl;
 	      icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
               icmp_outgoing->type = err.TYPE_TTL;
@@ -362,7 +363,29 @@ namespace router {
               std::memcpy(ip_outgoing->src_ip, ip_incoming->dest_ip, 4);
               std::memcpy(ip_outgoing->dest_ip, net_inefs[i].ip_addr, 4);
 
-              std::cout << "Building the ICMP ethernet header" << std::endl;
+              eh_outgoing = (ether_header*) send_buffer;
+              std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
+              std::memcpy(eh_outgoing->ether_shost, net_inefs[i].mac_addr, 6);
+              eh_outgoing->ether_type = htons(0x800);
+
+	      if (send(net_inefs[i].descr, send_buffer, n, 0) == -1) {
+    	        std::cout << "There was an error sending the ICMP echo packet" << std::endl;
+              }
+	    } else if (fwd_inef.length() <= 0) {
+	      // Send error if there is no available forward interface
+	      std::cout << "Network destination unreachable. Sending error..." << std::endl;
+	      icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
+              icmp_outgoing->type = err.TYPE_UNREACHABLE;
+	      icmp_outgoing->code = err.CODE_ZERO;
+              icmp_outgoing->checksum = 0;
+              icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) + sizeof(IPHeader)));
+
+	      ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
+	      ip_outgoing->checksum = 0;
+              ip_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(ip_outgoing), 	(sizeof(IPHeader)));
+              std::memcpy(ip_outgoing->src_ip, net_inefs[i].ip_addr, 4);
+              std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
+
               eh_outgoing = (ether_header*) send_buffer;
               std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
               std::memcpy(eh_outgoing->ether_shost, net_inefs[i].mac_addr, 6);
