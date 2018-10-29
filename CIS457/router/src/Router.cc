@@ -137,7 +137,11 @@ namespace router {
     int packet_socket;
     int i = 0;
     struct ifaddrs *ifaddr, *tmp;
+    struct timeval timeout;
     std::vector<NetworkInterface> net_inefs;
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 500;
 
     if (getifaddrs(&ifaddr) == -1) {
       std::cerr << "getifaddrs machine broke" << std::endl;
@@ -156,6 +160,7 @@ namespace router {
           struct sockaddr_in *local_add = (struct sockaddr_in*) tmp->ifa_addr;
 
           packet_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+
           if (packet_socket < 0) {
             std::cerr << "socket machine broke [" << packet_socket << "]" << std::endl;
             return errno;
@@ -164,6 +169,8 @@ namespace router {
           if (bind(packet_socket, tmp->ifa_addr, sizeof(struct sockaddr_ll)) == -1) {
             std::cerr << "bind machine broke" << std::endl;
           }
+
+          setsockopt(packet_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
           net_if.name = tmp->ifa_name;
           net_if.descr = packet_socket;
@@ -199,7 +206,7 @@ namespace router {
         FD_SET(net_inefs[i].descr, &read_fds);
       }
 
-      int activity = select(fd_max + 1, &read_fds, NULL, NULL, NULL);
+      int activity = select(fd_max + 1, &read_fds, NULL, NULL, &timeout);
 
       if (activity == -1) {
         printf("Unable to modify socket file descriptor.\n");
@@ -220,7 +227,8 @@ namespace router {
 
           int n = recvfrom(net_inefs[i].descr, buf, 1500, 0, (sockaddr*) &recvaddr, &recvaddrlen);
           if (n < 0) {
-            std::cerr << "recvfrom machine broke" << std::endl;
+            //std::cerr << "recvfrom machine broke" << std::endl;
+            continue;
           }
 
           if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
@@ -375,6 +383,7 @@ namespace router {
 	      // Send error if there is no available forward interface
 	      std::cout << "Network destination unreachable. Sending error..." << std::endl;
 	      icmp_outgoing = (ICMPHeader*) (send_buffer + sizeof(ether_header) + sizeof(IPHeader));
+              ip_outgoing->ttl = ip_outgoing->ttl + 1;
               icmp_outgoing->type = err.TYPE_UNREACHABLE;
 	      icmp_outgoing->code = err.CODE_ZERO;
               icmp_outgoing->checksum = 0;
@@ -382,9 +391,9 @@ namespace router {
 
 	      ip_outgoing = (IPHeader*) (send_buffer + sizeof(ether_header));
 	      ip_outgoing->checksum = 0;
-              ip_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(ip_outgoing), 	(sizeof(IPHeader)));
               std::memcpy(ip_outgoing->src_ip, net_inefs[i].ip_addr, 4);
               std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
+	      ip_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(ip_outgoing), 	(sizeof(IPHeader)));
 
               eh_outgoing = (ether_header*) send_buffer;
               std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
@@ -428,7 +437,9 @@ namespace router {
             }
 	    
             char temp_buffer[1500];
+	    char old_buffer[1500];
             char arp_buffer[42];
+	    std::memcpy(old_buffer, send_buffer, 1500);
 
 	    std::string string_target_ip = (std::string) reinterpret_cast<char*>(target_ip);
 	    
@@ -460,19 +471,48 @@ namespace router {
                 std::cout << "There was an error sending the ICMP echo packet" << std::endl;
               }
 
-              int reply = 1;
+	      int res_bytes = 1;
               struct sockaddr_ll recvaddr;
               socklen_t sin_size = sizeof(sockaddr_ll);
               std::cout << "BLocking until we get the MAC back from " << dest_inef.name << std::endl;
 
               // Get ready to get the contents
-
-              while(reply) {
-                recvfrom(dest_inef.descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
+              while(1) {
+                res_bytes = recvfrom(dest_inef.descr, temp_buffer, 1500, 0, (sockaddr*) &recvaddr, &sin_size);
                 if (recvaddr.sll_pkttype == PACKET_OUTGOING) continue;
-                reply = 0;
-                std::cout << "Got the mac" << std::endl;
+                if (res_bytes < 0) { 
+                  std::cout << "Timed out waiting for destination ARP reply" << std::endl;
+		  break;
+	        } else {
+		  std::cout << "Got the mac" << std::endl;
+		  break;
+		}
               }
+
+	      if (res_bytes < 0) {
+		// Send error if there is no available forward interface
+	        std::cout << "Network host unreachable. Sending error..." << std::endl;
+	        icmp_outgoing = (ICMPHeader*) (old_buffer + sizeof(ether_header) + sizeof(IPHeader));
+                ip_outgoing->ttl = ip_outgoing->ttl + 1;
+                icmp_outgoing->type = err.TYPE_UNREACHABLE;
+	        icmp_outgoing->code = err.CODE_ONE;
+                icmp_outgoing->checksum = 0;
+                icmp_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(icmp_outgoing), (1500 - sizeof(ether_header) + sizeof(IPHeader)));
+
+                 ip_outgoing = (IPHeader*) (old_buffer + sizeof(ether_header));
+                 ip_outgoing->checksum = 0;
+                 std::memcpy(ip_outgoing->src_ip, dest_inef.ip_addr, 4);
+                 std::memcpy(ip_outgoing->dest_ip, ip_incoming->src_ip, 4);
+                 ip_outgoing->checksum = checksum(reinterpret_cast<unsigned char*>(ip_outgoing), 	(sizeof(IPHeader)));
+                 eh_outgoing = (ether_header*) old_buffer;
+                 std::memcpy(eh_outgoing->ether_dhost, eh_incoming->ether_shost, 6);
+                 std::memcpy(eh_outgoing->ether_shost, dest_inef.mac_addr, 6);
+                 eh_outgoing->ether_type = htons(0x800);
+	         if (send(net_inefs[i].descr, old_buffer, n, 0) == -1) {
+    	           std::cout << "There was an error sending the ICMP echo packet" << std::endl;
+                 }
+	         continue;
+	      }
 
               std::memcpy(arp_buffer, temp_buffer, 42);
 
