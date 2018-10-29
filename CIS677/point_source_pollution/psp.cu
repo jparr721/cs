@@ -1,9 +1,10 @@
 #include <cstdint>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-const int BLOCK_SIZE = 1024;
+const int BLOCK_SIZE = 64;
 
 class PointSourcePollution {
   public:
@@ -108,26 +109,29 @@ int main(int argc, char** argv) {
   cudaError_t e;
   double *cylinder, *copy_cylinder, *temp;
 
-  e = cudaMalloc((void**) &cylinder, cylinder_size * sizeof(double));
+  cudaMalloc((void**) &cylinder, cylinder_size * sizeof(double));
+  cudaMalloc((void**) &copy_cylinder, cylinder_size * sizeof(double));
+  cudaMalloc((void**) &temp, cylinder_size * sizeof(double));
+
+  // init our arrays
+  for (int i = 0; i < cylinder_size; ++i) {
+    if (i == 0) {
+      cylinder[i] = contaminant_concentration;
+      copy_cylinder[i] = contaminant_concentration;
+    }
+
+    cylinder[i] = 0.0;
+    copy_cylinder[i] = 0.0;
+  }
+  std::cout << cylinder[0] << copy_cylinder[0] << std::endl;
+
+  e = cudaGetLastError();
   if (e != cudaSuccess) {
-    std::cerr << "Error performing cuda malloc for cylinder" << std::endl;
+    std::cerr << "Error: " << e << std::endl;
     return EXIT_FAILURE;
   }
 
-  e = cudaMalloc((void**) &copy_cylinder, cylinder_size * sizeof(double));
-  if (e != cudaSuccess) {
-    std::cerr << "Error performing cuda malloc for copy cyliner" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  e = cudaMalloc((void**) &temp, cylinder_size * sizeof(double));
-  if (e != cudaSuccess) {
-    std::cerr << "Error performing cuda malloc for temp cylinder" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  const uint64_t GRID_SIZE = cylinder_size / BLOCK_SIZE;
-  make_array<<<GRID_SIZE, BLOCK_SIZE>>>(cylinder, copy_cylinder, cylinder_size, contaminant_concentration);
+  const uint64_t GRID_SIZE = ceil(cylinder_size / static_cast<double>(BLOCK_SIZE));
   diffuse<<<GRID_SIZE, BLOCK_SIZE>>>(
       cylinder,
       copy_cylinder,
@@ -136,9 +140,11 @@ int main(int argc, char** argv) {
       diffusion_time,
       contaminant_concentration);
 
+  double* answer;
+  e = cudaMemcpy(&answer, &cylinder, cylinder_size * sizeof(double), cudaMemcpyDeviceToHost);
   std::cout << "Answer at slice location: " << slice_location << " is " << cylinder[slice_location] << std::endl;
   std::cout << "Now visualizing results..." << std::endl;
-  psp.end(cylinder, cylinder_size);
+  psp.end(answer, cylinder_size);
 
   e = cudaFree(cylinder);
   if (e != cudaSuccess) {
@@ -153,6 +159,6 @@ int main(int argc, char** argv) {
   }
 
 
-  system("python plot.py");
+  /* system("python plot.py"); */
   return EXIT_SUCCESS;
 }
