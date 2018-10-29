@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-const int BLOCK_SIZE = 64;
+const int BLOCK_SIZE = 1024;
 
 class PointSourcePollution {
   public:
@@ -38,26 +38,6 @@ void central_difference_theorem(
 }
 
 __global__
-void make_array(
-    double* cylinder,
-    double* copy_cylinder,
-    uint64_t cylinder_size,
-    uint64_t concentration
-    ) {
-  int i = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-
-  if (i < cylinder_size) {
-    if (i == 0) {
-      cylinder[i] = concentration;
-      copy_cylinder[i] = concentration;
-    } else {
-      cylinder[i] = 0.0;
-      copy_cylinder[i] = 0.0;
-    }
-  }
-}
-
-__global__
 void diffuse(
     double* cylinder,
     double* copy_cylinder,
@@ -70,18 +50,17 @@ void diffuse(
   int i = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 
   if (i < cylinder_size) {
-    for (int i = 1; i < diffusion_time; ++i) {
-      for (int j = 1; j < cylinder_size; ++j) {
-        left = cylinder[j - 1];
-        right = cylinder[j + 1];
+    if (i > 0)
+      left = cylinder[i - 1];
+    else
+      left = cylinder[i];
+    right = cylinder[i + 1];
 
-        central_difference_theorem(left, right, cdt_out);
-        cylinder[j] = cdt_out;
-      }
-      temp = cylinder;
-      cylinder = copy_cylinder;
-      copy_cylinder = temp;
-    }
+    central_difference_theorem(left, right, cdt_out);
+    cylinder[i] = cdt_out;
+    temp = cylinder;
+    cylinder = copy_cylinder;
+    copy_cylinder = temp;
   }
 }
 
@@ -127,23 +106,26 @@ int main(int argc, char** argv) {
 
   e = cudaGetLastError();
   if (e != cudaSuccess) {
-    std::cerr << "Error: " << e << std::endl;
+    std::cerr << "Error: " << cudaGetErrorString(e) << std::endl;
     return EXIT_FAILURE;
   }
 
   const uint64_t GRID_SIZE = ceil(cylinder_size / static_cast<double>(BLOCK_SIZE));
-  diffuse<<<GRID_SIZE, BLOCK_SIZE>>>(
-      cylinder,
-      copy_cylinder,
-      temp,
-      cylinder_size,
-      diffusion_time,
-      contaminant_concentration);
+  for (int i = 0; i < diffusion_time; ++i) {
+    diffuse<<<GRID_SIZE, BLOCK_SIZE>>>(
+        cylinder,
+        copy_cylinder,
+        temp,
+        cylinder_size,
+        diffusion_time,
+        contaminant_concentration);
+  }
   cudaDeviceSynchronize();
 
   e = cudaGetLastError();
   if (e != cudaSuccess) {
-    std::cerr << "Error: " << e << std::endl;
+    std::cerr << "Error2: " << cudaGetErrorString(e) << std::endl;
+    return EXIT_FAILURE;
   }
 
   std::cout << "Answer at slice location: " << slice_location << " is " << cylinder[slice_location] << std::endl;
@@ -155,11 +137,11 @@ int main(int argc, char** argv) {
 
   e = cudaGetLastError();
   if (e != cudaSuccess) {
-    std::cerr << "Error perofmring memory free" << std::endl;
+    std::cerr << cudaGetErrorString(e) << std::endl;
     return EXIT_FAILURE;
   }
 
 
-  /* system("python plot.py"); */
+  system("python plot.py");
   return EXIT_SUCCESS;
 }
