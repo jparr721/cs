@@ -109,19 +109,19 @@ int main(int argc, char** argv) {
   cudaError_t e;
   double *cylinder, *copy_cylinder, *temp;
 
-  cudaMalloc((void**) &cylinder, cylinder_size * sizeof(double));
-  cudaMalloc((void**) &copy_cylinder, cylinder_size * sizeof(double));
-  cudaMalloc((void**) &temp, cylinder_size * sizeof(double));
+  cudaMallocManaged(&cylinder, cylinder_size * sizeof(double));
+  cudaMallocManaged(&copy_cylinder, cylinder_size * sizeof(double));
+  cudaMallocManaged(&temp, cylinder_size * sizeof(double));
 
   // init our arrays
   for (int i = 0; i < cylinder_size; ++i) {
     if (i == 0) {
       cylinder[i] = contaminant_concentration;
       copy_cylinder[i] = contaminant_concentration;
+    } else {
+      cylinder[i] = 0.0;
+      copy_cylinder[i] = 0.0;
     }
-
-    cylinder[i] = 0.0;
-    copy_cylinder[i] = 0.0;
   }
   std::cout << cylinder[0] << copy_cylinder[0] << std::endl;
 
@@ -139,22 +139,23 @@ int main(int argc, char** argv) {
       cylinder_size,
       diffusion_time,
       contaminant_concentration);
+  cudaDeviceSynchronize();
 
-  double* answer;
-  e = cudaMemcpy(&answer, &cylinder, cylinder_size * sizeof(double), cudaMemcpyDeviceToHost);
-  std::cout << "Answer at slice location: " << slice_location << " is " << cylinder[slice_location] << std::endl;
-  std::cout << "Now visualizing results..." << std::endl;
-  psp.end(answer, cylinder_size);
-
-  e = cudaFree(cylinder);
+  e = cudaGetLastError();
   if (e != cudaSuccess) {
-    std::cerr << "Error performing memory free on cylinder" << std::endl;
-    return EXIT_FAILURE;
+    std::cerr << "Error: " << e << std::endl;
   }
 
-  e = cudaFree(copy_cylinder);
+  std::cout << "Answer at slice location: " << slice_location << " is " << cylinder[slice_location] << std::endl;
+  std::cout << "Now visualizing results..." << std::endl;
+  psp.end(cylinder, cylinder_size);
+
+  cudaFree(cylinder);
+  cudaFree(copy_cylinder);
+
+  e = cudaGetLastError();
   if (e != cudaSuccess) {
-    std::cerr << "Error perofmring memory free on copy_cylinder" << std::endl;
+    std::cerr << "Error perofmring memory free" << std::endl;
     return EXIT_FAILURE;
   }
 

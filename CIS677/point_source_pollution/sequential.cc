@@ -10,7 +10,6 @@ class PointSourcePollution {
     ~PointSourcePollution() = default;
     std::vector<double> diffuse(
         uint64_t cylinder_size,
-        uint64_t slice_size,
         uint64_t diffusion_time,
         uint64_t contaminant_concentration);
     void end(const std::vector<double> & data);
@@ -37,7 +36,6 @@ void PointSourcePollution::end(const std::vector<double>& data) {
 
 std::vector<double> PointSourcePollution::diffuse(
     uint64_t cylinder_size,
-    uint64_t slice_size,
     uint64_t diffusion_time,
     uint64_t contaminant_concentration
     ) {
@@ -68,10 +66,10 @@ double PointSourcePollution::central_difference_theorem(double left, double righ
 }
 
 int main(int argc, char** argv) {
-  uint64_t cylinder_size, slice_size, slice_location, diffusion_time, contaminant_concentration;
+  uint64_t cylinder_size, slice_location, diffusion_time, contaminant_concentration;
 
-  if (argc < 6) {
-    std::cerr << "usage: psp cylinder_size slice_size slice_location diffusion_time contaminant_concentration" << std::endl;
+  if (argc < 5) {
+    std::cerr << "usage: psp cylinder_size slice_location diffusion_time contaminant_concentration" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -83,13 +81,12 @@ int main(int argc, char** argv) {
   }
 
   cylinder_size = atoi(argv[1]);
-  slice_size = atoi(argv[2]);
-  slice_location = atoi(argv[3]);
-  diffusion_time = atoi(argv[4]);
-  contaminant_concentration = atoi(argv[5]);
+  slice_location = atoi(argv[2]);
+  diffusion_time = atoi(argv[3]);
+  contaminant_concentration = atoi(argv[4]);
 
   PointSourcePollution psp(cylinder_size);
-  std::vector<double> output = psp.diffuse(cylinder_size, slice_size, diffusion_time, contaminant_concentration);
+  std::vector<double> output = psp.diffuse(cylinder_size, diffusion_time, contaminant_concentration);
   std::cout << "Answer at slice location: " << slice_location << " is " << output[slice_location] << std::endl;
   std::cout << "Now visualizing results..." << std::endl;
   psp.end(output);

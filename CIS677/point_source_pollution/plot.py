@@ -13,11 +13,12 @@ def visualize(path):
         data.append([float(x) for x in content.split(' ')])
 
     plot = np.array(data)
-    fig, ax = plt.subplots()
-    _ = ax.imshow(plot)
+    fig, ax = plt.subplots(nrows=1, sharex=True)
+    ax.imshow(plot, cmap='plasma', aspect='auto')
 
     ax.set_title('Point source pollution')
-    fig.tight_layout()
+    ax.set_yticks([])
+    plt.tight_layout()
     plt.show()
 
 
