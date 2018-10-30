@@ -13,4 +13,14 @@
 \date{October 2018}
 \maketitle
 
+\section{Introduction}
+Point source pollution is a very common occurance in our modern world. Whether it is just a simple spill, or a deadly break in an oil line, humans have long used modeling to predict the disaster surface of such events. This project is another example of such modeling. Utilizing a partial differential equation, models for a 1-dimensional river and 2-dimensional lake-like area have been able to be successfully simulated. This project served as an introduction to cuda-accelerated modeling of systems like this. Given the nature of the equation, it would prove to be very taxing on a normal CPU to attempt this degree of calculation for iterations sometimes in the billions. As a result, the problem specification mandated the use of a GPU and CUDA code to help mitigate these performance bottlenecks. With unlimited computing power this situation becomes trivial like in situations for researchers in national labs, however, given that resources of this scope were not available, a great deal of exploration was taken into proper optimization techniques, and further inquiry into getting every last ounce of performance from the CUDA code on limited hardware.
+
+\section{Motivation}
+Outside of the project specification, this project was particularly interesting to myself as a researcher because of my steadfast desire to learn more about simulations of phenomena that can have a direct impact on the environment. A great deal of my interest lies in the understanding of how such interactions exist naturally, and the ability to solve the problems that they present. The implications of very fine-tuned environmental modeling can speak volumes about ways to help further preserve the environment as a whole.
+
+\section{Program Architecture}
+My sequential code was about as simple as it gets. The code was able to be implement central difference theorem without much hassle, and this allowed more time to be devoted to building (and debugging) the parallel version. At first, it was an extreme challenge to get everything working. CUDA is very particular about its memory and any misstep caused a slew of hard-to-track-down errors. This enabled learning more of the ``do's'' and ``dont's'' of CUDA development. In terms of program operation, it was found that for certain numbers of cycles, there was a minimum number needed to see any reasonable results. For example, when run with a cylinder size of 1000 - 10000, a diffusion time that was even within the same order of magnitude of the cylinder size presented results that ended upproducing values that were ~0.
+As a result
+
 \end{document}
