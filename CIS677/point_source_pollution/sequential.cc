@@ -9,7 +9,7 @@
 
 class PointSourcePollution {
   public:
-    explicit PointSourcePollution(uint64_t cylinder_size);
+    explicit PointSourcePollution();
     ~PointSourcePollution() = default;
     std::vector<double> diffuse(
         uint64_t cylinder_size,
@@ -20,16 +20,16 @@ class PointSourcePollution {
         uint64_t pool_cols,
         uint64_t diffusion_time,
         uint64_t contaminant_concentration,
-        uint64_t contaminant_locations,
-        uint64_t leaks);
+        uint64_t leaks,
+        bool multiple);
     void end(const std::vector<double> & data);
+    void end2d(const std::vector<std::vector<double>>& data);
   private:
-    std::vector<uint64_t> simulation_space;
     double central_difference_theorem(double left, double right) const;
     double central_difference_theorem2d(double left, double right, double up, double down) const;
 };
 
-PointSourcePollution::PointSourcePollution(uint64_t cylinder_size) : simulation_space(cylinder_size, 0) {}
+PointSourcePollution::PointSourcePollution() {}
 
 void PointSourcePollution::end(const std::vector<double>& data) {
   std::ofstream payload;
@@ -45,6 +45,23 @@ void PointSourcePollution::end(const std::vector<double>& data) {
   payload.close();
 }
 
+void PointSourcePollution::end2d(const std::vector<std::vector<double>>& data) {
+  std::ofstream payload;
+  payload.open("output.txt");
+
+  for (uint64_t i = 0; i < data.size(); ++i) {
+    for (uint64_t j = 0; j < data[i].size(); ++j) {
+      if (j != 0) {
+        payload << " ";
+      }
+
+      payload << data[i][j];
+    }
+    payload << "\n";
+  }
+  payload.close();
+}
+
 double PointSourcePollution::central_difference_theorem2d(double left, double right, double up, double down) const {
   return (left + right + up + down) / 4;
 }
@@ -54,8 +71,8 @@ std::vector<std::vector<double>> PointSourcePollution::diffuse2d(
     uint64_t pool_cols,
     uint64_t diffusion_time,
     uint64_t contaminant_concentration,
-    uint64_t contaminant_locations,
-    uint64_t leaks
+    uint64_t leaks,
+    bool multiple
     ) {
   std::random_device rd;
   std::mt19937 g(rd());
@@ -72,12 +89,17 @@ std::vector<std::vector<double>> PointSourcePollution::diffuse2d(
   std::vector<std::vector<double>> copy_pool(pool_rows, std::vector<double>(pool_cols, 0));
   std::vector<std::vector<double>> temp(pool_rows, std::vector<double>(pool_cols, 0));
 
-  for (uint64_t i = 0; i < leak_locations.size(); ++i) {
-    auto row = std::get<0>(leak_locations[i]);
-    auto col = std::get<1>(leak_locations[i]);
+  if (multiple) {
+    for (uint64_t i = 0; i < leak_locations.size(); ++i) {
+      auto row = std::get<0>(leak_locations[i]);
+      auto col = std::get<1>(leak_locations[i]);
 
-    pool[row][col] = contaminant_concentration;
-    copy_pool[row][col] = contaminant_concentration;
+      pool[row][col] = contaminant_concentration;
+      copy_pool[row][col] = contaminant_concentration;
+    }
+  } else {
+    pool[0][0] = contaminant_concentration;
+    copy_pool[0][0] = contaminant_concentration;
   }
 
   double left, right, up, down;
@@ -140,11 +162,29 @@ double PointSourcePollution::central_difference_theorem(double left, double righ
 }
 
 int main(int argc, char** argv) {
-  uint64_t cylinder_size, slice_location, diffusion_time, contaminant_concentration;
+  uint64_t pool_rows, pool_cols, leaks, cylinder_size, slice_location, diffusion_time, contaminant_concentration;
+  bool multiple = false;
 
   if (argc < 5) {
     std::cerr << "usage: psp cylinder_size slice_location diffusion_time contaminant_concentration" << std::endl;
+    std::cerr << "usage: pool_rows pool_cols leaks contaminant_concentration diffusion_time" << std::endl;
     return EXIT_FAILURE;
+  }
+
+  if (argc > 5) {
+    pool_rows = atoi(argv[1]);
+    pool_cols = atoi(argv[2]);
+    leaks = atoi(argv[3]);
+    if (leaks > 1) {
+      multiple = true;
+    }
+    contaminant_concentration = atoi(argv[4]);
+    diffusion_time = atoi(argv[5]);
+  } else {
+    cylinder_size = atoi(argv[1]);
+    slice_location = atoi(argv[2]);
+    diffusion_time = atoi(argv[3]);
+    contaminant_concentration = atoi(argv[4]);
   }
 
   for (int i = 0; i < argc; ++i) {
@@ -154,17 +194,22 @@ int main(int argc, char** argv) {
     }
   }
 
-  cylinder_size = atoi(argv[1]);
-  slice_location = atoi(argv[2]);
-  diffusion_time = atoi(argv[3]);
-  contaminant_concentration = atoi(argv[4]);
-
-  PointSourcePollution psp(cylinder_size);
-  std::vector<double> output = psp.diffuse(cylinder_size, diffusion_time, contaminant_concentration);
-  std::cout << "Answer at slice location: " << slice_location << " is " << output[slice_location] << std::endl;
-  std::cout << "Now visualizing results..." << std::endl;
-  psp.end(output);
-  system("python plot.py");
+  PointSourcePollution psp;
+  if (argc == 5) {
+    std::cout << "starting 1d diffusion..." << std::endl;
+    std::vector<double> output = psp.diffuse(cylinder_size, diffusion_time, contaminant_concentration);
+    std::cout << "Answer at slice location: " << slice_location << " is " << output[slice_location] << std::endl;
+    std::cout << "Now visualizing results..." << std::endl;
+    psp.end(output);
+    system("python plot.py output.txt");
+  } else {
+    std::cout << "starting 2d diffusion" << std::endl;
+    std::vector<std::vector<double>> out(pool_rows, std::vector<double>(pool_cols));
+    out = psp.diffuse2d(pool_rows, pool_cols, diffusion_time, contaminant_concentration, leaks, multiple);
+    std::cout << "Now visualizing results..." << std::endl;
+    psp.end2d(out);
+    system("python plot.py output.txt");
+  }
 
   return EXIT_SUCCESS;
 }

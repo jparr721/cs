@@ -2,7 +2,7 @@
 
 \usepackage{listings}
 \usepackage{graphics}
-% \usepackage[margin0.5in]{geometry}
+\usepackage{booktabs}
 
 \begin{document}
 \title{%
@@ -21,6 +21,15 @@ Outside of the project specification, this project was particularly interesting 
 
 \section{Program Architecture}
 My sequential code was about as simple as it gets. The code was able to be implement central difference theorem without much hassle, and this allowed more time to be devoted to building (and debugging) the parallel version. At first, it was an extreme challenge to get everything working. CUDA is very particular about its memory and any misstep caused a slew of hard-to-track-down errors. This enabled learning more of the ``do's'' and ``dont's'' of CUDA development. In terms of program operation, it was found that for certain numbers of cycles, there was a minimum number needed to see any reasonable results. For example, when run with a cylinder size of 1000 - 10000, a diffusion time that was even within the same order of magnitude of the cylinder size presented results that ended upproducing values that were ~0.
-As a result
+As a result, I opted to run each simulation a few times with varying numbers of iterations to see what had the nicest spread and the cleanest visualization surface. This gave a range of outputs and several reproducable ones as well.
+
+\section{Results}
+Unfortunately, I ran out of time when it came to parallelizing my 2d diffusion code, but I was able to still get extremely interesting findings for my final results which proved to be very enlightening and aligned well with my hypoethesized outputs.
+It took quite a few runs to acquire a reliable rhythm for the tests, but once a pattern was found it was trivial to proceed. In terms of the CUDA code, block sizes of all kinds were used, however, I consistently found that the best performance was for a block size of 1024.
+This eventually took a toll on my server's GPU so I took breaks to let the system cool and keep runs consistent.
+When tested on Seawolf I saw very marginal upogrades in terms of speed and as a result all times and data below is from my home server for the sake of ease of use as Seawolf saw a lot of traffic over the main time periods in which I was testing code. The following tests were run:
+
+\begin{itemize}
+  \item
 
 \end{document}
