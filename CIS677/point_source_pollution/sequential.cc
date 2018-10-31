@@ -1,7 +1,10 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <random>
+#include <tuple>
 #include <vector>
 
 class PointSourcePollution {
@@ -12,10 +15,18 @@ class PointSourcePollution {
         uint64_t cylinder_size,
         uint64_t diffusion_time,
         uint64_t contaminant_concentration);
+    std::vector<std::vector<double>> diffuse2d(
+        uint64_t pool_rows,
+        uint64_t pool_cols,
+        uint64_t diffusion_time,
+        uint64_t contaminant_concentration,
+        uint64_t contaminant_locations,
+        uint64_t leaks);
     void end(const std::vector<double> & data);
   private:
     std::vector<uint64_t> simulation_space;
     double central_difference_theorem(double left, double right) const;
+    double central_difference_theorem2d(double left, double right, double up, double down) const;
 };
 
 PointSourcePollution::PointSourcePollution(uint64_t cylinder_size) : simulation_space(cylinder_size, 0) {}
@@ -32,6 +43,69 @@ void PointSourcePollution::end(const std::vector<double>& data) {
   }
 
   payload.close();
+}
+
+double PointSourcePollution::central_difference_theorem2d(double left, double right, double up, double down) const {
+  return (left + right + up + down) / 4;
+}
+
+std::vector<std::vector<double>> PointSourcePollution::diffuse2d(
+    uint64_t pool_rows,
+    uint64_t pool_cols,
+    uint64_t diffusion_time,
+    uint64_t contaminant_concentration,
+    uint64_t contaminant_locations,
+    uint64_t leaks
+    ) {
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::vector<std::tuple<uint64_t, uint64_t>> leak_locations;
+
+  for (uint64_t i = 0; i < leaks; ++i) {
+    std::uniform_int_distribution<uint64_t> leak_row(0, pool_rows);
+    std::uniform_int_distribution<uint64_t> leak_col(0, pool_cols);
+    std::tuple<uint64_t, uint64_t> val = std::make_tuple(leak_row(g), leak_col(g));
+    leak_locations.push_back(val);
+  }
+
+  std::vector<std::vector<double>> pool(pool_rows, std::vector<double>(pool_cols, 0));
+  std::vector<std::vector<double>> copy_pool(pool_rows, std::vector<double>(pool_cols, 0));
+  std::vector<std::vector<double>> temp(pool_rows, std::vector<double>(pool_cols, 0));
+
+  for (uint64_t i = 0; i < leak_locations.size(); ++i) {
+    auto row = std::get<0>(leak_locations[i]);
+    auto col = std::get<1>(leak_locations[i]);
+
+    pool[row][col] = contaminant_concentration;
+    copy_pool[row][col] = contaminant_concentration;
+  }
+
+  double left, right, up, down;
+
+  for (uint64_t k = 0; k < diffusion_time; ++k) {
+    for (uint64_t i = 0; i < pool_rows; ++i) {
+      for (uint64_t j = 0; j < pool_cols; ++j) {
+        left = j - 1 >= 0
+          ? pool[i][j - 1]
+          : pool[i][j];
+        right = j + 1 <= pool_cols
+          ? pool[i][j + 1]
+          : pool[i][j];
+        up = i - 1 >= 0
+          ? pool[i - 1][j]
+          : pool[i][j];
+        down = i + 1 <= pool_rows
+          ? pool[i + 1][j]
+          : pool[i][j];
+        copy_pool[i][j] = central_difference_theorem2d(left, right, up, down);
+      }
+    }
+    temp = pool;
+    pool = copy_pool;
+    copy_pool = temp;
+  }
+
+  return pool;
 }
 
 std::vector<double> PointSourcePollution::diffuse(

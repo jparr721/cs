@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
-PATH = './output.txt'
 
-
-def visualize(path):
+def visualize():
+    path = sys.argv[1]
     data = []
 
     with open(path) as f:
@@ -22,4 +22,4 @@ def visualize(path):
     plt.show()
 
 
-visualize(PATH)
+visualize()
