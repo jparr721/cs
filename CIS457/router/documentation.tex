@@ -1,0 +1,31 @@
+
+\documentclass[11pt]{article}
+
+\usepackage{setspace}
+\doublespacing
+
+\begin{document}
+\title{Virtual Router}
+\author{Jarred Parr, Kyle Flynn, Thomas Bailey}
+
+\date{October 2018}
+\maketitle
+\section{Introduction}
+This project was designed to simulate the functionality of a router, using a provided routing table. The router responds to pings, routes traffic to hosts, and sends ICMP error packets.
+
+\section{Design}
+We did this project in C++. The core functionality of the router exists in src/Router.cc. This file contains a start method with the main router loop, and uses functional programming to mitigate code duplication. #Included into Router.cc are .hpp files for classes that represent that various headers that are manipulated by the router. This abstraction simplifies complex bit transfers.
+
+\section{Challenges}
+
+We had some problems with malformed packets and incorrect checksums. ICMP error packets were not being delivered because of the mismatched checksum. Additionally, some ARP packets were being shown as malformed. The final product did not function perfectly with traceroute.
+
+\section{Compiling}
+The code was compiled with gcc 8.2.1 on arch linux and can also be compiled via the provided make file. 
+
+\begin{itemize}
+  \item Run make all or simply make to get the executable
+  \item Run ./router rX-table.txt with relevant routing table
+\end{itemize}
+
+\end{document}
