@@ -15,31 +15,31 @@ class Client {
     int get_port();
     in_addr_t get_host();
     static void* handle_messages(void* arg);
-    auto input_handler();
+    std::string input_handler();
     int RunClient();
 };
 
 void* Client::handle_messages(void* arg) {
   int socket = *(int*) arg;
-  while (1) {
-    char message[4096];
-    int numbytes = recv(socket, message, 4096 - 1, 0);
-    if (std::strcmp(message, "quit\n") == 0) {
-      std::cout << "Exiting" << std::endl;
-      send(socket, message, strlen(message) + 1, 0);
+  char line[5000];
+  while (true) {
+    recv(socket, line, 5000, 0);
+    if (std::strcmp(line, "quit") == 0) {
+      std::cout << "Quitting";
+      send(socket, line, strlen(line) + 1, 0);
       close(socket);
-      return EXIT_SUCCESS;
+      return nullptr;
     }
-    send(socket, message, strlen(message) + 1, 0);
+    std::cout << " <<< "<< line << std::flush;
+    std::cout << "" << std::endl;
   }
-
-  return nullptr;
 }
 
 int Client::get_port() {
-  std::cout << "Enter the host to connect to: " << std::endl;
+  std::cout << "Enter the port to connect to: " << std::endl;
   std::string port("");
   std::getline(std::cin, port);
+
   return std::stoi(port);
 }
 
@@ -47,11 +47,13 @@ in_addr_t Client::get_host() {
   std::cout << "Enter the host to connect to: " << std::endl;
   std::string host = "";
   std::getline(std::cin, host);
+
   return inet_addr(host.c_str());
 }
 
-auto Client::input_handler() {
-  std::cout << " >>> " << std::endl;
+std::string Client::input_handler() {
+  std::cout << " >>> " << std::flush;
+  std::cout << "" << std::endl;
   std::string message("");
   std::getline(std::cin, message);
 
@@ -68,14 +70,14 @@ int Client::RunClient() {
 
   int port = get_port();
   in_addr_t host = get_host();
-  std::cout << "Client running on " << host << ":" << port << std::endl;
+  std::cout << "Client running on localhost:" << port << std::endl;
 
   struct sockaddr_in server;
   server.sin_family = AF_INET;
   server.sin_port = htons(port);
   server.sin_addr.s_addr = host;
 
-  int c = connect(sockfd, reinterpret_cast<sockaddr*>(&server), sizeof(server));
+  int c = connect(sockfd, (sockaddr*)&server, sizeof(server));
   if (c < -1) {
     std::cerr << "Error connecting to the server" << std::endl;
     return EXIT_FAILURE;
@@ -91,7 +93,10 @@ int Client::RunClient() {
     if (message == "quit") {
       std::cout << "Exiting" << std::endl;
       send(sockfd, message.c_str(), message.length() + 1, 0);
+      close(sockfd);
+      return EXIT_SUCCESS;
     }
+    send(sockfd, message.c_str(), message.length() + 1, 0);
   }
 
   return EXIT_SUCCESS;
