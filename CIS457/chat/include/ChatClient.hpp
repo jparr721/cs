@@ -45,6 +45,8 @@ class ChatClient {
     int handle_port();
     in_addr_t handle_host();
 
+    std::string handle_input();
+
     unsigned char* rsa_encrypt(
         const std::string& in,
         EVP_PKEY *key);
@@ -60,7 +62,7 @@ class ChatClient {
         const std::string& plaintext,
         unsigned char* key,
         unsigned char* iv,
-        std::string cipher);
+        const std::string& cipher);
 
 };
 } // namespace client

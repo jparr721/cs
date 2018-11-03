@@ -1,4 +1,5 @@
 #include "./include/ChatClient.hpp"
+#include "./include/User.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -12,6 +13,7 @@
 #include <openssl/rand.h>
 #include <sys/socket.h>
 #include <tuple>
+#include <unistd.h>
 
 namespace client {
 void* ChatClient::worker(void* args) {
@@ -49,7 +51,7 @@ in_addr_t ChatClient::handle_host() {
   return inet_addr(host.c_str());
 }
 
-int handle_port() {
+int ChatClient::handle_port() {
   std::cout << "Please enter the port to connect from: " << std::flush;
   std::string port = "";
   std::getline(std::cin, port);
@@ -180,10 +182,14 @@ std::string ChatClient::decrypt(
     const std::string& plaintext,
     unsigned char* key,
     unsigned char* iv,
-    std::string cipher) {
+    const std::string& cipher) {
   EVP_CIPHER_CTX *ctx;
   int plaintext_len = sizeof(plaintext.c_str());
   if (!(ctx = EVP_CIPHER_CTX_new())) {
+    err();
+  }
+
+  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv)) {
     err();
   }
 
@@ -207,6 +213,14 @@ std::string ChatClient::decrypt(
   return plaintext;
 }
 
+std::string ChatClient::handle_input() {
+  std::cout << " >>> " << std::flush;
+  std::string message = "";
+  std::getline(std::cin, message);
+
+  return message;
+}
+
 int ChatClient::RunClient() {
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
@@ -215,7 +229,7 @@ int ChatClient::RunClient() {
   }
   int port = handle_port();
   in_addr_t host = handle_host();
-  std::string key;
+  unsigned char key[32];
 
   struct sockaddr_in server;
   server.sin_family = AF_INET;
@@ -231,8 +245,9 @@ int ChatClient::RunClient() {
   }
 
   std::string username = "";
-  std::string message = "";
   ChatClient::symmetric_key_message skm;
+  int taken = 1;
+  bool kicked = false;
 
   ERR_load_crypto_strings();
   OpenSSL_add_all_algorithms();
@@ -244,9 +259,47 @@ int ChatClient::RunClient() {
   EVP_PKEY *public_key;
   public_key = PEM_read_PUBKEY(rsa_public_key, nullptr, nullptr, nullptr);
 
-  skm.encrypted_key = rsa_encrypt(key, public_key);
+  // Set our key with the rsa encryption
+  skm.encrypted_key = rsa_encrypt(
+      std::string(reinterpret_cast<char*>(key)),
+      public_key);
 
-  sendto(sockfd, &skm, sizeof(ChatClient::symmetric_key_message), 0, reinterpret_cast<sockaddr*>(&server), sizeof server);
+  // Send the key to the server so it can decrypt the messages
+  sendto(sockfd, &skm, sizeof(ChatClient::symmetric_key_message), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
+
+  do {
+    std::cout << "Please enter a username" << std::endl;
+    std::getline(std::cin, username);
+    sendto(sockfd, username.c_str(), username.length(), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
+  } while(recv(sockfd, &taken, sizeof(int), 0) == 0);
+
+  // Allocate space on the heap
+  ChatClient::thread *t = new ChatClient::thread;
+  std::memcpy(&t->socket, &sockfd, sizeof(int));
+
+  pthread_t child;
+  pthread_create(&child, nullptr, worker, t);
+  pthread_detach(child);
+
+  while (true) {
+    ChatClient::std_message s_message;
+    std::string message = handle_input();
+
+    if (message == "/quit\n" && !kicked) {
+      break;
+    }
+
+    RAND_pseudo_bytes(s_message.iv, 16);
+    // Encrpyt our message
+    s_message.cipher = encrypt(message, key, s_message.iv, s_message.cipher);
+
+    // Send it along
+    sendto(sockfd, &s_message, sizeof(ChatClient::std_message), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
+  }
+
+  close(sockfd);
+
+  return EXIT_SUCCESS;
 }
 
 } // namespace client
@@ -254,4 +307,7 @@ int ChatClient::RunClient() {
 
 int main() {
   client::ChatClient cs;
+  cs.RunClient();
+
+  return EXIT_SUCCESS;
 }
