@@ -40,30 +40,10 @@ class ChatClient {
     static void* worker(void* args);
     bool kicked = false;
 
-    void err();
-
     int handle_port();
     in_addr_t handle_host();
 
     std::string handle_input();
-
-    unsigned char* rsa_encrypt(
-        const std::string& in,
-        EVP_PKEY *key);
-    unsigned char* rsa_decrypt(
-        const std::string& in,
-        EVP_PKEY *key);
-    std::string encrypt(
-        const std::string& plaintext,
-        unsigned char* key,
-        unsigned char* iv,
-        const std::string& cipher);
-    std::string decrypt(
-        const std::string& plaintext,
-        unsigned char* key,
-        unsigned char* iv,
-        const std::string& cipher);
-
 };
 } // namespace client
 
