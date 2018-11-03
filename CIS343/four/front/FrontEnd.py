@@ -1,5 +1,6 @@
 import curses
 import curses.textpad
+import os
 
 
 class FrontEnd:
@@ -8,6 +9,7 @@ class FrontEnd:
         self.player = player
         self.player.play('media/cello.wav')
         curses.wrapper(self.menu)
+        self.root_directory_files = []
 
     def menu(self, args):
         self.stdscr = curses.initscr()
@@ -30,6 +32,8 @@ class FrontEnd:
                 self.update_song()
                 self.stdscr.touchwin()
                 self.stdscr.refresh()
+            elif c == ord('l'):
+                self.list_directory()
 
     def update_song(self):
         self.stdscr.addstr(15, 10, "                                        ")
@@ -52,6 +56,29 @@ class FrontEnd:
         self.stdscr.refresh()
         self.player.stop()
         self.player.play(path.decode(encoding="utf-8"))
+
+    def list_directory(self):
+        '''
+        Lists directories of current folder and displays
+        only the files that are in the directory and stores
+        them into the self. This is just a surbey of the songs,
+        when selecting a song a different command is used
+        '''
+        self.root_directory_files = [f for f in os.listdir('./')
+                                     if os.path.isfile(os.path.join('./', f))]
+        list_window = curses.newwin(5, 200, 5, 200)
+        list_window.border()
+        list_window.addstr(0,
+                           0,
+                           'Songs in current directory',
+                           curses.A_REVERSE)
+        for idx, val in enumerate(self.root_directory_files):
+            list_window.addstr(idx + 1, 10, val)
+        self.stdscr.refresh()
+        curses.noecho()
+        del list_window
+        self.stdscr.touchwin()
+        self.stdscr.refresh()
 
     def quit(self):
         self.player.stop()
