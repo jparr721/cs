@@ -1,12 +1,20 @@
 #ifndef CHAT_CHATCLIENT_HPP
 #define CHAT_CHATCLIENT_HPP
 
+#include "./include/User.hpp"
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <openssl/rsa.h>
 #include <string>
+#include <sys/socket.h>
+
 
 namespace client {
 class ChatClient {
   public:
+    const std::string version = "0.1.0";
+
     int RunClient();
     // Holds thread specific shit
     struct thread {
@@ -22,7 +30,7 @@ class ChatClient {
     };
 
     struct symmetric_key_message {
-      unsigned char encrypted_key[256];
+      unsigned char* encrypted_key;
     };
 
     void setKicked(bool kicked);
@@ -33,16 +41,16 @@ class ChatClient {
     bool kicked = false;
 
     void err();
-    int rsa_encrypt(
-        std::string in,
-        size_t len,
-        EVP_PKEY *key,
-        std::string out) const;
-    int rsa_decrypt(
-        std::string in,
-        size_t len,
-        EVP_PKEY *key,
-        std::string out) const;
+
+    int handle_port();
+    in_addr_t handle_host();
+
+    unsigned char* rsa_encrypt(
+        const std::string& in,
+        EVP_PKEY *key);
+    unsigned char* rsa_decrypt(
+        const std::string& in,
+        EVP_PKEY *key);
     std::string encrypt(
         const std::string& plaintext,
         unsigned char* key,
@@ -53,6 +61,7 @@ class ChatClient {
         unsigned char* key,
         unsigned char* iv,
         std::string cipher);
+
 };
 } // namespace client
 
