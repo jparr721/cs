@@ -1,7 +1,7 @@
 #ifndef CHAT_CHATCLIENT_HPP
 #define CHAT_CHATCLIENT_HPP
 
-#include "./include/User.hpp"
+#include "../include/User.hpp"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
