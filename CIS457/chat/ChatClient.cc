@@ -26,7 +26,7 @@ void* client::ChatClient::client_handler(void* args) {
   while (data != "/quit" && data != "kicked\n") {
     recv(t.socket, &s, sizeof(ChatClient::std_message), 0);
     // Decrypt our message
-    SLIP_SLOP.decrypt(data, t.key, s.iv, s.cipher);
+    data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
     if (data == "kicked") {
       std::cout << "OHH HO HO HOOO YOU HAVE BEEN KICKED MY BOY" << std::endl;
       exit(0);
@@ -136,7 +136,7 @@ int ChatClient::RunClient() {
 
     RAND_pseudo_bytes(s_message.iv, 16);
     // Encrpyt our message
-    s_message.cipher = DIVINE_SUCC.encrypt(message, key, s_message.iv, s_message.cipher);
+    s_message.cipher = DIVINE_SUCC.encrypt(key, s_message.iv, s_message.cipher);
 
     // Send it along
     sendto(sockfd, &s_message, sizeof(ChatClient::std_message), 0, reinterpret_cast<sockaddr*>(&server), sin_size);

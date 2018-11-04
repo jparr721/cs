@@ -48,13 +48,31 @@ void* ChatServer::server_handler(void* args) {
     if (command == "/list") {
       cs.list_users();
     } else if (command == "/broadcast") {
-
+      std::string outgoing = handle_input("What do you want to say?: ");
     }
   }
 }
 
-void ChatServer::broadcast() {
+std::string ChatServer::handle_input(std::string prompt = " >>> ") {
+  std::cout << prompt << std::flush;
+  std::string message = "";
+  std::getline(std::cin, message);
 
+  return message;
+}
+
+void ChatServer::broadcast(const std::string& message) {
+  the::Succ succ;
+  for (const auto &user : users) {
+    ChatServer::std_message outgoing;
+    RAND_pseudo_bytes(outgoing.iv, 16);
+    outgoing.cipher = succ.encrypt(
+        const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(user.key)),
+        outgoing.iv,
+        message);
+
+    send(user.socket, message.c_str(), sizeof(ChatServer::std_message), 0);
+  }
 }
 
 void ChatServer::list_users() {

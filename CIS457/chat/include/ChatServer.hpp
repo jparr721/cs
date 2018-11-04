@@ -42,13 +42,15 @@ class ChatServer {
     void list_users();
 
     // The /broadcast command
-    void broadcast();
+    void broadcast(const std::string& message);
 
   private:
     bool is_admin;
     std::vector<thread> users;
-    bool check_admin(std::string password);
+    bool check_admin(const std::string& password);
     static void* server_handler(void* args);
+
+    std::string handle_input(std::string prompt);
 
     // Making auto for bool return or string
     std::string extract_command(const std::string& input) const;
