@@ -20,12 +20,10 @@ namespace the {
           const std::string& in,
           EVP_PKEY *key);
       std::string encrypt(
-          const std::string& plaintext,
           unsigned char* key,
           unsigned char* iv,
           const std::string& cipher);
       std::string decrypt(
-          const std::string& plaintext,
           unsigned char* key,
           unsigned char* iv,
           const std::string& cipher);

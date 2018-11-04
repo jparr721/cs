@@ -16,7 +16,7 @@
 #include <tuple>
 #include <unistd.h>
 
-void* client::ChatClient::worker(void* args) {
+void* client::ChatClient::client_handler(void* args) {
   the::Succ SLIP_SLOP;
   ChatClient::thread t;
   ChatClient::std_message s;
@@ -123,7 +123,7 @@ int ChatClient::RunClient() {
   std::memcpy(&t->socket, &sockfd, sizeof(int));
 
   pthread_t child;
-  pthread_create(&child, nullptr, worker, t);
+  pthread_create(&child, nullptr, client_handler, t);
   pthread_detach(child);
 
   while (true) {

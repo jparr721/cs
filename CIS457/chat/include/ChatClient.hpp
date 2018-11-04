@@ -1,11 +1,8 @@
 #ifndef CHAT_CHATCLIENT_HPP
 #define CHAT_CHATCLIENT_HPP
 
-#include "../include/User.hpp"
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <openssl/rsa.h>
 #include <string>
 #include <sys/socket.h>
 
@@ -26,6 +23,8 @@ class ChatClient {
 
     struct std_message {
       std::string cipher;
+
+      // Initialization vector
       unsigned char iv[16];
     };
 
@@ -37,7 +36,7 @@ class ChatClient {
     bool getKicked();
   private:
     const int MAXDATASIZE = 4096;
-    static void* worker(void* args);
+    static void* client_handler(void* args);
     bool kicked = false;
 
     int handle_port();

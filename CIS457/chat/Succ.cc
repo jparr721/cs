@@ -6,10 +6,10 @@ void the::Succ::err() {
 }
 
 std::string the::Succ::encrypt(
-    const std::string& plaintext,
     unsigned char* key,
     unsigned char* iv,
     const std::string& cipher) {
+  std::string plaintext;
   EVP_CIPHER_CTX *ctx;
   int cipher_len = sizeof(cipher.c_str());
 
@@ -41,10 +41,10 @@ std::string the::Succ::encrypt(
 }
 
 std::string the::Succ::decrypt(
-    const std::string& plaintext,
     unsigned char* key,
     unsigned char* iv,
     const std::string& cipher) {
+  std::string plaintext;
   EVP_CIPHER_CTX *ctx;
   int plaintext_len = sizeof(plaintext.c_str());
   if (!(ctx = EVP_CIPHER_CTX_new())) {
