@@ -48,7 +48,7 @@ void* ChatServer::server_handler(void* args) {
     if (command == "/list") {
       cs.list_users();
     } else if (command == "/broadcast") {
-      std::string outgoing = handle_input("What do you want to say?: ");
+      std::string outgoing = cs.handle_input("What do you want to say?: ");
     }
   }
 }
