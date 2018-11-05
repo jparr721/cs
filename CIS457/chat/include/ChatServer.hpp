@@ -50,6 +50,8 @@ class ChatServer {
     bool check_admin(const std::string& password);
     static void* server_handler(void* args);
 
+    int handle_port();
+  
     std::string handle_input(std::string prompt);
 
     // Making auto for bool return or string

@@ -22,7 +22,7 @@ void* ChatServer::server_handler(void* args) {
   ChatServer::std_message s;
   ChatServer::thread t;
   ChatServer cs;
-
+  
   std::memcpy(&t, args, sizeof(ChatServer::thread));
   // Data sent over the wire
   char data[4096];
@@ -53,6 +53,14 @@ void* ChatServer::server_handler(void* args) {
   }
 }
 
+int ChatServer::handle_port() {
+  std::cout << "Please enter the port for the server: " << std::flush;
+  std::string port = "";
+  std::getline(std::cin, port);
+
+  return std::stoi(port);
+}
+  
 std::string ChatServer::handle_input(std::string prompt = " >>> ") {
   std::cout << prompt << std::flush;
   std::string message = "";
@@ -101,6 +109,69 @@ std::string ChatServer::extract_command(const std::string& input) const {
 }
 
 int ChatServer::RunServer() {
+
+  int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_port = htons(handle_port());
+
+  if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    std::cout << "Failed to bind socket." << std::endl;
+    return EXIT_FAILURE;
+  }  
+
+  while (true) {
+    // listen for a new client connection
+    listen(sock, 5);
+
+    struct sockaddr_in client;
+    socklen_t sin_size = sizeof(client);
+
+    int clientsocket = accept(sock, reinterpret_cast<sockaddr*>(&client), &sin_size);
+
+    if (clientsocket > -1) {
+      std::cout << "Client conected" << std::endl;
+    } else {
+      std::cout << "oh no no no no" << std::endl;
+    }
+
+    struct thread t;    
+    t.socket = clientsocket;
+    char buf[1024];
+
+    // receive the key
+    recv(clientsocket, &t.key, sizeof(t.key), 0);
+
+    // receive the username in the buf for no reason
+    recv(clientsocket, &buf, 1024, 0);
+    t.username = (std::string) buf;
+
+    std::cout << t.key << std::endl;
+    std::cout << "username: " + t.username << std::endl;
+
+    // acknowledge username
+    int ack = 1;
+    send(clientsocket, &ack, sizeof(int), 0); 
+    
+    ChatServer::users.push_back(t);
+
+    pthread_t client_r;
+    pthread_create(&client_r, nullptr, ChatServer::server_handler, &t);
+    pthread_detach(client_r);
+    
+  }
+  
+  
   return EXIT_SUCCESS;
 }
+
 } // namespace server
+
+int main() {
+  server::ChatServer cs;
+  cs.RunServer();
+
+  return EXIT_SUCCESS;
+}

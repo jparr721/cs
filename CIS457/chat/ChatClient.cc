@@ -89,6 +89,8 @@ int ChatClient::RunClient() {
     return EXIT_FAILURE;
   }
 
+  std::cout << "You connected." << std::endl;
+  
   std::string username = "";
   ChatClient::symmetric_key_message skm;
   int taken = 1;
