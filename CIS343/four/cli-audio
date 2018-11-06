@@ -3,11 +3,12 @@
 from front.FrontEnd import FrontEnd
 from player.Player import Player
 from curses import wrapper
+import sys
 
 
 def main():
     player = Player()
-    front_end = FrontEnd(player)
+    front_end = FrontEnd(player, sys.argv[1])
 
 
 if __name__ == "__main__":

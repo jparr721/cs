@@ -4,13 +4,13 @@ import os
 import sys
 
 
-class FrontEnd:
+class FrontEnd(object):
 
-    def __init__(self, player):
+    def __init__(self, player, media_root):
         self.player = player
         curses.wrapper(self.menu)
         self.root_directory_files = []
-        self.song_root = sys.argv[1]
+        self.media_root = media_root
 
     def menu(self, args):
         self.stdscr = curses.initscr()
@@ -34,7 +34,9 @@ class FrontEnd:
                 self.stdscr.touchwin()
                 self.stdscr.refresh()
             elif c == ord('l'):
-                self.list_directory(self.song_root)
+                # breaks here
+                self.list_direcotry(self.media_root)
+                # self.list_directory(sys.argv[1])
 
     def update_song(self):
         self.stdscr.addstr(15, 10, '                                        ')
@@ -43,6 +45,12 @@ class FrontEnd:
 
     def play(self, song):
         self.player.play(song)
+
+    def set_song_root(self, root):
+        self.media_root = root
+
+    def get_song_root(self):
+        return self.media_root
 
     def change_song(self):
         changeWindow = curses.newwin(5, 40, 5, 50)
@@ -72,8 +80,9 @@ class FrontEnd:
         list_window.border()
         list_window.addstr(0,
                            0,
-                           'Songs in current directory',
+                           path,
                            curses.A_REVERSE)
+        list_window.addstr(10, 10, self.media_root)
         self.stdscr.refresh()
         curses.noecho()
         for idx, val in enumerate(self.root_directory_files):
