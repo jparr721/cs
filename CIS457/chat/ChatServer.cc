@@ -68,7 +68,10 @@ void* ChatServer::server_handler(void* args) {
     
     
     if (command == "list") {
-      t.instance->list_users();
+      std::string outlist = "";
+      for (int i = 0; i < t.instance->users.size(); i++)
+	outlist = outlist + t.instance->users[i].username + "\n ";
+      send(t.socket, outlist.c_str(), outlist.length(), 0);
     } else if (command == "broadcast") {
       std::cout << "we broadcasting" << std::endl;
       for (int i = 0; i < t.instance->users.size(); ++i) {
