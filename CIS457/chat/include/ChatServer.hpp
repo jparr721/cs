@@ -28,6 +28,8 @@ class ChatServer {
 
       // To decrypt our goodies
       unsigned char* key;
+      
+      ChatServer* instance;
     };
 
     struct std_message {
