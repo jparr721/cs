@@ -114,11 +114,9 @@ int ChatClient::RunClient() {
   // Send the key to the server so it can decrypt the messages
   sendto(sockfd, &skm, sizeof(ChatClient::symmetric_key_message), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
 
-  do {
-    std::cout << "Please enter a username" << std::endl;
-    std::getline(std::cin, username);
-    sendto(sockfd, username.c_str(), username.length(), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
-  } while(recv(sockfd, &taken, sizeof(int), 0) == 0);
+  std::cout << "Please enter a username" << std::endl;
+  std::getline(std::cin, username);
+  sendto(sockfd, username.c_str(), username.length(), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
 
   // Allocate space on the heap
   ChatClient::thread *t = new ChatClient::thread;
