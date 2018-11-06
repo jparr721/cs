@@ -43,7 +43,7 @@ void* ChatServer::server_handler(void* args) {
 
     if (std::string(data) == "/quit" || r <= 0) {
       std::cout << "Shutting down the server connection to user: " << t.username << std::endl;
-      close(t.socket);
+      //close(t.socket);
       // Break this worker
       break;
     }
@@ -111,6 +111,7 @@ void* ChatServer::server_handler(void* args) {
       }
     }
   }
+  std::cout << "Closing handler thread" << std::endl;
   return NULL;
 }
 
@@ -237,7 +238,6 @@ int ChatServer::RunServer() {
     t->client = client;
     t->key = decrypted_key;
     t->instance = this;
-    t->child = &client_r;
 
     std::cout << "len: " << r << std::endl;
     std::cout << "key: " << t->key << std::endl;
