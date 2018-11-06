@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdio>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <openssl/conf.h>
 #include <openssl/err.h>
@@ -54,6 +55,17 @@ void* ChatServer::server_handler(void* args) {
     std::string command = t.instance->extract_command(message);
 
     std::cout << "this the command:(" + command + ")" << std::endl;
+
+
+    std::vector<std::string> command_args;
+    std::istringstream iss(message);
+    for(std::string message; iss >> message; ) {
+      command_args.push_back(message);
+    }
+    std::cout << "args: " << std::endl;
+    std::cout << command_args.size() << std::endl;
+
+    
     
     if (command == "list") {
       t.instance->list_users();
@@ -64,6 +76,14 @@ void* ChatServer::server_handler(void* args) {
 	std::cout << t.instance->users[i].username << std::endl;
 	send(t.instance->users[i].socket, message.c_str(), message.length(), 0);
       }
+    } else if (command == "pm") {
+	std::cout << "we pming" << std::endl;
+	for (int i = 0; i < t.instance->users.size(); ++i) {
+	  std::cout << "username1 = " + t.instance->users[i].username << std::endl;
+	  std::cout << "username2 = " + command_args[1] << std::endl;
+	  if (t.instance->users[i].username == command_args[1])
+	    send(t.instance->users[i].socket, command_args[2].c_str(), command_args[2].length(), 0);
+	}
     } else if (command == "kick") {
       std::string pass = "";
       std::cout << "Admin password: " << std::flush;
