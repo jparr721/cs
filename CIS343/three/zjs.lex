@@ -1,5 +1,7 @@
 %{
   #include <stdio.h>
+  #include <stdlib.h>
+  #include "zjs.h"
 %}
 
 %option noyywrap
@@ -7,17 +9,17 @@
 
 %%
 
-end             { printf("END"); }
-;               { printf("END_STATEMENT"); }
-line            { printf("LINE"); }
-point           { printf("POINT"); }
-circle          { printf("CIRCLE"); }
-rectangle       { printf("RECTANGLE"); }
-set_color       { printf("SET_COLOR"); }
-[0-9]+          { printf("INTEGER"); }
-[0-9]+\.[0-9]+  { printf("FLOATING POINT"); }
-[' '\t\n]       ;
-.               { printf("Error on line: %d\n", yylineno); }
+end             return END;
+;               return END_STATEMENT;
+line            return LINE;
+point           return POINT;
+circle          return CIRCLE;
+rectangle       return RECTANGLE;
+set_color       return SET_COLOR;
+[0-9]+          return INTEGER;
+[0-9]+\.[0-9]+  return FLOAT;
+[' '\t\n]       return IGNORE;
+.               return ERR;
 
 %%
 
