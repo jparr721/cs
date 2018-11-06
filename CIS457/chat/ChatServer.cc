@@ -36,9 +36,11 @@ void* ChatServer::server_handler(void* args) {
 
     
     if (r < 0) {
+      std::cout << "I'VE GOTTEN ALL THE WAY GERE" << std::endl;
       break;
     }
-    if (std::string(data) == "/quit") {
+
+    if (std::string(data) == "/quit" || r <= 0) {
       std::cout << "Shutting down the server connection to user: " << t.username << std::endl;
       close(t.socket);
       // Break this worker
@@ -91,6 +93,7 @@ void* ChatServer::server_handler(void* args) {
       }
     }
   }
+  return NULL;
 }
 
 bool ChatServer::check_admin(const std::string& pass) {
@@ -173,7 +176,7 @@ int ChatServer::RunServer() {
   while (true) {
     sockaddr_in client;
     socklen_t sin_size = sizeof(client);
-
+    std::cout << "Waiting for connection..." << std::endl;
     int clientsocket = accept(sock, reinterpret_cast<sockaddr*>(&client), &sin_size);
     if (clientsocket > -1) {
       std::cout << "Client conected" << std::endl;
@@ -197,6 +200,7 @@ int ChatServer::RunServer() {
     unsigned char* decrypted_key;
     // Get username
     char username[100];
+    std::memset(username, 0, sizeof(username));
     int r = recv(clientsocket, username, 100, 0);
     if  (r < 0) {
       const std::string err = "Failed to get username, exiting";
@@ -204,13 +208,18 @@ int ChatServer::RunServer() {
       std::cerr << "failed to get username, killing session" << std::endl;
       close(clientsocket);
     }
+    
+    char actual_name[r];
+    std::strcpy(actual_name, username);
 
+    pthread_t client_r;
     thread* t = new thread();
     t->socket = clientsocket;
-    t->username = std::string(username);
+    t->username = std::string(actual_name);
     t->client = client;
     t->key = decrypted_key;
     t->instance = this;
+    t->child = &client_r;
 
     std::cout << "len: " << r << std::endl;
     std::cout << "key: " << t->key << std::endl;
@@ -219,9 +228,6 @@ int ChatServer::RunServer() {
     // Add the user to our global ref
     this->users.push_back(*t);
 
-    std::cout << this->users.size() << std::endl;
-    
-    pthread_t client_r;
     pthread_create(&client_r, NULL, ChatServer::server_handler, t);
     pthread_detach(client_r);
 
