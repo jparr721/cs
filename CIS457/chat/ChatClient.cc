@@ -24,9 +24,13 @@ void* client::ChatClient::client_handler(void* args) {
 
   std::string data;
   while (data != "/quit" && data != "kicked") {
-    recv(t.socket, &s, sizeof(ChatClient::std_message), 0);
+
+    char buf[4096];
+    
+    recv(t.socket, buf, 4096, 0);
     // Decrypt our message
     //data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
+    data = std::string(buf);
     if (data == "kicked") {
       std::cout << "OHH HO HO HOOO YOU HAVE BEEN KICKED MY BOY" << std::endl;
       exit(0);

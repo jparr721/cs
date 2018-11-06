@@ -34,6 +34,7 @@ void* ChatServer::server_handler(void* args) {
     std::memset(data, 0, sizeof(data));
     int r = recv(t.socket, data, 4096, 0);
 
+    
     if (r < 0) {
       break;
     }
@@ -50,10 +51,17 @@ void* ChatServer::server_handler(void* args) {
 
     std::string command = t.instance->extract_command(message);
 
+    std::cout << "this the command:(" + command + ")" << std::endl;
+    
     if (command == "list") {
       t.instance->list_users();
     } else if (command == "broadcast") {
-      std::string outgoing = t.instance->handle_input("What do you want to say?: ");
+      std::cout << "we broadcasting" << std::endl;
+      for (int i = 0; i < t.instance->users.size(); ++i) {
+	std::cout << t.instance->users.size() << std::endl;
+	std::cout << t.instance->users[i].username << std::endl;
+	send(t.instance->users[i].socket, message.c_str(), message.length(), 0);
+      }
     } else if (command == "kick") {
       std::string pass = "";
       std::cout << "Admin password: " << std::flush;
@@ -138,7 +146,7 @@ std::string ChatServer::extract_command(const std::string& input) const {
   for (const auto v : input) {
     if  (v == '/') {
       // Strips everything before the command delimeter
-      command = input.substr(input.find('/') + 1);
+      command = input.substr(input.find('/') + 1, input.find(' ')-1);
       return command;
     }
     return command;
@@ -211,6 +219,8 @@ int ChatServer::RunServer() {
     // Add the user to our global ref
     this->users.push_back(*t);
 
+    std::cout << this->users.size() << std::endl;
+    
     pthread_t client_r;
     pthread_create(&client_r, NULL, ChatServer::server_handler, t);
     pthread_detach(client_r);
