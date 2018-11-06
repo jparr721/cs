@@ -35,7 +35,7 @@ class FrontEnd(object):
                 self.stdscr.refresh()
             elif c == ord('l'):
                 # breaks here
-                self.list_direcotry(self.media_root)
+                self.list_directory(self.media_root)
                 # self.list_directory(sys.argv[1])
 
     def update_song(self):
