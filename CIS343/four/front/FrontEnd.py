@@ -8,9 +8,9 @@ class FrontEnd(object):
 
     def __init__(self, player, media_root):
         self.player = player
-        curses.wrapper(self.menu)
         self.root_directory_files = []
         self.media_root = media_root
+        curses.wrapper(self.menu)
 
     def menu(self, args):
         self.stdscr = curses.initscr()
