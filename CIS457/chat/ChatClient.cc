@@ -24,9 +24,13 @@ void* client::ChatClient::client_handler(void* args) {
 
   std::string data;
   while (data != "/quit" && data != "kicked") {
-    recv(t.socket, &s, sizeof(ChatClient::std_message), 0);
+
+    char buf[4096];
+    
+    recv(t.socket, buf, 4096, 0);
     // Decrypt our message
-    data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
+    //data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
+    data = std::string(buf);
     if (data == "kicked") {
       std::cout << "OHH HO HO HOOO YOU HAVE BEEN KICKED MY BOY" << std::endl;
       exit(0);
@@ -96,10 +100,10 @@ int ChatClient::RunClient() {
   int taken = 1;
   bool kicked = false;
 
-  ERR_load_crypto_strings();
-  OpenSSL_add_all_algorithms();
-  OPENSSL_config(nullptr);
-  RAND_bytes(key, 32);
+  //ERR_load_crypto_strings();
+  //OpenSSL_add_all_algorithms();
+  //OPENSSL_config(nullptr);
+  //RAND_bytes(key, 32);
 
 
   FILE* rsa_public_key = std::fopen("rsa_pub.pem", "rb");
@@ -123,7 +127,7 @@ int ChatClient::RunClient() {
   std::memcpy(&t->socket, &sockfd, sizeof(int));
 
   pthread_t child;
-  pthread_create(&child, nullptr, client_handler, t);
+  pthread_create(&child, NULL, client_handler, t);
   pthread_detach(child);
 
   while (true) {
@@ -134,12 +138,12 @@ int ChatClient::RunClient() {
       break;
     }
 
-    RAND_pseudo_bytes(s_message.iv, 16);
+    //RAND_pseudo_bytes(s_message.iv, 16);
     // Encrpyt our message
-    s_message.cipher = DIVINE_SUCC.encrypt(key, s_message.iv, s_message.cipher);
+    //s_message.cipher = DIVINE_SUCC.encrypt(key, s_message.iv, s_message.cipher);
 
     // Send it along
-    sendto(sockfd, &s_message, sizeof(ChatClient::std_message), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
+    send(sockfd, message.c_str(), message.length(), 0);
   }
 
   close(sockfd);
