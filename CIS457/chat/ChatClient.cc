@@ -23,7 +23,7 @@ void* client::ChatClient::client_handler(void* args) {
   std::memcpy(&t, args, sizeof(ChatClient::thread));
 
   std::string data;
-  while (data != "/quit" && data != "kicked\n") {
+  while (data != "/quit" && data != "kicked") {
     recv(t.socket, &s, sizeof(ChatClient::std_message), 0);
     // Decrypt our message
     data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
@@ -90,7 +90,7 @@ int ChatClient::RunClient() {
   }
 
   std::cout << "You connected." << std::endl;
-  
+
   std::string username = "";
   ChatClient::symmetric_key_message skm;
   int taken = 1;

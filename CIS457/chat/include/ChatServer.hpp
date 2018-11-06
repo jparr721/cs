@@ -13,6 +13,8 @@ namespace server {
 class ChatServer {
   public:
     const std::string version = "0.1.0";
+    const int MAXDATASIZE = 4096;
+    int taken = 0;
 
     int RunServer();
 
@@ -25,7 +27,7 @@ class ChatServer {
       struct sockaddr_in client;
 
       // To decrypt our goodies
-      unsigned char key[32];
+      unsigned char* key;
     };
 
     struct std_message {
@@ -44,14 +46,16 @@ class ChatServer {
     // The /broadcast command
     void broadcast(const std::string& message);
 
+    // Currently connected users
+    std::vector<thread> users;
+
   private:
     bool is_admin;
-    std::vector<thread> users;
-    bool check_admin(const std::string& password);
+    bool check_admin(const std::string& pass);
     static void* server_handler(void* args);
 
     int handle_port();
-  
+
     std::string handle_input(std::string prompt);
 
     // Making auto for bool return or string

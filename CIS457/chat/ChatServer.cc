@@ -22,7 +22,7 @@ void* ChatServer::server_handler(void* args) {
   ChatServer::std_message s;
   ChatServer::thread t;
   ChatServer cs;
-  
+
   std::memcpy(&t, args, sizeof(ChatServer::thread));
   // Data sent over the wire
   char data[4096];
@@ -49,8 +49,39 @@ void* ChatServer::server_handler(void* args) {
       cs.list_users();
     } else if (command == "/broadcast") {
       std::string outgoing = cs.handle_input("What do you want to say?: ");
+    } else if (command == "/kick") {
+      std::string pass = "";
+      std::cout << "Admin password: " << std::flush;
+      std::getline(std::cin, pass);
+      std::cout << std::endl;
+
+      if (cs.check_admin(pass)) {
+        std::string who = "";
+        std::cout << "Who?: " << std::flush;
+        std::getline(std::cin, who);
+        std::cout << std::endl;
+        std::string kick_msg("kicked");
+
+        for (int i = 0; i < cs.users.size(); ++i) {
+          if (cs.users[i].username == who) {
+            std::cout << "Bye Felicia!" << std::endl;
+            // Encrypt our kick message
+            ChatServer::std_message sm;
+            cs.users.erase(cs.users.begin() + i);
+            RAND_pseudo_bytes(sm.iv, 16);
+            sm.cipher = SKOOMA_HIGH.encrypt(cs.users[i].key, sm.iv, kick_msg);
+            send(cs.users[i].socket, &sm, sizeof(ChatServer::std_message), 0);
+          }
+        }
+      } else {
+        std::cout << "access denied" << std::endl;
+      }
     }
   }
+}
+
+bool ChatServer::check_admin(const std::string& pass) {
+  return pass == admin_password;
 }
 
 int ChatServer::handle_port() {
@@ -60,7 +91,7 @@ int ChatServer::handle_port() {
 
   return std::stoi(port);
 }
-  
+
 std::string ChatServer::handle_input(std::string prompt = " >>> ") {
   std::cout << prompt << std::flush;
   std::string message = "";
@@ -109,10 +140,10 @@ std::string ChatServer::extract_command(const std::string& input) const {
 }
 
 int ChatServer::RunServer() {
-
+  the::Succ sad;
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
-  struct sockaddr_in addr;
+  sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(handle_port());
@@ -120,50 +151,65 @@ int ChatServer::RunServer() {
   if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     std::cout << "Failed to bind socket." << std::endl;
     return EXIT_FAILURE;
-  }  
+  }
+
+  // listen for a new client connection
+  listen(sock, 10);
 
   while (true) {
-    // listen for a new client connection
-    listen(sock, 5);
-
-    struct sockaddr_in client;
+    sockaddr_in client;
     socklen_t sin_size = sizeof(client);
 
     int clientsocket = accept(sock, reinterpret_cast<sockaddr*>(&client), &sin_size);
-
     if (clientsocket > -1) {
       std::cout << "Client conected" << std::endl;
     } else {
       std::cout << "oh no no no no" << std::endl;
     }
 
-    struct thread t;    
+    ERR_load_crypto_strings();
+    OpenSSL_add_all_algorithms();
+    OPENSSL_config(nullptr);
+
+    char data[this->MAXDATASIZE];
+
+    FILE* private_rsa_key = std::fopen("rsa_priv.pem", "rb");
+    EVP_PKEY *private_key;
+    private_key = PEM_read_PrivateKey(private_rsa_key, nullptr, nullptr, nullptr);
+
+    recvfrom(clientsocket, &data, sizeof(data), 0, reinterpret_cast<sockaddr*>(&client), &sin_size);
+    unsigned char* decrypted_key = sad.rsa_decrypt(
+        std::string(data), private_key);
+
+    // Get username
+    char username[100];
+    int r = recvfrom(clientsocket, username, 100, 0, reinterpret_cast<sockaddr*>(&client), &sin_size);
+    if  (r < 0) {
+      const std::string err = "Failed to get username, exiting";
+      send(clientsocket, err.c_str(), err.length(), 0);
+      std::cerr << "failed to get username, killing session" << std::endl;
+      close(clientsocket);
+    }
+
+    thread t;
     t.socket = clientsocket;
-    char buf[1024];
+    t.username = std::string(username);
+    t.client = client;
+    t.key = decrypted_key;
 
-    // receive the key
-    recv(clientsocket, &t.key, sizeof(t.key), 0);
+    std::cout << "key: " << t.key << std::endl;
+    std::cout << "username: " << t.username << std::endl;
 
-    // receive the username in the buf for no reason
-    recv(clientsocket, &buf, 1024, 0);
-    t.username = (std::string) buf;
-
-    std::cout << t.key << std::endl;
-    std::cout << "username: " + t.username << std::endl;
-
-    // acknowledge username
-    int ack = 1;
-    send(clientsocket, &ack, sizeof(int), 0); 
-    
-    ChatServer::users.push_back(t);
+    // Add the user to our global ref
+    this->users.push_back(t);
 
     pthread_t client_r;
     pthread_create(&client_r, nullptr, ChatServer::server_handler, &t);
     pthread_detach(client_r);
-    
+
   }
-  
-  
+
+
   return EXIT_SUCCESS;
 }
 
