@@ -10,5 +10,10 @@ Requires pyaudio and curses.  curses is usually built-in.  pyaudio easily instal
 ```
 python -m pip install pyaudio
 ```
+Run it with:
+
+```
+python cli-audio <media_dir>
+```
 
 Via the pyaudio website.
