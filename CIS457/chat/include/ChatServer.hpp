@@ -65,7 +65,7 @@ class ChatServer {
     // Making auto for bool return or string
     std::string extract_command(const std::string& input) const;
 
-    std::string admin_password = "oblong mongoose\n";
+    std::string admin_password = "1234";
 
 };
 } // namespace server

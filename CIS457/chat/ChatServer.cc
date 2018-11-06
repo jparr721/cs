@@ -89,15 +89,10 @@ void* ChatServer::server_handler(void* args) {
 	}
     } else if (command == "kick") {
       std::string pass = "";
-      std::cout << "Admin password: " << std::flush;
-      std::getline(std::cin, pass);
-      std::cout << std::endl;
 
-      if (t.instance->check_admin(pass)) {
-        std::string who = "";
-        std::cout << "Who?: " << std::flush;
-        std::getline(std::cin, who);
-        std::cout << std::endl;
+      if (t.instance->check_admin(command_args[2])) {
+        std::string who = command_args[1];
+        
         std::string kick_msg("kicked");
 
         for (int i = 0; i < t.instance->users.size(); ++i) {
@@ -105,10 +100,10 @@ void* ChatServer::server_handler(void* args) {
             std::cout << "Bye Felicia!" << std::endl;
             // Encrypt our kick message
             ChatServer::std_message sm;
-            t.instance->users.erase(t.instance->users.begin() + i);
             //RAND_pseudo_bytes(sm.iv, 16);
             //sm.cipher = SKOOMA_HIGH.encrypt(cs.getUsers()[i].key, sm.iv, kick_msg);
             send(t.instance->users[i].socket, kick_msg.c_str(), kick_msg.length(), 0);
+            t.instance->users.erase(t.instance->users.begin() + i);
           }
         }
       } else {
