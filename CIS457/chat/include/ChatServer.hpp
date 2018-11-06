@@ -30,6 +30,8 @@ class ChatServer {
       unsigned char* key;
       
       ChatServer* instance;
+
+      pthread_t* child;
     };
 
     struct std_message {
