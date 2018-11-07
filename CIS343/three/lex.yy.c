@@ -493,8 +493,10 @@ char *yytext;
 #line 1 "zjs.lex"
 #line 2 "zjs.lex"
   #include <stdio.h>
-#line 496 "lex.yy.c"
-#line 497 "lex.yy.c"
+  #include <stdlib.h>
+  #include "zjs.h"
+#line 498 "lex.yy.c"
+#line 499 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -711,10 +713,10 @@ YY_DECL
 		}
 
 	{
-#line 8 "zjs.lex"
+#line 10 "zjs.lex"
 
 
-#line 717 "lex.yy.c"
+#line 719 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -783,66 +785,66 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 10 "zjs.lex"
-{ printf("END"); }
+#line 12 "zjs.lex"
+return END;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 11 "zjs.lex"
-{ printf("END_STATEMENT"); }
+#line 13 "zjs.lex"
+return END_STATEMENT;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 12 "zjs.lex"
-{ printf("LINE"); }
+#line 14 "zjs.lex"
+return LINE;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 13 "zjs.lex"
-{ printf("POINT"); }
+#line 15 "zjs.lex"
+return POINT;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 14 "zjs.lex"
-{ printf("CIRCLE"); }
+#line 16 "zjs.lex"
+return CIRCLE;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 15 "zjs.lex"
-{ printf("RECTANGLE"); }
+#line 17 "zjs.lex"
+return RECTANGLE;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 16 "zjs.lex"
-{ printf("SET_COLOR"); }
+#line 18 "zjs.lex"
+return SET_COLOR;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 17 "zjs.lex"
-{ printf("INTEGER"); }
+#line 19 "zjs.lex"
+return INTEGER;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 18 "zjs.lex"
-{ printf("FLOATING POINT"); }
+#line 20 "zjs.lex"
+return FLOAT;
 	YY_BREAK
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 19 "zjs.lex"
-;
+#line 21 "zjs.lex"
+return IGNORE;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 20 "zjs.lex"
-{ printf("Error on line: %d\n", yylineno); }
+#line 22 "zjs.lex"
+return ERR;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 22 "zjs.lex"
+#line 24 "zjs.lex"
 ECHO;
 	YY_BREAK
-#line 845 "lex.yy.c"
+#line 847 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1859,7 +1861,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 22 "zjs.lex"
+#line 24 "zjs.lex"
 
 
 int main(int argc, char** argv) {

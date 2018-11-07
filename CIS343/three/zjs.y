@@ -4,6 +4,12 @@
   int yyerror(const char* msg)
 %}
 
+%union {
+  int intValue;
+  float floatValue;
+  char* stringValue;
+}
+
 %token END
 %token END_STATEMENT
 %token LINE
@@ -11,13 +17,11 @@
 %token CIRCLE
 %token RECTANGLE
 %token SET_COLOR
-%token INTEGER
-%token FLOAT
-%token ERR
-%token IGNORE
+%token <invValue> INT
+%token <floatValue> FLOAT
 
 %%
-program: list_of_expr END;
+program: list_of_expr end;
 list_of_expr: expr
             | expr list_of_expr;
 expr: line
@@ -72,7 +76,15 @@ set_color: SET_COLOR INT INT INT END_STATEMENT
   }
 };
 
+end: END END_STATEMENT
+{
+  finish();
+  return 0;
+};
+
 %%
+
+extern FILE* yyin;
 
 int main(int argc, char** argv) {
   setup();
