@@ -8,7 +8,7 @@ class FrontEnd(object):
 
     def __init__(self, player):
         self.player = player
-        # self.player.play('media/cello.wav')
+        self.player.play('media/cello.wav')
         self.root_directory_files = []
         self.media_root = sys.argv[1]
         curses.wrapper(self.menu)
@@ -35,7 +35,7 @@ class FrontEnd(object):
                 self.stdscr.touchwin()
                 self.stdscr.refresh()
             elif c == ord('l'):
-                self.list_directory(self.media_root)
+                self.list_directory()
 
     def update_song(self):
         self.stdscr.addstr(15, 10, '                                        ')
@@ -63,23 +63,24 @@ class FrontEnd(object):
         self.stdscr.touchwin()
         self.stdscr.refresh()
         self.player.stop()
-        self.player.play(path.decode(encoding='utf-8'))
+        self.player.play(self.media_root + '/' + path.decode(encoding='utf-8'))
 
-    def list_directory(self, path):
+    def list_directory(self):
         '''
         Lists directories of current folder and displays
         only the files that are in the directory and stores
         them into the self. This is just a surbey of the songs,
         when selecting a song a different command is used
         '''
-        self.root_directory_files = [f for f in os.listdir(path)
-                                     if os.path.isfile(os.path.join(path, f))]
+        self.root_directory_files = [f for f in os.listdir(self.media_root)
+                                     if os.path.isfile(
+                                         os.path.join(self.media_root, f))]
         list_window = curses.newwin(
                 len(self.root_directory_files) + 5, 200, 5, 100)
         list_window.border()
         list_window.addstr(0,
                            0,
-                           path,
+                           self.media_root,
                            curses.A_REVERSE)
 
         self.stdscr.refresh()
