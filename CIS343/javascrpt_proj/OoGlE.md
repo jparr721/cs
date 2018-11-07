@@ -25,11 +25,11 @@ You will be given a large JSON file full of data for users. JSON is the Javascri
             "SID": "NS",
             "goodSlave": "NS",
             "beatingsToDate": -1
-        }
+        },
         "children": {
-            "Jeff Jr.",
-       		"Turtle Person",
-        	"REDACTED"
+            "Designation": "Jeff Jr.",
+       		"Designation": "Turtle Person",
+        	"Designation": "REDACTED"
         }
     }
 }
