@@ -8,6 +8,7 @@ class FrontEnd(object):
 
     def __init__(self, player, media_root):
         self.player = player
+        # self.player.play('media/cello.wav')
         self.root_directory_files = []
         self.media_root = media_root
         curses.wrapper(self.menu)
@@ -34,9 +35,7 @@ class FrontEnd(object):
                 self.stdscr.touchwin()
                 self.stdscr.refresh()
             elif c == ord('l'):
-                # breaks here
                 self.list_directory(self.media_root)
-                # self.list_directory(sys.argv[1])
 
     def update_song(self):
         self.stdscr.addstr(15, 10, '                                        ')
@@ -82,7 +81,7 @@ class FrontEnd(object):
                            0,
                            path,
                            curses.A_REVERSE)
-        list_window.addstr(10, 10, self.media_root)
+        # list_window.addstr(10, 10, self.media_root)
         self.stdscr.refresh()
         curses.noecho()
         for idx, val in enumerate(self.root_directory_files):
