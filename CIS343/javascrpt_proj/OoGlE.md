@@ -27,9 +27,9 @@ You will be given a large JSON file full of data for users. JSON is the Javascri
             "beatingsToDate": -1
         }
         "children": {
-            "Designation": "Jeff Jr.",
-       		"Designation": "Turtle Person",
-        	"Designation": "REDACTED"
+            "Jeff Jr.",
+       		"Turtle Person",
+        	"REDACTED"
         }
     }
 }
