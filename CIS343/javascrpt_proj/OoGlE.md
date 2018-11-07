@@ -44,3 +44,10 @@ PUT /:id 	Updates a particular slave programmer (or more than one) by ID
 POST /		Creates a new slave programmer into our legion
 ```
 
+## A Few Caveats
+This needs to have some sort of testing. 
+- We need a way to determine that data inputted in the body of the request is valid JSON and can be properly put into the JSON structure of the file.
+- We need to capture incorrect routes. So if I go to `/blah` in my [tool](https://www.getpostman.com/) it should return a consistent and easy to understand error message.
+
+## Bonus Zone
+JavaScript and TypeScript are easy to use, but hard to use well. Great use of proper design patterns will be rewarded. We want clean, maintainable code here. *hint, hint, read the notes about certain es6 patterns* 
