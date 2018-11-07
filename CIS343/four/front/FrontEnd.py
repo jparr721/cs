@@ -6,11 +6,11 @@ import sys
 
 class FrontEnd(object):
 
-    def __init__(self, player, media_root):
+    def __init__(self, player):
         self.player = player
         # self.player.play('media/cello.wav')
         self.root_directory_files = []
-        self.media_root = media_root
+        self.media_root = sys.argv[1]
         curses.wrapper(self.menu)
 
     def menu(self, args):
@@ -81,7 +81,7 @@ class FrontEnd(object):
                            0,
                            path,
                            curses.A_REVERSE)
-        # list_window.addstr(10, 10, self.media_root)
+
         self.stdscr.refresh()
         curses.noecho()
         for idx, val in enumerate(self.root_directory_files):
