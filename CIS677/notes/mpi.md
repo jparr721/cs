@@ -54,3 +54,6 @@ while (not_converged) {
 #### Downsides
 - A little bit extra overhead (mem copy)
 - Extra checks and complexity
+
+#### Timing
+`MPI_Wtime()`
