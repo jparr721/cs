@@ -1,7 +1,10 @@
 %{
   #include <stdio.h>
+  #include <stdlib.h>
   #include "zjs.h"
-  int yyerror(const char* msg)
+  int yyerror(const char* msg);
+  extern char* yytext;
+int yylex();
 %}
 
 %union {
@@ -17,7 +20,7 @@
 %token CIRCLE
 %token RECTANGLE
 %token SET_COLOR
-%token <invValue> INT
+%token <intValue> INT
 %token <floatValue> FLOAT
 
 %%
@@ -94,6 +97,6 @@ int main(int argc, char** argv) {
 }
 
 int yyerror(const char* msg) {
-  printf("%s\n", msg);
+  printf("%s\n", msg, yytext);
   return 1;
 }

@@ -65,10 +65,13 @@
 #line 1 "zjs.y" /* yacc.c:339  */
 
   #include <stdio.h>
+  #include <stdlib.h>
   #include "zjs.h"
-  int yyerror(const char* msg)
+  int yyerror(const char* msg);
+  extern char* yytext;
+int yylex();
 
-#line 72 "y.tab.c" /* yacc.c:339  */
+#line 75 "zjs.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -86,7 +89,10 @@
 # define YYERROR_VERBOSE 0
 #endif
 
-
+/* In a future release of Bison, this section will be replaced
+   by #include "zjs.tab.h".  */
+#ifndef YY_YY_ZJS_TAB_H_INCLUDED
+# define YY_YY_ZJS_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -111,29 +117,19 @@ extern int yydebug;
     FLOAT = 266
   };
 #endif
-/* Tokens.  */
-#define END 258
-#define END_STATEMENT 259
-#define LINE 260
-#define POINT 261
-#define CIRCLE 262
-#define RECTANGLE 263
-#define SET_COLOR 264
-#define INT 265
-#define FLOAT 266
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 7 "zjs.y" /* yacc.c:355  */
+#line 10 "zjs.y" /* yacc.c:355  */
 
   int intValue;
   float floatValue;
   char* stringValue;
 
-#line 137 "y.tab.c" /* yacc.c:355  */
+#line 133 "zjs.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -146,11 +142,11 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-
+#endif /* !YY_YY_ZJS_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 154 "y.tab.c" /* yacc.c:358  */
+#line 150 "zjs.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -448,8 +444,8 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    24,    24,    25,    26,    27,    28,    29,    30,    31,
-      34,    43,    52,    61,    70,    79
+       0,    27,    27,    28,    29,    30,    31,    32,    33,    34,
+      37,    46,    55,    64,    73,    82
 };
 #endif
 
@@ -1234,76 +1230,76 @@ yyreduce:
   switch (yyn)
     {
         case 10:
-#line 35 "zjs.y" /* yacc.c:1651  */
+#line 38 "zjs.y" /* yacc.c:1651  */
     {
-  if((yyvsp[-4].invValue) >= 0 && (yyvsp[-4].invValue) <= WIDTH &&  (yyvsp[-3].invValue) >= 0 && (yyvsp[-3].invValue) <= HEIGHT) {
-    line((yyvsp[-4].invValue),(yyvsp[-3].invValue),(yyvsp[-2].invValue),(yyvsp[-1].invValue));
+  if((yyvsp[-4].intValue) >= 0 && (yyvsp[-4].intValue) <= WIDTH &&  (yyvsp[-3].intValue) >= 0 && (yyvsp[-3].intValue) <= HEIGHT) {
+    line((yyvsp[-4].intValue),(yyvsp[-3].intValue),(yyvsp[-2].intValue),(yyvsp[-1].intValue));
   } else {
     printf("Points must be between 0 and %d for width and 0 and %d for height", WIDTH, HEIGHT);
   }
 }
-#line 1246 "y.tab.c" /* yacc.c:1651  */
+#line 1242 "zjs.tab.c" /* yacc.c:1651  */
     break;
 
   case 11:
-#line 44 "zjs.y" /* yacc.c:1651  */
+#line 47 "zjs.y" /* yacc.c:1651  */
     {
-  if ((yyvsp[-2].invValue) >= 0 && (yyvsp[-2].invValue) <= WIDTH && (yyvsp[-1].invValue) >= 0 && (yyvsp[-1].invValue) <= HEIGHT) {
-    point((yyvsp[-2].invValue), (yyvsp[-1].invValue));
+  if ((yyvsp[-2].intValue) >= 0 && (yyvsp[-2].intValue) <= WIDTH && (yyvsp[-1].intValue) >= 0 && (yyvsp[-1].intValue) <= HEIGHT) {
+    point((yyvsp[-2].intValue), (yyvsp[-1].intValue));
   } else {
     printf("Points must be between 0 and %d for width and 0 and %d for height\n", WIDTH, HEIGHT);
   }
 }
-#line 1258 "y.tab.c" /* yacc.c:1651  */
+#line 1254 "zjs.tab.c" /* yacc.c:1651  */
     break;
 
   case 12:
-#line 53 "zjs.y" /* yacc.c:1651  */
+#line 56 "zjs.y" /* yacc.c:1651  */
     {
-  if((yyvsp[-3].invValue) >= 0 && (yyvsp[-3].invValue) <= WIDTH && (yyvsp[-2].invValue) >= 0 && (yyvsp[-2].invValue) <= HEIGHT && (yyvsp[-1].invValue) >= 0){
-    circle((yyvsp[-3].invValue),(yyvsp[-2].invValue),(yyvsp[-1].invValue));
+  if((yyvsp[-3].intValue) >= 0 && (yyvsp[-3].intValue) <= WIDTH && (yyvsp[-2].intValue) >= 0 && (yyvsp[-2].intValue) <= HEIGHT && (yyvsp[-1].intValue) >= 0){
+    circle((yyvsp[-3].intValue),(yyvsp[-2].intValue),(yyvsp[-1].intValue));
   } else {
     printf("Points must be between 0 and %d for width and 0 and %d for height and positive for radius\n", WIDTH, HEIGHT);
   }
 }
-#line 1270 "y.tab.c" /* yacc.c:1651  */
+#line 1266 "zjs.tab.c" /* yacc.c:1651  */
     break;
 
   case 13:
-#line 62 "zjs.y" /* yacc.c:1651  */
+#line 65 "zjs.y" /* yacc.c:1651  */
     {
-  if ((yyvsp[-4].invValue) >= 0 && (yyvsp[-4].invValue) <= WIDTH && (yyvsp[-3].invValue) >= 0 && (yyvsp[-3].invValue) <= HEIGHT) {
-    rectangle((yyvsp[-4].invValue), (yyvsp[-3].invValue), (yyvsp[-2].invValue), (yyvsp[-1].invValue));
+  if ((yyvsp[-4].intValue) >= 0 && (yyvsp[-4].intValue) <= WIDTH && (yyvsp[-3].intValue) >= 0 && (yyvsp[-3].intValue) <= HEIGHT) {
+    rectangle((yyvsp[-4].intValue), (yyvsp[-3].intValue), (yyvsp[-2].intValue), (yyvsp[-1].intValue));
   } else {
     printf("Points must be between 0 and %d for width and 0 and %d for height\n", WIDTH, HEIGHT);
   }
 }
-#line 1282 "y.tab.c" /* yacc.c:1651  */
+#line 1278 "zjs.tab.c" /* yacc.c:1651  */
     break;
 
   case 14:
-#line 71 "zjs.y" /* yacc.c:1651  */
+#line 74 "zjs.y" /* yacc.c:1651  */
     {
-  if ((yyvsp[-3].invValue) >= 0 && (yyvsp[-3].invValue) <= 255 && (yyvsp[-2].invValue) >= 0 && (yyvsp[-2].invValue) <= 255 && (yyvsp[-1].invValue) >= 0 && (yyvsp[-1].invValue) <= 255) {
-    set_color((yyvsp[-3].invValue), (yyvsp[-2].invValue), (yyvsp[-1].invValue));
+  if ((yyvsp[-3].intValue) >= 0 && (yyvsp[-3].intValue) <= 255 && (yyvsp[-2].intValue) >= 0 && (yyvsp[-2].intValue) <= 255 && (yyvsp[-1].intValue) >= 0 && (yyvsp[-1].intValue) <= 255) {
+    set_color((yyvsp[-3].intValue), (yyvsp[-2].intValue), (yyvsp[-1].intValue));
   } else {
     printf("RGB Values must be betweem 0 - 255\n");
   }
 }
-#line 1294 "y.tab.c" /* yacc.c:1651  */
+#line 1290 "zjs.tab.c" /* yacc.c:1651  */
     break;
 
   case 15:
-#line 80 "zjs.y" /* yacc.c:1651  */
+#line 83 "zjs.y" /* yacc.c:1651  */
     {
   finish();
   return 0;
 }
-#line 1303 "y.tab.c" /* yacc.c:1651  */
+#line 1299 "zjs.tab.c" /* yacc.c:1651  */
     break;
 
 
-#line 1307 "y.tab.c" /* yacc.c:1651  */
+#line 1303 "zjs.tab.c" /* yacc.c:1651  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1531,7 +1527,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 85 "zjs.y" /* yacc.c:1910  */
+#line 88 "zjs.y" /* yacc.c:1910  */
 
 
 extern FILE* yyin;
@@ -1544,6 +1540,6 @@ int main(int argc, char** argv) {
 }
 
 int yyerror(const char* msg) {
-  printf("%s\n", msg);
+  printf("%s\n", msg, yytext);
   return 1;
 }
