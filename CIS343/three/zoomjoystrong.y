@@ -1,7 +1,7 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
-  #include "zjs.h"
+  #include "zoomjoystrong.h"
   int yyerror(const char* msg);
   extern char* yytext;
 int yylex();
@@ -100,3 +100,4 @@ int yyerror(const char* msg) {
   printf("%s\n", msg, yytext);
   return 1;
 }
+

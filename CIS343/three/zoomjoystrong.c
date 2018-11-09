@@ -1,4 +1,4 @@
-#include "zjs.h"
+#include "zoomjoystrong.h"
 #include <math.h>
 #include <SDL2/SDL.h>
 #include <unistd.h>
