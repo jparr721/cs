@@ -45,10 +45,10 @@ class FrontEnd(object):
     def play(self, song):
         self.player.play(song)
 
-    def set_song_root(self, root):
+    def set_media_root(self, root):
         self.media_root = root
 
-    def get_song_root(self):
+    def get_media_root(self):
         return self.media_root
 
     def change_song(self):
