@@ -35,7 +35,7 @@ void* ChatServer::server_handler(void* args) {
     std::memset(data, 0, sizeof(data));
     int r = recv(t.socket, data, 4096, 0);
 
-    
+
     if (r < 0) {
       std::cout << "I'VE GOTTEN ALL THE WAY GERE" << std::endl;
       break;
@@ -65,34 +65,34 @@ void* ChatServer::server_handler(void* args) {
     std::cout << "args: " << std::endl;
     std::cout << command_args.size() << std::endl;
 
-    
-    
+
     if (command == "list") {
       std::string outlist = "";
-      for (int i = 0; i < t.instance->users.size(); i++)
-	outlist = outlist + t.instance->users[i].username + "\n ";
+      for (int i = 0; i < t.instance->users.size(); i++) {
+        outlist = outlist + t.instance->users[i].username + "\n ";
+      }
       send(t.socket, outlist.c_str(), outlist.length(), 0);
     } else if (command == "broadcast") {
       std::cout << "we broadcasting" << std::endl;
       for (int i = 0; i < t.instance->users.size(); ++i) {
-	std::cout << t.instance->users.size() << std::endl;
-	std::cout << t.instance->users[i].username << std::endl;
-	send(t.instance->users[i].socket, message.c_str(), message.length(), 0);
+        std::cout << t.instance->users.size() << std::endl;
+        std::cout << t.instance->users[i].username << std::endl;
+        send(t.instance->users[i].socket, message.c_str(), message.length(), 0);
       }
     } else if (command == "pm") {
-	std::cout << "we pming" << std::endl;
-	for (int i = 0; i < t.instance->users.size(); ++i) {
-	  std::cout << "username1 = " + t.instance->users[i].username << std::endl;
-	  std::cout << "username2 = " + command_args[1] << std::endl;
-	  if (t.instance->users[i].username == command_args[1])
-	    send(t.instance->users[i].socket, command_args[2].c_str(), command_args[2].length(), 0);
-	}
+      std::cout << "we pming" << std::endl;
+      for (int i = 0; i < t.instance->users.size(); ++i) {
+        std::cout << "username1 = " + t.instance->users[i].username << std::endl;
+        std::cout << "username2 = " + command_args[1] << std::endl;
+        if (t.instance->users[i].username == command_args[1])
+          send(t.instance->users[i].socket, command_args[2].c_str(), command_args[2].length(), 0);
+      }
     } else if (command == "kick") {
       std::string pass = "";
 
       if (t.instance->check_admin(command_args[2])) {
         std::string who = command_args[1];
-        
+
         std::string kick_msg("kicked");
 
         for (int i = 0; i < t.instance->users.size(); ++i) {
@@ -227,7 +227,7 @@ int ChatServer::RunServer() {
       std::cerr << "failed to get username, killing session" << std::endl;
       close(clientsocket);
     }
-    
+
     char actual_name[r];
     std::strcpy(actual_name, username);
 

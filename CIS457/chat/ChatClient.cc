@@ -26,7 +26,7 @@ void* client::ChatClient::client_handler(void* args) {
   while (data != "/quit" && data != "kicked") {
 
     char buf[4096];
-    
+
     recv(t.socket, buf, 4096, 0);
     // Decrypt our message
     //data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
