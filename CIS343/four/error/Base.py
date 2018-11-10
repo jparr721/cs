@@ -2,5 +2,13 @@ class Error(Exception):
     pass
 
 
-class CLIError(Exception):
+class CLIError(Error):
+    pass
+
+
+class CLIAudioFileException(CLIError):
+    pass
+
+
+class CLIAudioScreenSizeException(CLIError):
     pass

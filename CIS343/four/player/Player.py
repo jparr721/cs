@@ -3,6 +3,8 @@
 import pyaudio
 import wave
 import time
+import os
+from error import Base as b
 
 
 class Player:
@@ -12,6 +14,8 @@ class Player:
         self.position = 0
 
     def getCurrentSong(self):
+        if self.paused is True:
+            return self.currentSong + ' paused'
         return self.currentSong
 
     def pause(self):
@@ -24,7 +28,10 @@ class Player:
 
     def play(self, track):
         self.paused = False
-        self.currentSong = track
+        if os.path.exists(track):
+            self.currentSong = os.path.abspath(track)
+        else:
+            raise b.CLIAudioFileException('Song file does not exist')
         self.wf = wave.open(track, 'rb')
 
         # instantiate PyAudio (1)

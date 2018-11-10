@@ -2,6 +2,7 @@ import curses
 import curses.textpad
 import os
 import sys
+from error import Base as b
 
 
 class FrontEnd(object):
@@ -10,7 +11,10 @@ class FrontEnd(object):
         self.player = player
         self.player.play('media/cello.wav')
         self.root_directory_files = []
-        self.media_root = sys.argv[1]
+        if len(sys.argv) < 2:
+            raise b.CLIError('Invalid number of arguments provided')
+        else:
+            self.media_root = sys.argv[1]
         curses.wrapper(self.menu)
 
     def menu(self, args):
@@ -28,6 +32,7 @@ class FrontEnd(object):
             if c == 27:
                 self.quit()
             elif c == ord('p'):
+                self.update_song()
                 self.player.pause()
             elif c == ord('c'):
                 self.change_song()
@@ -43,7 +48,11 @@ class FrontEnd(object):
                 15, 10, 'Now playing: ' + self.player.getCurrentSong())
 
     def play(self, song):
-        self.player.play(song)
+        try:
+            self.player.play(song)
+            self.update_song()
+        except b.CLIAudioFileException:
+            print('Invalid input file provided')
 
     def set_media_root(self, root):
         self.media_root = root
@@ -90,7 +99,7 @@ class FrontEnd(object):
 
         list_window.addstr(
                 len(self.root_directory_files) + 3, 10, 'Press ENTER to exit')
-        exit = list_window.getstr(1, 1, 30)
+        list_window.getstr(1, 1, 30)
         curses.noecho()
         del list_window
         self.stdscr.touchwin()
