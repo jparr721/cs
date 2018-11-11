@@ -26,7 +26,7 @@ void* client::ChatClient::client_handler(void* args) {
   while (data != "/quit" && data != "kicked") {
 
     char buf[4096];
-
+    std::memset(buf, 0, sizeof(buf));
     recv(t.socket, buf, 4096, 0);
     // Decrypt our message
     //data = SLIP_SLOP.decrypt(t.key, s.iv, s.cipher);
@@ -36,7 +36,7 @@ void* client::ChatClient::client_handler(void* args) {
       exit(0);
       return nullptr;
     }
-    std::cout << " <<< " << data << std::endl;
+    std::cout << " <<< " << data << "\n <<< " << std::endl;
   }
 
   return nullptr;

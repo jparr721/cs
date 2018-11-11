@@ -56,7 +56,7 @@ void* ChatServer::server_handler(void* args) {
 
     std::cout << "this the command:(" + command + ")" << std::endl;
 
-
+    //std::cout << commands_args.size()
     std::vector<std::string> command_args;
     std::istringstream iss(message);
     for(std::string message; iss >> message; ) {
@@ -69,15 +69,14 @@ void* ChatServer::server_handler(void* args) {
     if (command == "list") {
       std::string outlist = "";
       for (int i = 0; i < t.instance->users.size(); i++) {
-        outlist = outlist + t.instance->users[i].username + "\n ";
+        outlist = outlist + "\n" + t.instance->users[i].username;
       }
       send(t.socket, outlist.c_str(), outlist.length(), 0);
     } else if (command == "broadcast") {
       std::cout << "we broadcasting" << std::endl;
       for (int i = 0; i < t.instance->users.size(); ++i) {
-        std::cout << t.instance->users.size() << std::endl;
-        std::cout << t.instance->users[i].username << std::endl;
-        send(t.instance->users[i].socket, message.c_str(), message.length(), 0);
+        std::cout << "sending to " + t.instance->users[i].username + ": " + command_args[1] << std::endl;
+        send(t.instance->users[i].socket, command_args[1].c_str(), command_args[1].length(), 0);
       }
     } else if (command == "pm") {
       std::cout << "we pming" << std::endl;
