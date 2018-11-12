@@ -35,13 +35,22 @@ class FrontEnd(object):
                 self.update_song()
                 self.player.pause()
             elif c == ord('c'):
-                self.change_song()
-                self.update_song()
+                try:
+                    self.change_song()    
+                    self.update_song()
+                except b.CLIAudioFileException:
+                    self.display_error(
+                    'Could not find the desired audio file. Check your library to make sure the file is there.')
                 self.stdscr.touchwin()
                 self.stdscr.refresh()
+                    
             elif c == ord('l'):
                 self.list_directory()
 
+    def display_error(self, error):
+        self.stdscr.addstr(15, 10, '                                        ')
+        self.stdscr.addstr(15, 10, error)
+                
     def update_song(self):
         self.stdscr.addstr(15, 10, '                                        ')
         self.stdscr.addstr(
@@ -68,7 +77,6 @@ class FrontEnd(object):
         curses.echo()
         path = changeWindow.getstr(1, 1, 30)
         curses.noecho()
-        del changeWindow
         self.stdscr.touchwin()
         self.stdscr.refresh()
         self.player.stop()
