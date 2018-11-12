@@ -43,6 +43,7 @@ GET /:id 	Returns ALL slave programmers by ID
 PUT /:id 	Updates a particular slave programmer (or more than one) by ID
 POST /		Creates a new slave programmer into our legion
 ```
+You will notice the lack of delete routes because no one is allowed to leave our beautiful organization, silly.
 
 ## A Few Caveats
 This needs to have some sort of testing. 
