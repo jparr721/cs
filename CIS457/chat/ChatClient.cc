@@ -116,7 +116,7 @@ int ChatClient::RunClient() {
   // get that pubkey
   EVP_PKEY *pubkey;
   FILE* pubf = fopen("rsa_pub.pem","rb");
-  pubkey = PEM_read_PUBKEY(pubf,NULL,NULL,NULL);
+  pubkey = PEM_read_PUBKEY(pubf,nullptr,nullptr,nullptr);
 
   std::cout << key << std::endl;
 
@@ -143,7 +143,7 @@ int ChatClient::RunClient() {
   std::memcpy(&t->socket, &sockfd, sizeof(int));
 
   pthread_t child;
-  pthread_create(&child, NULL, client_handler, t);
+  pthread_create(&child, nullptr, client_handler, t);
   pthread_detach(child);
 
   while (true) {
@@ -161,7 +161,7 @@ int ChatClient::RunClient() {
 
     unsigned char ciphertext[1024];
 
-    int ciphertext_len = JEFF.encrypt(plaintext, strlen(message.c_str()), key, miv, ciphertext);
+    int ciphertext_len = JEFF.encrypt(plaintext, message.size(), key, miv, ciphertext);
 
     send(sockfd, ciphertext, ciphertext_len, 0);
   }

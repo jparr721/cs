@@ -20,12 +20,13 @@
 
 namespace server {
 
-//std::vector<ChatServer::thread> ChatServer::users;
-
 void* ChatServer::server_handler(void* args) {
   the::Succ SKOOMA_HIGH;
+  yep::Crypto JEFF;
   ChatServer::std_message s;
   ChatServer::thread t;
+
+  RAND_bytes(s.iv, 16);
 
   std::memcpy(&t, args, sizeof(ChatServer::thread));
 
@@ -38,49 +39,56 @@ void* ChatServer::server_handler(void* args) {
 
 
     if (r < 0) {
-      std::cout << "I'VE GOTTEN ALL THE WAY GERE" << std::endl;
       break;
     }
 
     if (std::string(data) == "/quit" || r <= 0) {
       std::cout << "Shutting down the server connection to user: " << t.username << std::endl;
-      //close(t.socket);
       // Break this worker
       break;
     }
 
     std::string message = std::string(data);
-    //std::string message = SKOOMA_HIGH.decrypt(t.key, s.iv, s.cipher);
-    std::cout << " <<< " << t.username << ": " << message << std::endl;
+    unsigned char* decrypted_message;
+    int message_len = JEFF.decrypt(
+        const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(message.c_str())),
+          message.size(),
+          t.key,
+          s.iv,
+          decrypted_message);
+    std::cout << " <<< " << t.username << ": " << decrypted_message << std::endl;
 
     std::string command = t.instance->extract_command(message);
 
-    std::cout << "this the command:(" + command + ")" << std::endl;
+    std::cout << "Command:(" + command + ")" << std::endl;
 
-    //std::cout << commands_args.size()
     std::vector<std::string> command_args;
     std::istringstream iss(message);
+
     for(std::string message; iss >> message; ) {
       command_args.push_back(message);
     }
-    std::cout << "args: " << std::endl;
-    std::cout << command_args.size() << std::endl;
 
+    std::cout << "args: " << command_args.size() << std::endl;
 
     if (command == "list") {
       std::string outlist = "";
+
       for (int i = 0; i < t.instance->users.size(); i++) {
         outlist = outlist + "\n" + t.instance->users[i].username;
       }
+
       send(t.socket, outlist.c_str(), outlist.length(), 0);
     } else if (command == "broadcast") {
-      std::cout << "we broadcasting" << std::endl;
+      std::cout << "Sending broadcast packet" << std::endl;
+
       for (int i = 0; i < t.instance->users.size(); ++i) {
         std::cout << "sending to " + t.instance->users[i].username + ": " + command_args[1] << std::endl;
         send(t.instance->users[i].socket, command_args[1].c_str(), command_args[1].length(), 0);
       }
     } else if (command == "pm") {
-      std::cout << "we pming" << std::endl;
+      std::cout << "Sending personal message" << std::endl;
+
       for (int i = 0; i < t.instance->users.size(); ++i) {
         std::cout << "username1 = " + t.instance->users[i].username << std::endl;
         std::cout << "username2 = " + command_args[1] << std::endl;
@@ -112,7 +120,7 @@ void* ChatServer::server_handler(void* args) {
     }
   }
   std::cout << "Closing handler thread" << std::endl;
-  return NULL;
+  return nullptr;
 }
 
 bool ChatServer::check_admin(const std::string& pass) {
@@ -201,12 +209,12 @@ int ChatServer::RunServer() {
     if (clientsocket > -1) {
       std::cout << "Client conected" << std::endl;
     } else {
-      std::cout << "oh no no no no" << std::endl;
+      std::cout << "Error, failed to connect client" << std::endl;
     }
 
-    
+
     char data[this->MAXDATASIZE];
-    printf("im here accepting a connection\n");
+    std::cout << "Server now accepting connections" << std::endl;
 
 
     /*
@@ -214,32 +222,27 @@ int ChatServer::RunServer() {
     */
 
     unsigned char encrypted_key[256];
-    
+
     // get that privkey
     EVP_PKEY *privkey;
     FILE *privf = fopen("rsa_priv.pem", "rb");
-    privkey = PEM_read_PrivateKey(privf,NULL,NULL,NULL);
+    privkey = PEM_read_PrivateKey(privf, nullptr, nullptr, nullptr);
     unsigned char decrypted_key[32];
 
     // receive encrypted key
 
     recv(clientsocket, &encrypted_key, 256, 0);
     encrypted_key[256] = '\0';
-    
+
     int decryptedkey_len = JEFF.rsa_decrypt(encrypted_key, 256, privkey, decrypted_key);
 
-    
+
     std::cout << decrypted_key << std::endl;
-
-
-
-
-
 
     /*
       END
     */
-    
+
     // Get username
     char username[100];
     std::memset(username, 0, sizeof(username));
@@ -247,7 +250,7 @@ int ChatServer::RunServer() {
     if  (r < 0) {
       const std::string err = "Failed to get username, exiting";
       send(clientsocket, err.c_str(), err.length(), 0);
-      std::cerr << "failed to get username, killing session" << std::endl;
+      std::cerr << "Failed to get username, killing session" << std::endl;
       close(clientsocket);
     }
 
@@ -269,7 +272,7 @@ int ChatServer::RunServer() {
     // Add the user to our global ref
     this->users.push_back(*t);
 
-    pthread_create(&client_r, NULL, ChatServer::server_handler, t);
+    pthread_create(&client_r, nullptr, ChatServer::server_handler, t);
     pthread_detach(client_r);
 
   }

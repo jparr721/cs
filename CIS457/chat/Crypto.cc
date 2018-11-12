@@ -22,14 +22,14 @@ void yep::Crypto::handleErrors(void)
 int yep::Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){
   EVP_PKEY_CTX *ctx;
   size_t outlen;
-  ctx = EVP_PKEY_CTX_new(key, NULL);
+  ctx = EVP_PKEY_CTX_new(key, nullptr);
   if (!ctx)
     handleErrors();
   if (EVP_PKEY_encrypt_init(ctx) <= 0)
     handleErrors();
   if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
     handleErrors();
-  if (EVP_PKEY_encrypt(ctx, NULL, &outlen, in, inlen) <= 0)
+  if (EVP_PKEY_encrypt(ctx, nullptr, &outlen, in, inlen) <= 0)
     handleErrors();
   if (EVP_PKEY_encrypt(ctx, out, &outlen, in, inlen) <= 0)
     handleErrors();
@@ -39,14 +39,14 @@ int yep::Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, uns
 int yep::Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){
   EVP_PKEY_CTX *ctx;
   size_t outlen;
-  ctx = EVP_PKEY_CTX_new(key,NULL);
+  ctx = EVP_PKEY_CTX_new(key,nullptr);
   if (!ctx)
     handleErrors();
   if (EVP_PKEY_decrypt_init(ctx) <= 0)
     handleErrors();
   if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
     handleErrors();
-  if (EVP_PKEY_decrypt(ctx, NULL, &outlen, in, inlen) <= 0)
+  if (EVP_PKEY_decrypt(ctx, nullptr, &outlen, in, inlen) <= 0)
     handleErrors();
   if (EVP_PKEY_decrypt(ctx, out, &outlen, in, inlen) <= 0)
     handleErrors();
@@ -59,7 +59,7 @@ int yep::Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
   int len;
   int ciphertext_len;
   if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
-  if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+  if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
     handleErrors();
   if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
     handleErrors();
@@ -76,7 +76,7 @@ int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned
   int len;
   int plaintext_len;
   if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
-  if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+  if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
     handleErrors();
   if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
     handleErrors();
