@@ -118,6 +118,8 @@ int ChatClient::RunClient() {
   FILE* pubf = fopen("rsa_pub.pem","rb");
   pubkey = PEM_read_PUBKEY(pubf,NULL,NULL,NULL);
 
+  std::cout << key << std::endl;
+  
   unsigned char encrypted_key[256];
   int encryptedkey_len = JEFF.rsa_encrypt(key, 32, pubkey, encrypted_key);
 
@@ -152,12 +154,16 @@ int ChatClient::RunClient() {
       break;
     }
 
-    //RAND_pseudo_bytes(s_message.iv, 16);
-    // Encrpyt our message
-    //s_message.cipher = DIVINE_SUCC.encrypt(key, s_message.iv, s_message.cipher);
+    unsigned char* plaintext = (unsigned char*)message.c_str();
+    
+    unsigned char miv[16];
+    RAND_bytes(miv, 16);
 
-    // Send it along
-    send(sockfd, message.c_str(), message.length(), 0);
+    unsigned char ciphertext[1024];
+
+    int ciphertext_len = JEFF.encrypt(plaintext, strlen(message.c_str()), key, miv, ciphertext);
+
+    send(sockfd, ciphertext, ciphertext_len, 0);
   }
 
   close(sockfd);
