@@ -119,12 +119,12 @@ int ChatClient::RunClient() {
   pubkey = PEM_read_PUBKEY(pubf,NULL,NULL,NULL);
 
   std::cout << key << std::endl;
-  
+
   unsigned char encrypted_key[256];
   int encryptedkey_len = JEFF.rsa_encrypt(key, 32, pubkey, encrypted_key);
 
   std::cout << encryptedkey_len << std::endl;
-  
+
   // send encrypted key to server
   int len = sendto(sockfd, &encrypted_key, encryptedkey_len, 0, reinterpret_cast<sockaddr*>(&server), sin_size);
 
@@ -133,7 +133,7 @@ int ChatClient::RunClient() {
   /*
    END MY LIFE =======================================================
   */
-  
+
   std::cout << "Please enter a username" << std::endl;
   std::getline(std::cin, username);
   sendto(sockfd, username.c_str(), username.length(), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
@@ -155,7 +155,7 @@ int ChatClient::RunClient() {
     }
 
     unsigned char* plaintext = (unsigned char*)message.c_str();
-    
+
     unsigned char miv[16];
     RAND_bytes(miv, 16);
 

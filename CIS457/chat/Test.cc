@@ -17,7 +17,7 @@
 
 int main() {
   yep::Crypto JEFF;
-  
+
   unsigned char key[32];
   unsigned char iv[16];
   unsigned char *plaintext =
@@ -41,10 +41,10 @@ int main() {
   FILE* privf = fopen("rsa_priv.pem","rb");
   privkey = PEM_read_PrivateKey(privf,NULL,NULL,NULL);
   unsigned char decrypted_key[32];
-  int decryptedkey_len = JEFF.rsa_decrypt(encrypted_key, encryptedkey_len, privkey, decrypted_key); 
-  
+  int decryptedkey_len = JEFF.rsa_decrypt(encrypted_key, encryptedkey_len, privkey, decrypted_key);
+
   decryptedtext_len = JEFF.decrypt(ciphertext, ciphertext_len, decrypted_key, iv,
-			      decryptedtext);
+            decryptedtext);
   decryptedtext[decryptedtext_len] = '\0';
   printf("Decrypted text is:\n");
   printf("%s\n", decryptedtext);

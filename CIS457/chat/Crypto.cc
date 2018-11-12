@@ -19,7 +19,7 @@ void yep::Crypto::handleErrors(void)
 }
 
 
-int yep::Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){ 
+int yep::Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){
   EVP_PKEY_CTX *ctx;
   size_t outlen;
   ctx = EVP_PKEY_CTX_new(key, NULL);
@@ -36,7 +36,7 @@ int yep::Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, uns
   return outlen;
 }
 
-int yep::Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){ 
+int yep::Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){
   EVP_PKEY_CTX *ctx;
   size_t outlen;
   ctx = EVP_PKEY_CTX_new(key,NULL);
@@ -54,7 +54,7 @@ int yep::Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, uns
 }
 
 int yep::Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
-	unsigned char *iv, unsigned char *ciphertext){
+  unsigned char *iv, unsigned char *ciphertext){
   EVP_CIPHER_CTX *ctx;
   int len;
   int ciphertext_len;
@@ -71,7 +71,7 @@ int yep::Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
 }
 
 int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
-	    unsigned char *iv, unsigned char *plaintext){
+      unsigned char *iv, unsigned char *plaintext){
   EVP_CIPHER_CTX *ctx;
   int len;
   int plaintext_len;
@@ -86,42 +86,3 @@ int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned
   EVP_CIPHER_CTX_free(ctx);
   return plaintext_len;
 }
-/*
-int main(void){
-  unsigned char *pubfilename = "RSApub.pem";
-  unsigned char *privfilename = "RSApriv.pem";
-  unsigned char key[32];
-  unsigned char iv[16];
-  unsigned char *plaintext =
-    (unsigned char *)"This is a test string to encrypt.";
-  unsigned char ciphertext[1024];
-  unsigned char decryptedtext[1024];
-  int decryptedtext_len, ciphertext_len;
-  OpenSSL_add_all_algorithms();
-  RAND_bytes(key,32);
-  RAND_bytes(iv,16);
-  EVP_PKEY *pubkey, *privkey;
-  FILE* pubf = fopen(pubfilename,"rb");
-  pubkey = PEM_read_PUBKEY(pubf,NULL,NULL,NULL);
-  unsigned char encrypted_key[256];
-  int encryptedkey_len = rsa_encrypt(key, 32, pubkey, encrypted_key);
-  ciphertext_len = encrypt (plaintext, strlen ((char *)plaintext), key, iv,
-                            ciphertext);
-  printf("Ciphertext is:\n");
-  BIO_dump_fp (stdout, (const char *)ciphertext, ciphertext_len);
-
-  FILE* privf = fopen(privfilename,"rb");
-  privkey = PEM_read_PrivateKey(privf,NULL,NULL,NULL);
-  unsigned char decrypted_key[32];
-  int decryptedkey_len = rsa_decrypt(encrypted_key, encryptedkey_len, privkey, decrypted_key); 
-  
-  decryptedtext_len = decrypt(ciphertext, ciphertext_len, decrypted_key, iv,
-			      decryptedtext);
-  decryptedtext[decryptedtext_len] = '\0';
-  printf("Decrypted text is:\n");
-  printf("%s\n", decryptedtext);
-  EVP_cleanup();
-  ERR_free_strings();
-  return 0;
-}
-*/
