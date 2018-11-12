@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 int main() {
-  Crypto JEFF;
+  yep::Crypto JEFF;
   
   unsigned char key[32];
   unsigned char iv[16];

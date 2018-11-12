@@ -12,14 +12,14 @@
 #include <string.h>
 
 
-void Crypto::handleErrors(void)
+void yep::Crypto::handleErrors(void)
 {
   ERR_print_errors_fp(stderr);
   abort();
 }
 
 
-int Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){ 
+int yep::Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){ 
   EVP_PKEY_CTX *ctx;
   size_t outlen;
   ctx = EVP_PKEY_CTX_new(key, NULL);
@@ -36,7 +36,7 @@ int Crypto::rsa_encrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned
   return outlen;
 }
 
-int Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){ 
+int yep::Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned char* out){ 
   EVP_PKEY_CTX *ctx;
   size_t outlen;
   ctx = EVP_PKEY_CTX_new(key,NULL);
@@ -53,7 +53,7 @@ int Crypto::rsa_decrypt(unsigned char* in, size_t inlen, EVP_PKEY *key, unsigned
   return outlen;
 }
 
-int Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+int yep::Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
 	unsigned char *iv, unsigned char *ciphertext){
   EVP_CIPHER_CTX *ctx;
   int len;
@@ -70,7 +70,7 @@ int Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
   return ciphertext_len;
 }
 
-int Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 	    unsigned char *iv, unsigned char *plaintext){
   EVP_CIPHER_CTX *ctx;
   int len;

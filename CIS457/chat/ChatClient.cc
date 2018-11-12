@@ -1,6 +1,7 @@
 #include "./include/ChatClient.hpp"
 #include "./include/User.hpp"
 #include "./include/Succ.hpp"
+#include "./include/Crypto.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -70,7 +71,6 @@ std::string ChatClient::handle_input() {
 
 int ChatClient::RunClient() {
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  the::Succ DIVINE_SUCC;
 
   if (sockfd < 0) {
     std::cerr << "Error creating the socket" << std::endl;
@@ -78,7 +78,6 @@ int ChatClient::RunClient() {
   }
   int port = handle_port();
   in_addr_t host = handle_host();
-  unsigned char key[32];
 
   struct sockaddr_in server;
   server.sin_family = AF_INET;
@@ -100,24 +99,39 @@ int ChatClient::RunClient() {
   int taken = 1;
   bool kicked = false;
 
-  //ERR_load_crypto_strings();
-  //OpenSSL_add_all_algorithms();
-  //OPENSSL_config(nullptr);
-  //RAND_bytes(key, 32);
+  /*
+   CRYPTO GARBAGE BEGINS HERE ===========================================
+  */
 
+  yep::Crypto JEFF;
 
-  FILE* rsa_public_key = std::fopen("rsa_pub.pem", "rb");
-  EVP_PKEY *public_key;
-  public_key = PEM_read_PUBKEY(rsa_public_key, nullptr, nullptr, nullptr);
+  unsigned char key[32];
+  unsigned char iv[16];
 
-  // Set our key with the rsa encryption
-  skm.encrypted_key = DIVINE_SUCC.rsa_encrypt(
-      std::string(reinterpret_cast<char*>(key)),
-      public_key);
+  OpenSSL_add_all_algorithms();
 
-  // Send the key to the server so it can decrypt the messages
-  sendto(sockfd, &skm, sizeof(ChatClient::symmetric_key_message), 0, reinterpret_cast<sockaddr*>(&server), sin_size);
+  RAND_bytes(key, 32);
+  RAND_bytes(iv,16);
 
+  // get that pubkey
+  EVP_PKEY *pubkey;
+  FILE* pubf = fopen("rsa_pub.pem","rb");
+  pubkey = PEM_read_PUBKEY(pubf,NULL,NULL,NULL);
+
+  unsigned char encrypted_key[256];
+  int encryptedkey_len = JEFF.rsa_encrypt(key, 32, pubkey, encrypted_key);
+
+  std::cout << encryptedkey_len << std::endl;
+  
+  // send encrypted key to server
+  int len = sendto(sockfd, &encrypted_key, encryptedkey_len, 0, reinterpret_cast<sockaddr*>(&server), sin_size);
+
+  std::cout << len << std::fflush;
+
+  /*
+   END MY LIFE =======================================================
+  */
+  
   std::cout << "Please enter a username" << std::endl;
   std::getline(std::cin, username);
   sendto(sockfd, username.c_str(), username.length(), 0, reinterpret_cast<sockaddr*>(&server), sin_size);

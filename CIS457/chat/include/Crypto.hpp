@@ -8,7 +8,7 @@
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <string.h>
-
+namespace yep {
 class Crypto {
 public:
   void handleErrors(void);
@@ -19,5 +19,5 @@ public:
   int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 	      unsigned char *iv, unsigned char *plaintext);
 };
-
+} // end namespace
 #endif

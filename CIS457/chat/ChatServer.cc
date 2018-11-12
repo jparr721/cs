@@ -1,6 +1,7 @@
 #include "./include/ChatServer.hpp"
 
 #include "./include/Succ.hpp"
+#include "./include/Crypto.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -176,6 +177,7 @@ std::string ChatServer::extract_command(const std::string& input) const {
 
 int ChatServer::RunServer() {
   the::Succ sad;
+  yep::Crypto JEFF;
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
   sockaddr_in addr;
@@ -202,20 +204,42 @@ int ChatServer::RunServer() {
       std::cout << "oh no no no no" << std::endl;
     }
 
-    //ERR_load_crypto_strings();
-    //OpenSSL_add_all_algorithms();
-    //OPENSSL_config(nullptr);
-
+    
     char data[this->MAXDATASIZE];
     printf("im here accepting a connection\n");
-    //FILE* private_rsa_key = std::fopen("rsa_priv.pem", "rb");
-    //EVP_PKEY *private_key;
-    //private_key = PEM_read_PrivateKey(private_rsa_key, nullptr, nullptr, nullptr);
 
-    recv(clientsocket, &data, sizeof(data), 0);
-    //unsigned char* decrypted_key = sad.rsa_decrypt(
-        //std::string(data), private_key);
-    unsigned char* decrypted_key;
+
+    /*
+      CRYPTO
+    */
+
+    unsigned char encrypted_key[256];
+    
+    // get that privkey
+    EVP_PKEY *privkey;
+    FILE *privf = fopen("rsa_priv.pem", "rb");
+    privkey = PEM_read_PrivateKey(privf,NULL,NULL,NULL);
+    unsigned char decrypted_key[32];
+
+    // receive encrypted key
+
+    recv(clientsocket, &encrypted_key, 256, 0);
+    encrypted_key[256] = '\0';
+    
+    int decryptedkey_len = JEFF.rsa_decrypt(encrypted_key, 256, privkey, decrypted_key);
+
+    
+    std::cout << decrypted_key << std::endl;
+
+
+
+
+
+
+    /*
+      END
+    */
+    
     // Get username
     char username[100];
     std::memset(username, 0, sizeof(username));
