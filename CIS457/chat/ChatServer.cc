@@ -48,16 +48,24 @@ void* ChatServer::server_handler(void* args) {
       break;
     }
 
+    /* crypto */
     std::string message = std::string(data);
-    unsigned char* decrypted_message;
+    unsigned char* cipher = (unsigned char*)plaintext message.c_str();
+
+    unsigned char miv[16];
+    std::memset(miv, 0, 16);
+    
+    unsigned char decrypted_message[1024];
     std::cout << "Got something: " << message << std::endl;
     int message_len = JEFF.decrypt(
-        const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(message.c_str())),
+          cipher,
           message.size(),
           t.key,
-          s.iv,
+          miv,
           decrypted_message);
     std::cout << " <<< " << t.username << ": " << decrypted_message << std::endl;
+
+    std::cout << decrypted_message << std::endl;
 
     std::string command = t.instance->extract_command(message);
 

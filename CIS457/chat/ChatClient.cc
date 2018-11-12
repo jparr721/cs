@@ -156,8 +156,10 @@ int ChatClient::RunClient() {
     unsigned char* plaintext = (unsigned char*)message.c_str();
 
     unsigned char miv[16];
-    RAND_bytes(miv, 16);
+    //RAND_bytes(miv, 16);
 
+    std::memset(miv, 0, 16);
+    
     unsigned char ciphertext[1024];
 
     int ciphertext_len = JEFF.encrypt(plaintext, message.size(), key, miv, ciphertext);
