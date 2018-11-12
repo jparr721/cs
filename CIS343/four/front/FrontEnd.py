@@ -93,7 +93,7 @@ class FrontEnd(object):
                                      if os.path.isfile(
                                          os.path.join(self.media_root, f))]
         list_window = curses.newwin(
-                len(self.root_directory_files) + 5, 200, 5, 100)
+                len(self.root_directory_files) + 5, 30, 0, 90)
         list_window.border()
         list_window.addstr(0,
                            0,
