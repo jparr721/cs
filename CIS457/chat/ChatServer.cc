@@ -20,6 +20,24 @@
 
 namespace server {
 
+  std::pair<std::string, int> ChatServer::encrypt_string(std::string input, unsigned char key[16]) {
+    yep::Crypto JEFF;
+  unsigned char* plaintext = (unsigned char*)input.c_str();
+  unsigned char miv[16];
+  std::memset(miv, 0, 16);
+  unsigned char ciphertext[1024];
+  int ciphertext_len = JEFF.encrypt(plaintext, input.size(), key, miv, ciphertext);
+
+  std::string str( ciphertext, ciphertext + sizeof ciphertext / sizeof ciphertext[0] );
+
+  std::pair<std::string, int> result;
+
+  result.first = str;
+  result.second = ciphertext_len;
+  
+  return result;
+}
+  
 void* ChatServer::server_handler(void* args) {
   the::Succ SKOOMA_HIGH;
   yep::Crypto JEFF;
@@ -50,7 +68,7 @@ void* ChatServer::server_handler(void* args) {
 
     /* crypto */
     std::string message = std::string(data);
-    unsigned char* cipher = (unsigned char*)plaintext message.c_str();
+    unsigned char* cipher = (unsigned char*) message.c_str();
 
     unsigned char miv[16];
     std::memset(miv, 0, 16);
@@ -80,6 +98,8 @@ void* ChatServer::server_handler(void* args) {
 
     std::cout << "args: " << command_args.size() << std::endl;
 
+    std::string outgoing;
+    
     if (command == "list") {
       std::string outlist = "";
 
@@ -87,13 +107,18 @@ void* ChatServer::server_handler(void* args) {
         outlist = outlist + "\n" + t.instance->users[i].username;
       }
 
-      send(t.socket, outlist.c_str(), outlist.length(), 0);
+      std::pair<std::string, int> out = t.instance->encrypt_string(outlist, t.key);
+      send(t.socket, out.first.c_str(), out.second, 0);
+      
     } else if (command == "broadcast") {
       std::cout << "Sending broadcast packet" << std::endl;
 
       for (int i = 0; i < t.instance->users.size(); ++i) {
         std::cout << "sending to " + t.instance->users[i].username + ": " + command_args[1] << std::endl;
-        send(t.instance->users[i].socket, command_args[1].c_str(), command_args[1].length(), 0);
+
+	std::pair<std::string, int> out = t.instance->encrypt_string(command_args[1], t.instance->users[i].key);
+	
+        send(t.instance->users[i].socket, out.first.c_str(), out.second, 0);
       }
     } else if (command == "pm") {
       std::cout << "Sending personal message" << std::endl;
@@ -101,8 +126,11 @@ void* ChatServer::server_handler(void* args) {
       for (int i = 0; i < t.instance->users.size(); ++i) {
         std::cout << "username1 = " + t.instance->users[i].username << std::endl;
         std::cout << "username2 = " + command_args[1] << std::endl;
-        if (t.instance->users[i].username == command_args[1])
-          send(t.instance->users[i].socket, command_args[2].c_str(), command_args[2].length(), 0);
+        if (t.instance->users[i].username == command_args[1]) {
+	  std::pair<std::string, int> out = t.instance->encrypt_string(command_args[2], t.instance->users[1].key);
+	  
+	  send(t.instance->users[i].socket, out.first.c_str(), out.second, 0);
+	}
       }
     } else if (command == "kick") {
       std::string pass = "";
@@ -156,12 +184,13 @@ void ChatServer::broadcast(const std::string& message) {
   the::Succ succ;
   for (const auto &user : this->users) {
     ChatServer::std_message outgoing;
-    RAND_pseudo_bytes(outgoing.iv, 16);
-    outgoing.cipher = succ.encrypt(
+    //RAND_pseudo_bytes(outgoing.iv, 16);
+    /*outgoing.cipher = succ.encrypt(
         const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(user.key)),
         outgoing.iv,
         message);
-
+    */
+    
     send(user.socket, message.c_str(), sizeof(ChatServer::std_message), 0);
   }
 }

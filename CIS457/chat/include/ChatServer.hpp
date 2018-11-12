@@ -42,6 +42,8 @@ class ChatServer {
     bool get_admin();
     void set_admin(bool admin);
 
+  std::pair<std::string, int> encrypt_string(std::string input, unsigned char key[16]);
+  
     // The /list command
     void list_users();
 
