@@ -50,6 +50,7 @@ void* ChatServer::server_handler(void* args) {
 
     std::string message = std::string(data);
     unsigned char* decrypted_message;
+    std::cout << "Got something: " << message << std::endl;
     int message_len = JEFF.decrypt(
         const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(message.c_str())),
           message.size(),
@@ -235,7 +236,6 @@ int ChatServer::RunServer() {
     encrypted_key[256] = '\0';
 
     int decryptedkey_len = JEFF.rsa_decrypt(encrypted_key, 256, privkey, decrypted_key);
-
 
     std::cout << decrypted_key << std::endl;
 

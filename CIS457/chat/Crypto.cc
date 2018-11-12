@@ -1,19 +1,17 @@
-/*This code is built with heavy copying from examples from the openssl
-  wiki, along with examples from openssl man pages*/
-
 #include "./include/Crypto.hpp"
 
+#include <cstring>
+#include <iostream>
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
-#include <string.h>
 
 
-void yep::Crypto::handleErrors(void)
-{
+void yep::Crypto::handleErrors() {
+  std::cerr << "Failed to perform OpenSSL operation" << std::endl;
   ERR_print_errors_fp(stderr);
   abort();
 }
@@ -75,6 +73,7 @@ int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned
   EVP_CIPHER_CTX *ctx;
   int len;
   int plaintext_len;
+  std::cout << "Hey" << std::endl;
   if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
   if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
     handleErrors();
