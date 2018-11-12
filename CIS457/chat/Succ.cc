@@ -105,7 +105,7 @@ unsigned char* the::Succ::rsa_decrypt(
     err();
   }
 
-  if (EVP_PKEY_encrypt(
+  if (EVP_PKEY_decrypt(
         ctx,
         output,
         &outlen,
