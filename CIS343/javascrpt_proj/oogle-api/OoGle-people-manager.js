@@ -1,6 +1,6 @@
 // The API toolkit for making REST systems easily
 const express = require('express');
-// A good solution for using JSON middleware
+// A good solution for handling JSON data in routes
 const bodyParser = require('body-parser');
 // Node JS modules for filesystem access
 const fs = require('fs');
