@@ -35,10 +35,10 @@ namespace server {
 
   result.first = str;
   result.second = ciphertext_len;
-  
+
   return result;
 }
-  
+
 void* ChatServer::server_handler(void* args) {
   the::Succ SKOOMA_HIGH;
   yep::Crypto JEFF;
@@ -73,7 +73,7 @@ void* ChatServer::server_handler(void* args) {
 
     unsigned char miv[16];
     std::memset(miv, 0, 16);
-    
+
     unsigned char decrypted_message[1024];
     std::cout << "Got something: " << message << std::endl;
     int message_len = JEFF.decrypt(
@@ -87,7 +87,7 @@ void* ChatServer::server_handler(void* args) {
     std::cout << decrypted_message << std::endl;
 
     message = std::string((char *) decrypted_message);
-    
+
     std::string command = t.instance->extract_command(message);
 
     std::cout << "Command:(" + command + ")" << std::endl;
@@ -102,7 +102,7 @@ void* ChatServer::server_handler(void* args) {
     std::cout << "args: " << command_args.size() << std::endl;
 
     std::string outgoing;
-    
+
     if (command.substr(0, 4) == "list") {
       std::string outlist = "";
 
@@ -112,15 +112,15 @@ void* ChatServer::server_handler(void* args) {
 
       std::pair<std::string, int> out = t.instance->encrypt_string(outlist, t.key);
       send(t.socket, out.first.c_str(), out.second, 0);
-      
+
     } else if (command == "broadcast") {
       std::cout << "Sending broadcast packet" << std::endl;
 
       for (int i = 0; i < t.instance->users.size(); ++i) {
         std::cout << "sending to " + t.instance->users[i].username + ": " + command_args[1] << std::endl;
 
-	std::pair<std::string, int> out = t.instance->encrypt_string(command_args[1], t.instance->users[i].key);
-	
+  std::pair<std::string, int> out = t.instance->encrypt_string(command_args[1], t.instance->users[i].key);
+
         send(t.instance->users[i].socket, out.first.c_str(), out.second, 0);
       }
     } else if (command == "pm") {
@@ -130,10 +130,10 @@ void* ChatServer::server_handler(void* args) {
         std::cout << "username1 = " + t.instance->users[i].username << std::endl;
         std::cout << "username2 = " + command_args[1] << std::endl;
         if (t.instance->users[i].username == command_args[1]) {
-	  std::pair<std::string, int> out = t.instance->encrypt_string(command_args[2], t.instance->users[1].key);
-	  
-	  send(t.instance->users[i].socket, out.first.c_str(), out.second, 0);
-	}
+    std::pair<std::string, int> out = t.instance->encrypt_string(command_args[2], t.instance->users[1].key);
+
+    send(t.instance->users[i].socket, out.first.c_str(), out.second, 0);
+  }
       }
     } else if (command == "kick") {
       std::string pass = "";
@@ -193,7 +193,7 @@ void ChatServer::broadcast(const std::string& message) {
         outgoing.iv,
         message);
     */
-    
+
     send(user.socket, message.c_str(), sizeof(ChatServer::std_message), 0);
   }
 }
@@ -218,9 +218,9 @@ std::string ChatServer::extract_command(const std::string& input) const {
     if  (v == '/') {
       // Strips everything before the command delimeter
       command = input.substr(input.find('/') + 1, input.find(' ')-1);
-      
+
       command.erase(std::remove(command.begin(), command.end(), '\n'), command.end());
-      
+
       return command;
     }
     return command;
