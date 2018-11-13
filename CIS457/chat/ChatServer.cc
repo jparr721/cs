@@ -61,7 +61,7 @@ void* ChatServer::server_handler(void* args) {
       break;
     }
 
-    if (std::string(data) == "/quit" || r <= 0) {
+    if (std::string(data) == "/quit" || r < 0) {
       std::cout << "Shutting down the server connection to user: " << t.username << std::endl;
       // Break this worker
       break;
