@@ -27,7 +27,7 @@ class ChatServer {
       struct sockaddr_in client;
 
       // To decrypt our goodies
-      unsigned char* key;
+      unsigned char key[32];
 
       ChatServer* instance;
     };
@@ -42,7 +42,7 @@ class ChatServer {
     bool get_admin();
     void set_admin(bool admin);
 
-  std::pair<std::string, int> encrypt_string(std::string input, unsigned char key[16]);
+  std::pair<std::string, int> encrypt_string(std::string input, unsigned char key[32]);
   
     // The /list command
     void list_users();

@@ -56,6 +56,17 @@ int yep::Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
   EVP_CIPHER_CTX *ctx;
   int len;
   int ciphertext_len;
+
+
+
+  using namespace std;
+
+  cout << "\n\nPlaintext: " << plaintext << endl;
+  cout << "Length of plain: " << plaintext_len << endl;
+  cout << "iv: " << iv << endl;
+  cout << "Key: " << key << endl << endl;
+
+  
   if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
   if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
     handleErrors();
@@ -65,6 +76,10 @@ int yep::Crypto::encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
   if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) handleErrors();
   ciphertext_len += len;
   EVP_CIPHER_CTX_free(ctx);
+
+  cout << "Ciphertext: " << ciphertext << endl;
+  cout << "C len: " << ciphertext_len << endl;
+  
   return ciphertext_len;
 }
 
@@ -73,6 +88,15 @@ int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned
   EVP_CIPHER_CTX *ctx;
   int len;
   int plaintext_len;
+
+  using namespace std;
+
+  cout << "\n\nCiphertext: " << ciphertext << endl;
+  cout << "Length of cipher: " << ciphertext_len << endl;
+  cout << "iv: " << iv << endl;
+  cout << "Key: " << key << endl;
+
+  
   std::cout << "Hey" << std::endl;
   if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
   if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
@@ -83,5 +107,9 @@ int yep::Crypto::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned
   if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) handleErrors();
   plaintext_len += len;
   EVP_CIPHER_CTX_free(ctx);
+
+  cout << "Plaintext: " << plaintext << endl;
+  cout << "P len: " << plaintext_len << endl;
+  
   return plaintext_len;
 }
