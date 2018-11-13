@@ -29,19 +29,19 @@ class Server {
     void list_users();
 
     void broadcast(const std::string& message);
+    std::string extract_command(const std::string& input) const;
 
+    bool check_admin(const std::string& pass);
     // Use a smart pointer to destroy null refs
-    std::vector<std::unique_ptr<thread>> users;
+    std::vector<thread> users;
 
   private:
     bool is_admin;
     const std::string ADMIN_PASSWORD = "1234";
 
-    bool check_admin(const std::string& pass);
     static void* handler(void* args);
 
     int handle_port();
     std::string handle_input();
-    std::string extract_command(const std::string& input) const;
 };
 } // namespace server
