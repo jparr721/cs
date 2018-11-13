@@ -21,7 +21,7 @@
 
 namespace server {
 
-  std::pair<std::string, int> ChatServer::encrypt_string(std::string input, unsigned char key[16]) {
+  std::pair<std::string, int> ChatServer::encrypt_string(std::string input, unsigned char key[32]) {
     yep::Crypto JEFF;
   unsigned char* plaintext = (unsigned char*)input.c_str();
   unsigned char miv[16];
@@ -75,10 +75,20 @@ void* ChatServer::server_handler(void* args) {
     std::memset(miv, 0, 16);
 
     unsigned char decrypted_message[1024];
+    std::memset(decrypted_message, 0, 1024);
     std::cout << "Got something: " << message << std::endl;
+
+    std::cout << t.key << std::endl;
+
+    int fake = 16;
+
+    if (message.size() > fake) {
+      fake = message.size();
+    }
+
     int message_len = JEFF.decrypt(
           cipher,
-          message.size(),
+          fake,
           t.key,
           miv,
           decrypted_message);
@@ -275,12 +285,19 @@ int ChatServer::RunServer() {
 
     // receive encrypted key
 
+
+
     recv(clientsocket, &encrypted_key, 256, 0);
-    encrypted_key[256] = '\0';
+    //encrypted_key[256] = '\0';
 
     int decryptedkey_len = JEFF.rsa_decrypt(encrypted_key, 256, privkey, decrypted_key);
 
-    std::cout << decrypted_key << std::endl;
+    decrypted_key[decryptedkey_len] = '\0';
+
+    std::cout << "this the decrypted key: " << decrypted_key << std::endl;
+
+
+
 
     /*
       END
@@ -305,7 +322,7 @@ int ChatServer::RunServer() {
     t->socket = clientsocket;
     t->username = std::string(actual_name);
     t->client = client;
-    t->key = decrypted_key;
+    memcpy(t->key, &decrypted_key, decryptedkey_len);
     t->instance = this;
 
     std::cout << "len: " << r << std::endl;

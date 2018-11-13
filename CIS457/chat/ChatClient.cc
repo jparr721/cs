@@ -37,7 +37,8 @@ void* client::ChatClient::client_handler(void* args) {
     std::memset(miv, 0, 16);
 
     unsigned char plaintext[1024];
-
+    std::memset(plaintext, 0, 1024);
+    
     int plaintext_len = JEFF.decrypt(ciphertext, inlen, t.key, miv, plaintext);
 
     
@@ -123,6 +124,8 @@ int ChatClient::RunClient() {
   RAND_bytes(key, 32);
   RAND_bytes(iv,16);
 
+  std::cout << "this is the key: " << key << std::endl;
+  
   // get that pubkey
   EVP_PKEY *pubkey;
   FILE* pubf = fopen("rsa_pub.pem","rb");
@@ -131,6 +134,7 @@ int ChatClient::RunClient() {
   std::cout << key << std::endl;
 
   unsigned char encrypted_key[256];
+  std::memset(encrypted_key, 0, 256);
   int encryptedkey_len = JEFF.rsa_encrypt(key, 32, pubkey, encrypted_key);
 
   std::cout << encryptedkey_len << std::endl;
@@ -174,7 +178,7 @@ int ChatClient::RunClient() {
     std::memset(miv, 0, 16);
     
     unsigned char ciphertext[1024];
-
+    std::memset(ciphertext,0,1024);
     int ciphertext_len = JEFF.encrypt(plaintext, message.size(), key, miv, ciphertext);
 
     send(sockfd, ciphertext, ciphertext_len, 0);
