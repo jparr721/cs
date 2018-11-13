@@ -151,7 +151,9 @@ int ChatClient::RunClient() {
   // Allocate space on the heap
   ChatClient::thread *t = new ChatClient::thread;
   std::memcpy(&t->socket, &sockfd, sizeof(int));
+  std::memcpy(&t->key, &key, 32);
 
+  
   pthread_t child;
   pthread_create(&child, nullptr, client_handler, t);
   pthread_detach(child);
