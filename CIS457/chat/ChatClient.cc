@@ -19,6 +19,7 @@
 
 void* client::ChatClient::client_handler(void* args) {
   the::Succ SLIP_SLOP;
+  yep::Crypto JEFF;
   ChatClient::thread t;
   ChatClient::std_message s;
   std::memcpy(&t, args, sizeof(ChatClient::thread));
@@ -28,9 +29,19 @@ void* client::ChatClient::client_handler(void* args) {
 
     char buf[4096];
     std::memset(buf, 0, sizeof(buf));
-    recv(t.socket, buf, 4096, 0);
+    int inlen = recv(t.socket, buf, 4096, 0);
     // Decrypt our message
-    data = std::string(buf);
+    unsigned char* ciphertext = (unsigned char*)buf;
+
+    unsigned char miv[16];
+    std::memset(miv, 0, 16);
+
+    unsigned char plaintext[1024];
+
+    int plaintext_len = JEFF.decrypt(ciphertext, inlen, t.key, miv, plaintext);
+
+    
+    data = std::string((char *)plaintext);
     if (data == "kicked") {
       std::cout << "OHH HO HO HOOO YOU HAVE BEEN KICKED MY BOY" << std::endl;
       exit(0);

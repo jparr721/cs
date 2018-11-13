@@ -4,6 +4,7 @@
 #include "./include/Crypto.hpp"
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 #include <cstdio>
 #include <fstream>
 #include <sstream>
@@ -85,6 +86,8 @@ void* ChatServer::server_handler(void* args) {
 
     std::cout << decrypted_message << std::endl;
 
+    message = std::string((char *) decrypted_message);
+    
     std::string command = t.instance->extract_command(message);
 
     std::cout << "Command:(" + command + ")" << std::endl;
@@ -100,7 +103,7 @@ void* ChatServer::server_handler(void* args) {
 
     std::string outgoing;
     
-    if (command == "list") {
+    if (command.substr(0, 4) == "list") {
       std::string outlist = "";
 
       for (int i = 0; i < t.instance->users.size(); i++) {
@@ -215,6 +218,9 @@ std::string ChatServer::extract_command(const std::string& input) const {
     if  (v == '/') {
       // Strips everything before the command delimeter
       command = input.substr(input.find('/') + 1, input.find(' ')-1);
+      
+      command.erase(std::remove(command.begin(), command.end(), '\n'), command.end());
+      
       return command;
     }
     return command;
