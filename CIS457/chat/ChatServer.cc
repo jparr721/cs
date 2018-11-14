@@ -140,7 +140,7 @@ void* ChatServer::server_handler(void* args) {
         std::cout << "username1 = " + t.instance->users[i].username << std::endl;
         std::cout << "username2 = " + command_args[1] << std::endl;
         if (t.instance->users[i].username == command_args[1]) {
-    std::pair<std::string, int> out = t.instance->encrypt_string(command_args[2], t.instance->users[1].key);
+    std::pair<std::string, int> out = t.instance->encrypt_string(command_args[2], t.instance->users[i].key);
 
     send(t.instance->users[i].socket, out.first.c_str(), out.second, 0);
   }
