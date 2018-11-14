@@ -8,7 +8,7 @@
 
 class MPIComparison {
   public:
-    void compare_broadcast(int argc, char** argv, int num_elements);
+    void compare_broadcast(void* data, int num_elements);
   private:
     const int MASTER = 0;
     const int TAG = 0;
@@ -16,7 +16,7 @@ class MPIComparison {
     const int MAX = 25;
 };
 
-void MPIComparison::compare_broadcast(int argc, char** argv, int num_elements) {
+void MPIComparison::compare_broadcast(void* data, int num_elements) {
   int rank, num_nodes;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
@@ -32,7 +32,7 @@ void MPIComparison::compare_broadcast(int argc, char** argv, int num_elements) {
 
     for (int i = 0; i < num_nodes; ++i) {
       if (i != rank) {
-        MPI_Send(message.c_str(), message.size() + 1, MPI_CHAR, i, TAG, MPI_COMM_WORLD);
+        MPI_Send(data, num_elements, MPI_CHAR, i, TAG, MPI_COMM_WORLD);
       }
     }
   } else {
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     total_broadcast_time -= MPI_Wtime();
-    mpic.compare_broadcast(argc, argv, num_items);
+    mpic.compare_broadcast(data, num_items);
     MPI_Barrier(MPI_COMM_WORLD);
     total_broadcast_time += MPI_Wtime();
 
