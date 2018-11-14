@@ -9,7 +9,23 @@
 
 ## Practical
 
-Upon inspection of the code base on GitHub in search of something to compare, I stumbled upon the built in broadcast message. I noticed that they take a lot of precautionary steps and keep with the general flow of the library. This made me hypothesize in my head what a naive implementation might look like and how this could apply when being compared to the one that exists inside of the actual MPI library.
+Upon inspection of the code base on GitHub in search of something to compare, I stumbled upon the built in broadcast message. I noticed that they take a lot of precautionary steps and keep with the general flow of the library. This made me hypothesize in my head what a naive implementation might look like and how this could apply when being compared to the one that exists inside of the actual MPI library. Overall, I found that the naive implementation presented lower overhead overall and allowed for a very consistent speedup to be observed across the board.
+
+
+
+![Speedup](/home/lotus/Downloads/Speedup.png)
+
+The data was distributed in the following:
+
+| Speedup | Run Average Size |
+| ------- | ---------------- |
+| 20.25   | 10               |
+| 20.07   | 100              |
+| 19.59   | 1000             |
+| 18.86   | 100000           |
+| 19.77   | 100000000        |
+
+
 
 ```C++
 #include <chrono>
@@ -22,7 +38,7 @@ Upon inspection of the code base on GitHub in search of something to compare, I 
 
 class MPIComparison {
   public:
-    void compare_broadcast(int argc, char** argv, int num_elements);
+    void compare_broadcast(void* data, int num_elements);
   private:
     const int MASTER = 0;
     const int TAG = 0;
@@ -30,7 +46,7 @@ class MPIComparison {
     const int MAX = 25;
 };
 
-void MPIComparison::compare_broadcast(int argc, char** argv, int num_elements) {
+void MPIComparison::compare_broadcast(void* data, int num_elements) {
   int rank, num_nodes;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
@@ -46,7 +62,7 @@ void MPIComparison::compare_broadcast(int argc, char** argv, int num_elements) {
 
     for (int i = 0; i < num_nodes; ++i) {
       if (i != rank) {
-        MPI_Send(message.c_str(), message.size() + 1, MPI_CHAR, i, TAG, MPI_COMM_WORLD);
+        MPI_Send(data, num_elements, MPI_CHAR, i, TAG, MPI_COMM_WORLD);
       }
     }
   } else {
@@ -84,7 +100,7 @@ int main(int argc, char** argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     total_broadcast_time -= MPI_Wtime();
-    mpic.compare_broadcast(argc, argv, num_items);
+    mpic.compare_broadcast(data, num_items);
     MPI_Barrier(MPI_COMM_WORLD);
     total_broadcast_time += MPI_Wtime();
 
@@ -102,6 +118,5 @@ int main(int argc, char** argv) {
 
   return EXIT_SUCCESS;
 }
-
 ```
 
