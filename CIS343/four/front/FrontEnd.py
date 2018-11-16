@@ -34,8 +34,8 @@ class FrontEnd(object):
             if c == 27:
                 self.quit()
             elif c == ord('p'):
-                self.update_song()
                 self.player.pause()
+                self.update_song()
             elif c == ord('c'):
                 try:
                     self.change_song()    

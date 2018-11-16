@@ -20,7 +20,7 @@ class Player:
         """Return the song that is currently playing."""
         if self.paused is True:
             return self.currentSong + ' paused'
-        return self.currentSong
+        return self.currentSong + '       '
 
     def pause(self):
         """Pause the current stream."""
