@@ -1,3 +1,4 @@
+
 """PyAudio Example: Play a wave file (callback version)."""
 
 import pyaudio
@@ -8,17 +9,21 @@ from error import Base as b
 
 
 class Player:
+    """A class for the audio player."""
     def __init__(self):
+        """Player initialization code."""
         self.currentSong = "Nothing playing."
         self.paused = True
         self.position = 0
 
     def getCurrentSong(self):
+        """Return the song that is currently playing."""
         if self.paused is True:
             return self.currentSong + ' paused'
         return self.currentSong
 
     def pause(self):
+        """Pause the current stream."""
         if self.paused is False:
             self.paused = True
             self.stream.stop_stream()
@@ -27,6 +32,7 @@ class Player:
             self.stream.start_stream()
 
     def play(self, track):
+        """Play a given track by file path."""
         self.paused = False
         if os.path.exists(track):
             self.currentSong = os.path.abspath(track)
@@ -49,6 +55,7 @@ class Player:
         self.stream.start_stream()
 
     def stop(self):
+        """Stop the current stream."""
         self.stream.stop_stream()
         self.stream.close()
         self.wf.close()
