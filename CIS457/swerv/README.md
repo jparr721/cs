@@ -8,7 +8,7 @@ $ cd build
 $ cmake ..
 $ make
 $ cd ../bin
-$ ./swerv <OPTIONS>
+$ ./swerver <OPTIONS>
 ```
 ### Usage
 ```
