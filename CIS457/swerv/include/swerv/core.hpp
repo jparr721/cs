@@ -3,12 +3,31 @@
 #include <string>
 
 namespace swerver {
+  enum ContentType {
+    text = 1,
+    html = 2,
+    jpeg = 3,
+    pdf =  4
+  };
+
   class Core {
     public:
       Core() = default;
       ~Core() = default;
 
       int Run();
+
+      struct thread {
+        int socket;
+        // To access our goodies
+        Core* instance;
+      };
+
+      void send_http_response(
+          int socket,
+          int code,
+          bool keep_alive,
+          ContentType content_type);
 
       // Getters and setters
       std::string get_docroot();
@@ -23,6 +42,8 @@ namespace swerver {
       std::string docroot = ".doc";
       std::string logfile = ".log";
       int port = 1024;
+
+      static void* thread_handler(void* args);
 
       bool handle_args(char** argv);
       void usage();
