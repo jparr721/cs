@@ -10,3 +10,11 @@ $ make
 $ cd ../bin
 $ ./swerv <OPTIONS>
 ```
+### Usage
+```
+Usage:
+      swerver -p <PORT>       Specifies which port to run on.
+      swerver -docroot <DIR>  Specifies where the docroot will be.
+      swerver -logfile <FILE> Specifies where log files will be written to.
+      swerver default         Run server with default settings.
+```
