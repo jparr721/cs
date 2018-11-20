@@ -4,10 +4,10 @@
 
 namespace swerver {
   enum ContentType {
-    text = 1,
-    html = 2,
-    jpeg = 3,
-    pdf =  4
+    text,
+    html,
+    jpeg,
+    pdf
   };
 
   class Core {
