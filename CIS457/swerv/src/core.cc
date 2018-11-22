@@ -1,4 +1,4 @@
-#include <swerve/core.hpp>
+#include <swerv/core.h>
 
 #include <chrono>
 #include <pthread.h>
@@ -73,8 +73,10 @@ namespace swerver {
       int socket,
       int code,
       bool keep_alive,
-      ContentType content_type) {
-    std::string code_msg, connection_type, content_type_string;
+      ContentType content_type,
+      std::string filename,
+      std::string last_modified) {
+    std::string code_msg, connection_type, content_type_string, pdf_header;
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
@@ -102,21 +104,22 @@ namespace swerver {
       }
 
       switch (content_type) {
-        case 1:
+        case ContentType::text:
           // Text
           content_type_string = "text/plain\r\n";
           break;
-        case 2:
+        case ConentType::html:
           // html
           content_type_string = "text/html\r\n";
           break;
-        case 3:
+        case ContentType::jpeg:
           // jpeg
           content_type_string = "image/jpeg\r\n";
           break;
-        case 4:
+        case ContentType::pdf:
           // pdf
           content_type_string = "application/pdf\r\n";
+          pdf_header = "Content-Disposition: inline; filename=" + filename + "\r\n";
           break;
       }
 
@@ -125,7 +128,24 @@ namespace swerver {
         << "Date: " << std::put_time(std::localtime(&in_time_t))
         << "\r\n"
         << "Server: GVSU\r\n"
-        // TODO - Add the rest of the fields
+        << "Accepted-Ranges: bytes\r\n"
+        << "Connection: "
+        << connection_type
+        << "Content-Type: "
+        << content_type_string
+        << "\r\n";
+      if (content_type == ContentType::pdf) {
+        header << pdf_header;
+      }
+
+      if (d_last_mod != "") {
+        header << "Last-Modified: "
+          << last_modified
+          << "\r\n\n";
+      }
+
+      send(socket, header.str().c_str(), header.str().size(), 0);
+      std::cout << "{ Header: " << header.str() << "}" << std::endl;
     }
   }
 

@@ -27,7 +27,9 @@ namespace swerver {
           int socket,
           int code,
           bool keep_alive,
-          ContentType content_type);
+          ContentType content_type,
+          std::string filename,
+          std::string last_modified);
 
       // Getters and setters
       std::string get_docroot();
