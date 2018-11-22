@@ -5,6 +5,9 @@ const bodyParser = require('body-parser');
 // Node JS modules for filesystem access
 const fs = require('fs');
 // Our database connection
+// This will be a JSON object of our programmers
+// and can be accessed as if it was any other javascript
+// object
 const database = require('./programmers.json');
 
 // Make an instance of our express application
@@ -15,7 +18,7 @@ const port = 3000;
 // Apply our middleware so our code can natively handle JSON easily
 app.use(bodyParser.json());
 
-// We mut have our list of programmers to use
+// We must have our list of programmers to use
 if (!fs.existsSync('./programmers.json')) {
   throw new Error('Could not find database of programmers!');
 }

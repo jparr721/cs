@@ -6,8 +6,9 @@ from error import Base as b
 
 
 class FrontEnd(object):
-
+    """A class representing the front end for the audio player."""
     def __init__(self, player):
+        """Initialize the front end with a player instance."""
         self.player = player
         self.player.play('media/cello.wav')
         self.root_directory_files = []
@@ -15,10 +16,13 @@ class FrontEnd(object):
             raise b.CLIError('Invalid number of arguments provided')
         else:
             self.media_root = sys.argv[1]
+        self.stdscr = curses.initscr()
+        if self.stdscr.getmaxyx()[0] < 20 or self.stdscr.getmaxyx()[1] < 120:
+            raise b.CLIAudioScreenSizeException('Screen size is too small. Minimum cols is 120, and minimum rows is 20.')
         curses.wrapper(self.menu)
 
     def menu(self, args):
-        self.stdscr = curses.initscr()
+        """Create the menu and start the menu loop."""
         self.stdscr.border()
         self.stdscr.addstr(0, 0, 'cli-audio', curses.A_REVERSE)
         self.stdscr.addstr(5, 10, 'c - Change current song')
@@ -32,8 +36,8 @@ class FrontEnd(object):
             if c == 27:
                 self.quit()
             elif c == ord('p'):
-                self.update_song()
                 self.player.pause()
+                self.update_song()
             elif c == ord('c'):
                 try:
                     self.change_song()    
@@ -48,15 +52,18 @@ class FrontEnd(object):
                 self.list_directory()
 
     def display_error(self, error):
+        """Display an error."""
         self.stdscr.addstr(15, 10, '                                        ')
         self.stdscr.addstr(15, 10, error)
                 
     def update_song(self):
+        """Update the song."""
         self.stdscr.addstr(15, 10, '                                        ')
         self.stdscr.addstr(
                 15, 10, 'Now playing: ' + self.player.getCurrentSong())
 
     def play(self, song):
+        """Play a song with the player."""
         try:
             self.player.play(song)
             self.update_song()
@@ -64,12 +71,15 @@ class FrontEnd(object):
             print('Invalid input file provided')
 
     def set_media_root(self, root):
+        """Set the media root location."""
         self.media_root = root
 
     def get_media_root(self):
+        """Return the media root location."""
         return self.media_root
 
     def change_song(self):
+        """Change the song."""
         changeWindow = curses.newwin(5, 40, 5, 50)
         changeWindow.border()
         changeWindow.addstr(0, 0, 'What is the song name?', curses.A_REVERSE)
@@ -83,12 +93,12 @@ class FrontEnd(object):
         self.player.play(self.media_root + '/' + path.decode(encoding='utf-8'))
 
     def list_directory(self):
-        '''
+        """
         Lists directories of current folder and displays
         only the files that are in the directory and stores
         them into the self. This is just a surbey of the songs,
         when selecting a song a different command is used
-        '''
+        """
         self.root_directory_files = [f for f in os.listdir(self.media_root)
                                      if os.path.isfile(
                                          os.path.join(self.media_root, f))]
@@ -114,5 +124,6 @@ class FrontEnd(object):
         self.stdscr.refresh()
 
     def quit(self):
+        """Quit the front end view."""
         self.player.stop()
         exit()
