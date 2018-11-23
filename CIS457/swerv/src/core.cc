@@ -1,9 +1,13 @@
 #include <swerv/core.h>
 
 #include <chrono>
+#include <cstring>
 #include <pthread.h>
 #include <iostream>
+#include <iomanip>
 #include <memory>
+#include <netinet/in.h>
+#include <pthread.h>
 #include <sstream>
 #include <sys/socket.h>
 
@@ -50,17 +54,14 @@ namespace swerver {
     }
 
     for (int i = 1; i < argc - 1; ++i) {
-      switch (std::string(argv[i])) {
-        case "-p":
+      std::string opt(argv[i]);
+      if (opt == "-p") {
          this->set_port(std::stoi(argv[i + 1]));
-         break;
-        case "-docroot":
-         this->set_docroot(argv[i + 1]);
-         break;
-        case "-logfile":
-         this->set_logfile(argv[i+ 1]);
-         break;
-        default:
+      } else if (opt == "-docroot") {
+         this->set_docroot(std::string(argv[i + 1]));
+      } else if (opt == "-logfile") {
+         this->set_logfile(std::string(argv[i+ 1]));
+      } else {
          std::cerr << "Error, argument not supported" << std::endl;
          return false;
       }
@@ -69,13 +70,13 @@ namespace swerver {
     return true;
   }
 
-  void Core::send_http_repsonse(
-      int socket,
-      int code,
-      bool keep_alive,
-      ContentType content_type,
-      std::string filename,
-      std::string last_modified) {
+    void send_http_response(
+        int socket,
+        int code,
+        bool keep_alive,
+        Core::ContentType content_type,
+        std::string filename,
+        std::string last_modified) {
     std::string code_msg, connection_type, content_type_string, pdf_header;
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -104,19 +105,19 @@ namespace swerver {
       }
 
       switch (content_type) {
-        case ContentType::text:
+        case Core::ContentType::text:
           // Text
           content_type_string = "text/plain\r\n";
           break;
-        case ConentType::html:
+        case Core::ContentType::html:
           // html
           content_type_string = "text/html\r\n";
           break;
-        case ContentType::jpeg:
+        case Core::ContentType::jpeg:
           // jpeg
           content_type_string = "image/jpeg\r\n";
           break;
-        case ContentType::pdf:
+        case Core::ContentType::pdf:
           // pdf
           content_type_string = "application/pdf\r\n";
           pdf_header = "Content-Disposition: inline; filename=" + filename + "\r\n";
@@ -125,7 +126,7 @@ namespace swerver {
 
       std::ostringstream header;
       header << "HTTP/1.1 " << code_msg
-        << "Date: " << std::put_time(std::localtime(&in_time_t))
+        << "Date: " << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X")
         << "\r\n"
         << "Server: GVSU\r\n"
         << "Accepted-Ranges: bytes\r\n"
@@ -134,11 +135,11 @@ namespace swerver {
         << "Content-Type: "
         << content_type_string
         << "\r\n";
-      if (content_type == ContentType::pdf) {
+      if (content_type == Core::ContentType::pdf) {
         header << pdf_header;
       }
 
-      if (d_last_mod != "") {
+      if (last_modified != "") {
         header << "Last-Modified: "
           << last_modified
           << "\r\n\n";
@@ -152,15 +153,15 @@ namespace swerver {
   void* Core::thread_handler(void* args) {
     Core::thread t;
     Core c;
-    std::memcpy(&t, args, sizeof Core::thread);
-    socklen_t sin_size = sizeof t.client;
+    std::memcpy(&t, args, sizeof(Core::thread));
+    socklen_t sin_size = sizeof t.socket;
     char line[5000];
 
     for (;;) {
       int in = recv(t.socket, line, 5000, 0);
       if (in < 0) {
         std::cout << "Failed to get data from client" << std::endl;
-        c.send_http_response(404);
+        /* c.send_http_response(404); */
       }
     }
   }
@@ -177,10 +178,10 @@ namespace swerver {
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons(this->port);
 
-    int b = bind(sockfd, reinterpret_cast<sockaddr*>&server, sizeof(server));
+    int b = bind(sockfd, reinterpret_cast<sockaddr*>(&server), sizeof(server));
     if (b < 0) {
       std::cerr << "Failed to bind to port: " << this->port << std::endl;
-      return EXIT_FAILURE:
+      return EXIT_FAILURE;
     }
 
     std::cout << "Server ready for connections on port: " << this->port << std::endl;
@@ -189,11 +190,11 @@ namespace swerver {
 
     for(;;) {
       // Shared pointer for safe memory usage
-      std::shared_ptr<thread> t;
+      thread *t = new thread();
       t->instance = this;
       socklen_t sin_size = sizeof client;
 
-      int clientfd = accept(sockfd, reinterpret_cast<sockaddr*(&client), &sin_size);
+      int clientfd = accept(sockfd, reinterpret_cast<sockaddr*>(&client), &sin_size);
       t->socket = clientfd;
       pthread_t connection;
 
