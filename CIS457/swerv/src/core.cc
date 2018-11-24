@@ -38,21 +38,20 @@ namespace swerver {
 
   void Core::usage() {
     const char* help =
-      "Usage:"
-      " swerver -p <PORT>       Specifies which port to run on."
-      " swerver -docroot <DIR>  Specifies where the docroot will be."
-      " swerver -logfile <FILE> Specifies where log files will be written to.";
-      " swerver default         Run server with default settings.";
+      "Usage:\n"
+      " swerver -p <PORT>       Specifies which port to run on.\n"
+      " swerver -docroot <DIR>  Specifies where the docroot will be.\n"
+      " swerver -logfile <FILE> Specifies where log files will be written to.\n";
+      " swerver default         Run server with default settings.\n";
 
     std::cout << help << std::endl;
   }
 
   bool Core::handle_args(int argc, char** argv) {
-    if (argc < 1) {
+    if (argc < 3) {
       usage();
       return false;
     }
-
     for (int i = 1; i < argc - 1; ++i) {
       std::string opt(argv[i]);
       if (opt == "-p") {
