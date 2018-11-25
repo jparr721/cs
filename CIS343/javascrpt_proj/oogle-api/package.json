@@ -4,6 +4,7 @@
   "description": "",
   "main": "OoGle-people-manager.js",
   "scripts": {
+    "start": "node OoGle-people-manager.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "The Lord Of The Nine Realms",
