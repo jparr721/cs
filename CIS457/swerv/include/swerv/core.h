@@ -22,25 +22,6 @@ namespace swerver {
         // To access our goodies
         Core* instance;
       };
-
-      void send_http_response(
-          int socket,
-          int code,
-          bool keep_alive,
-          Core::ContentType content_type,
-          std::string filename,
-          std::string last_modified,
-          std::string file_data);
-
-      // Getters and setters
-      std::string get_docroot();
-      void set_docroot(std::string root);
-
-      std::string get_logfile();
-      void set_logfile(std::string);
-
-      int get_port();
-      void set_port(int port);
     private:
       const std::string html404 =
         R"(
@@ -73,6 +54,18 @@ namespace swerver {
       static void* thread_handler(void* args);
 
       bool handle_args(int argc, char** argv);
-      void usage();
+      void usage() const;
+
+      void send_http_response(
+          int socket,
+          int code,
+          bool keep_alive,
+          Core::ContentType content_type,
+          std::string filename,
+          std::string last_modified,
+          std::string file_data) const;
+
+      template <typename T>
+      auto read_file(std::string filename) const;
   };
 } // namespace swerver

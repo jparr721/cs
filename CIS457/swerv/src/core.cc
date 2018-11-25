@@ -2,9 +2,9 @@
 
 #include <chrono>
 #include <cstring>
-#include <pthread.h>
-#include <iostream>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -12,31 +12,26 @@
 #include <sys/socket.h>
 
 namespace swerver {
-  std::string Core::get_logfile() {
-    return this->logfile;
+  template <typename T>
+  auto Core::read_file(std::string filename) const {
+    T value;
+    std::ifstream f(filename);
+    if (!f.good()) value = false;
+
+    if constexpr (!value) {
+      return false;
+    }
+
+    // Write to a string
+    std::string str((std::istreambuf_iterator<char>(f),
+                     std::istreambuf_iterator<char>()));
+    value = str;
+
+
+    return value;
   }
 
-  void Core::set_logfile(std::string logfile) {
-    this->logfile = logfile;
-  }
-
-  std::string Core::get_docroot() {
-    return this->docroot;
-  }
-
-  void Core::set_docroot(std::string docroot) {
-    this->docroot = docroot;
-  }
-
-  int Core::get_port() {
-    return this->port;
-  }
-
-  void Core::set_port(int port) {
-    this->port = port;
-  }
-
-  void Core::usage() {
+  void Core::usage() const {
     const char* help =
       "Usage:\n"
       " swerver -p <PORT>       Specifies which port to run on.\n"
@@ -55,11 +50,11 @@ namespace swerver {
     for (int i = 1; i < argc - 1; ++i) {
       std::string opt(argv[i]);
       if (opt == "-p") {
-         this->set_port(std::stoi(argv[i + 1]));
+         this->port = std::stoi(argv[i + 1]);
       } else if (opt == "-docroot") {
-         this->set_docroot(std::string(argv[i + 1]));
+         this->docroot = std::string(argv[i + 1]);
       } else if (opt == "-logfile") {
-         this->set_logfile(std::string(argv[i+ 1]));
+         this->logfile = std::string(argv[i+ 1]);
       } else {
          std::cerr << "Error, argument not supported" << std::endl;
          return false;
@@ -69,14 +64,15 @@ namespace swerver {
     return true;
   }
 
-    void send_http_response(
+    void Core::send_http_response(
         int socket,
         int code,
         bool keep_alive,
         Core::ContentType content_type,
         std::string filename,
         std::string last_modified,
-        std::string file_data) {
+        std::string file_data
+        ) const {
     std::string code_msg, connection_type, content_type_string, pdf_header;
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -93,67 +89,69 @@ namespace swerver {
         break;
       case 404:
         code_msg = "404 Not Found\r\n";
-        html = html404;
+        html = this->html404;
         break;
       case 501:
         code_msg = "501 Not Implemented\r\n";
-        html = html501;
+        html = this->html501;
         break;
       default:
         code_msg = std::to_string(code) + "\r\n";
         break;
     }
 
-      if (keep_alive) {
-        connection_type = "keep-alive\r\n";
-      } else {
-        connection_type = "close\r\n";
-      }
-
-      switch (content_type) {
-        case Core::ContentType::text:
-          // Text
-          content_type_string = "text/plain\r\n";
-          break;
-        case Core::ContentType::html:
-          // html
-          content_type_string = "text/html\r\n";
-          break;
-        case Core::ContentType::jpeg:
-          // jpeg
-          content_type_string = "image/jpeg\r\n";
-          break;
-        case Core::ContentType::pdf:
-          // pdf
-          content_type_string = "application/pdf\r\n";
-          pdf_header = "Content-Disposition: inline; filename=" + filename + "\r\n";
-          break;
-      }
-
-      std::ostringstream header;
-      header << "HTTP/1.1 " << code_msg
-        << "Date: " << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X")
-        << "\r\n"
-        << "Server: GVSU\r\n"
-        << "Accepted-Ranges: bytes\r\n"
-        << "Connection: "
-        << connection_type
-        << "Content-Type: "
-        << content_type_string
-        << "\r\n";
-      if (content_type == Core::ContentType::pdf) {
-        header << pdf_header;
-      }
-
-      if (last_modified != "") {
-        header << "Last-Modified: "
-          << last_modified
-          << "\r\n\n";
-      }
-
-      send(socket, header.str().c_str(), header.str().size(), 0);
-      std::cout << "{ Header: " << header.str() << "}" << std::endl;
+    if (keep_alive) {
+      connection_type = "keep-alive\r\n";
+    } else {
+      connection_type = "close\r\n";
     }
+
+    switch (content_type) {
+      case Core::ContentType::text:
+        // Text
+        content_type_string = "text/plain\r\n";
+        break;
+      case Core::ContentType::html:
+        // html
+        content_type_string = "text/html\r\n";
+        break;
+      case Core::ContentType::jpeg:
+        // jpeg
+        content_type_string = "image/jpeg\r\n";
+        break;
+      case Core::ContentType::pdf:
+        // pdf
+        content_type_string = "application/pdf\r\n";
+        pdf_header = "Content-Disposition: inline; filename=" + filename + "\r\n";
+        break;
+    }
+
+    std::ostringstream header;
+    header << "HTTP/1.1 " << code_msg
+      << "Date: " << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X")
+      << "\r\n"
+      << "Server: GVSU\r\n"
+      << "Accepted-Ranges: bytes\r\n"
+      << "Connection: "
+      << connection_type
+      << "Content-Type: "
+      << content_type_string
+      << "\r\n"
+      << "Content-Length: "
+      << html.length()
+      << "\r\n";
+    if (content_type == Core::ContentType::pdf) {
+      header << pdf_header;
+    }
+
+    if (last_modified != "") {
+      header << "Last-Modified: "
+        << last_modified
+        << "\r\n\n";
+    }
+
+    send(socket, header.str().c_str(), header.str().size(), 0);
+    std::cout << "{ Header: " << header.str() << "}" << std::endl;
   }
 
   void* Core::thread_handler(void* args) {
@@ -173,7 +171,7 @@ namespace swerver {
   }
 
   int Core::Run(int argc, char** argv) {
-    if (!handle_args(argc, argv)) {
+    if (!this->handle_args(argc, argv)) {
       return EXIT_FAILURE;
     }
 
@@ -196,7 +194,7 @@ namespace swerver {
 
     for(;;) {
       // Shared pointer for safe memory usage
-      thread *t = new thread();
+      Core::thread *t = new thread();
       t->instance = this;
       socklen_t sin_size = sizeof client;
 
