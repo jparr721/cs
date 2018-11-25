@@ -13,7 +13,7 @@ Upon inspection of the code base on GitHub in search of something to compare, I 
 
 
 
-![Speedup](/home/lotus/Downloads/Speedup.png)
+![Speedup](/home/hermes/Downloads/Speedup.png)
 
 The data was distributed in the following:
 

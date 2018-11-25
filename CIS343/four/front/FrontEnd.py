@@ -16,11 +16,13 @@ class FrontEnd(object):
             raise b.CLIError('Invalid number of arguments provided')
         else:
             self.media_root = sys.argv[1]
+        self.stdscr = curses.initscr()
+        if self.stdscr.getmaxyx()[0] < 20 or self.stdscr.getmaxyx()[1] < 120:
+            raise b.CLIAudioScreenSizeException('Screen size is too small. Minimum cols is 120, and minimum rows is 20.')
         curses.wrapper(self.menu)
 
     def menu(self, args):
         """Create the menu and start the menu loop."""
-        self.stdscr = curses.initscr()
         self.stdscr.border()
         self.stdscr.addstr(0, 0, 'cli-audio', curses.A_REVERSE)
         self.stdscr.addstr(5, 10, 'c - Change current song')

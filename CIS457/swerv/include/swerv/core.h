@@ -3,19 +3,19 @@
 #include <string>
 
 namespace swerver {
-  enum ContentType {
-    text = 1,
-    html = 2,
-    jpeg = 3,
-    pdf =  4
-  };
-
   class Core {
     public:
+      enum ContentType {
+        text,
+        html,
+        jpeg,
+        pdf
+      };
+
       Core() = default;
       ~Core() = default;
 
-      int Run();
+      int Run(int argc, char** argv);
 
       struct thread {
         int socket;
@@ -27,7 +27,10 @@ namespace swerver {
           int socket,
           int code,
           bool keep_alive,
-          ContentType content_type);
+          Core::ContentType content_type,
+          std::string filename,
+          std::string last_modified,
+          std::string file_data);
 
       // Getters and setters
       std::string get_docroot();
@@ -69,7 +72,7 @@ namespace swerver {
 
       static void* thread_handler(void* args);
 
-      bool handle_args(char** argv);
+      bool handle_args(int argc, char** argv);
       void usage();
   };
 } // namespace swerver
