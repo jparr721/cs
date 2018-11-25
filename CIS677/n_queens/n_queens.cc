@@ -33,6 +33,7 @@ class NQueens {
       }
 
       print(game_board);
+      return EXIT_SUCCESS;
     }
 
     bool valid_spot(const std::vector<std::vector<int>>& game_board, int row, int col) const {
