@@ -1,4 +1,4 @@
-#include <swerve/core.hpp>
+#include <swerve/core.h>
 
 #include <chrono>
 #include <pthread.h>
@@ -73,27 +73,34 @@ namespace swerver {
       int socket,
       int code,
       bool keep_alive,
-      ContentType content_type) {
+      ContentType content_type,
+      std::string file_data) {
     std::string code_msg, connection_type, content_type_string;
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    std::string html = "";
 
     switch (code) {
       case 200:
         code_msg = "200 OK\r\n";
+        html = file_data;
         break;
       case 304:
         code_msg = "304 Not Modified\r\n";
+        html = file_data;
         break;
       case 404:
         code_msg = "404 Not Found\r\n";
+        html = html404;
         break;
       case 501:
         code_msg = "501 Not Implemented\r\n";
+        html = html501;
         break;
       default:
         code_msg = std::to_string(code) + "\r\n";
         break;
+    }
 
       if (keep_alive) {
         connection_type = "keep-alive\r\n";

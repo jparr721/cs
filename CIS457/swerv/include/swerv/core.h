@@ -39,6 +39,30 @@ namespace swerver {
       int get_port();
       void set_port(int port);
     private:
+      const std::string html404 =
+        R"(
+          <!DOCTYPE html>
+          <html>
+          <title>404! Whoops!</title>
+          <body>
+          <h1>
+          Error! The requested resource could not be found!
+          </h1>
+          </body>
+          </html>
+        )";
+      const std::string html501 =
+        R"(
+          <!DOCTYPE html>
+          <html>
+          <title>501!</title>
+          <body>
+          <h1>
+          Request Type not implemented.
+          </h1>
+          </body>
+          </html>
+        )";
       std::string docroot = ".doc";
       std::string logfile = ".log";
       int port = 1024;
