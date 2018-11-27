@@ -51,4 +51,4 @@ This needs to have some sort of testing.
 - We need to capture incorrect routes. So if I go to `/blah` in my [tool](https://www.getpostman.com/) it should return a consistent and easy to understand error message.
 
 ## Bonus Zone
-JavaScript and TypeScript are easy to use, but hard to use well. Great use of proper design patterns will be rewarded. We want clean, maintainable code here. *hint, hint, read the notes about certain es6 patterns* 
+JavaScript and TypeScript are easy to use, but hard to use well. Great use of proper design patterns will be rewarded. We want clean, maintainable code here. *hint, hint, read the [notes](https://github.com/jparr721/cs/blob/master/CIS343/javascrpt_proj/javascript.md) about certain es6 patterns* 
