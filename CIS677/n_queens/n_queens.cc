@@ -37,24 +37,20 @@ class NQueens {
     }
 
     bool valid_spot(const std::vector<std::vector<int>>& game_board, int row, int col) const {
-      // Check the row
       for (int i = 0; i < col; ++i) {
         if (game_board[row][i])
           return false;
-      }
 
-      // Check left diagonal
-      for (int i = 0; i < col; ++i) {
-        if (game_board[i][col - 1 - i])
-          return false;
-      }
+        for (int i = row, j = col; i >= 0 && j >=0; --i, --j) {
+          if (game_board[i][j])
+            return false;
+        }
 
-      // Check right diagonal
-      for (int i = 0; i < col; ++i) {
-        if (game_board[i][i])
-          return false;
+        for (int i = row, j = col; j >= 0 && i < n; ++i, --j) {
+          if (game_board[i][j])
+            return false;
+        }
       }
-
       return true;
     }
 
