@@ -15,10 +15,16 @@
             "goodSlave": "NS",
             "beatingsToDate": -1
         },
-       "children": {
-            "Designation": "Jeff Jr.",
-       		"Designation": "Turtle Person",
+       "children": [
+           {
+            "Designation": "Jeff Jr."
+           },
+           {
+       		"Designation": "Turtle Person"
+           },
+           {
         	"Designation": "REDACTED"
-        }
+           }
+        ]
     }
 }
