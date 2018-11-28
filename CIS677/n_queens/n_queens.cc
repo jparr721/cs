@@ -5,22 +5,9 @@
 #include <mpi.h>
 #include <vector>
 
-template <unsigned n>
 class NQueens {
   public:
-    /**
-     * Prints the game board
-     */
-    void print(const std::vector<std::vector<int>> game_board) {
-      for (auto i = 0u; i < n; ++i) {
-        for (auto j = 0u; j < n; ++j) {
-          std::cout << game_board[i][j] << " " << std::flush;
-        }
-        std::cout << std::endl;
-      }
-    }
-
-
+    explicit NQueens(int n) : n(n) {}
     /**
      * Sequential runs until all n queens
      * have been placed
@@ -61,33 +48,25 @@ class NQueens {
      * Parallel runs in MPI until all
      * queens have been placed
      */
-    void parallel() {
+    void parallel(int argc, char** argv) {
       MPI_Request req;
       int rank, num_nodes;
 
-      MPI_Init(nullptr, nullptr);
+      MPI_Init(&argc, &argv);
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
       MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
 
-      std::shared_ptr<int> return_values(new int[2 * n]);
-      int data_size, machine = 0;
+      long valid_solutions = sequential();
+      long valid;
 
-      if (rank == this->MASTER) {
-
+      if (rank != this->MASTER) {
+        MPI_Send(&valid_solutions, 1, MPI_INT, this->MASTER, this->TAG, MPI_COMM_WORLD);
       } else {
-        for (;;) {
-          MPI_Isend(&machine, 1, MPI_INT, this->MASTER, this->TAG, MPI_COMM_WORLD, &req);
-          MPI_Wait(&req, MPI_STATUS_IGNORE);
-
-          MPI_Recv(&data_size, 1, MPI_INT, this->MASTER, this->TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-          if (data_size < 0) {
-            break;
-          }
-
-          MPI_Recv(reinterpret_cast<void*>(&return_values), data_size * 2, MPI_INT, this->MASTER, this->TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          this->sequential();
+        valid = valid_solutions;
+        for (int i = 1; i < num_nodes; ++i) {
+          MPI_Recv(&valid, 1, MPI_INT, i, this->TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
+        std::cout << valid << std::endl;
       }
 
       MPI_Finalize();
@@ -96,12 +75,19 @@ class NQueens {
   private:
     const int MASTER = 0;
     const int TAG = 0;
+    uint16_t n;
 };
 
 int main(int argc, char** argv) {
-  NQueens<11> nq;
-  auto value = nq.sequential();
-  std::cout << value << std::endl;
+  if (argc < 2) {
+    std::cerr << "usage: nq n" << std::endl;
+    return EXIT_FAILURE;
+  }
+  int n = std::stoi(argv[1]);
+
+  NQueens nq(n);
+  /* auto value = nq.sequential(); */
+  nq.parallel(argc, argv);
 
   return EXIT_SUCCESS;
 }
