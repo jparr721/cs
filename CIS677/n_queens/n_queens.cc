@@ -56,17 +56,53 @@ class NQueens {
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
       MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
 
-      long valid_solutions = sequential();
-      long valid;
+      int data_size;
+      std::unique_ptr<int[]> return_values(new int[2 * n]);
+      std::vector<int> queens;
+      std::vector<std::vector<std::string>> done;
 
       if (rank != this->MASTER) {
-        MPI_Send(&valid_solutions, 1, MPI_INT, this->MASTER, this->TAG, MPI_COMM_WORLD);
-      } else {
-        valid = valid_solutions;
-        for (int i = 1; i < num_nodes; ++i) {
-          MPI_Recv(&valid, 1, MPI_INT, i, this->TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        std::unique_ptr<int[]> solutions(new int[2 * n]);
+        std::unique_ptr<MPI_Request[]> requests(new MPI_Request[num_nodes - 1]);
+        for (int i = 0; i < num_nodes; ++i) {
+          MPI_Irecv(&solutions[i], 1, MPI_INT, i, TAG, MPI_COMM_WORLD, &requests[i]);
         }
-        std::cout << valid << std::endl;
+      } else {
+        for (int i = 0; i < num_nodes; ++i) {
+          MPI_Isend(&i, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, &req);
+          MPI_Wait(&req, MPI_STATUS_IGNORE);
+          MPI_Recv(&data_size, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+          if (data_size <= 0) {
+            std::cerr << "Failed to hit node: " << i << std::endl;
+            break;
+          }
+
+          MPI_Recv(reinterpret_cast<void*>(&return_values), data_size * 2, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+          if (queens.size() == n) {
+            done.emplace_back();
+            for (auto i = 0u; i < n; ++i) {
+              done.back().emplace_back(n, '.');
+              done.back().back()[queens[i]] = 'Q';
+            }
+          } else {
+            for (auto i = 0u; i < n; ++i) {
+              bool valid = true;
+
+              for (auto j = 0u; valid && j < queens.size(); ++j) {
+                valid = (queens[j] != i) && (abs(queens[j] - i) != queens.size() - j);
+              }
+
+              if (valid) {
+                queens.push_back(i);
+                sequential_helper(done, queens);
+                queens.pop_back();
+              }
+            }
+          }
+          return_values[i] = done.size();
+        }
       }
 
       MPI_Finalize();
@@ -86,8 +122,9 @@ int main(int argc, char** argv) {
   int n = std::stoi(argv[1]);
 
   NQueens nq(n);
-  /* auto value = nq.sequential(); */
-  nq.parallel(argc, argv);
+  auto value = nq.sequential();
+  std::cout << value << std::endl;
+  /* nq.parallel(argc, argv); */
 
   return EXIT_SUCCESS;
 }
