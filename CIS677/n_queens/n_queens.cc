@@ -45,10 +45,10 @@ class NQueens {
     }
 
     void parallel2(int argc, char** argv) {
-      int num_nodex, rank;
-      if (num_nodex < n) {
+      int num_nodes, rank;
+      if (num_nodes < n) {
         for (auto i = 0u; i < n; ++i) {
-          if (i % num_nodex == ank) {
+          if (i % num_nodes == rank) {
             auto solutions = sequential();
           }
         }
