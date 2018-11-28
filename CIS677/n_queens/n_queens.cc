@@ -69,6 +69,8 @@ class NQueens {
       } else {
         MPI_Send(&sol, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD);
       }
+
+      MPI_Finalize();
     }
     /**
      * Parallel runs in MPI until all
