@@ -52,13 +52,11 @@ class NQueens {
 
       if (num_nodes < n) {
         for (auto i = 0u; i < n; ++i) {
-          if (i % num_nodes == rank) {
-            auto solutions = sequential();
-            sol += solutions;
-          }
+          auto solutions = sequential();
+          sol += solutions;
         }
       } else {
-        auto solutions = sequential();
+        sol = sequential();
       }
 
       if (rank == MASTER) {
