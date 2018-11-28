@@ -45,13 +45,31 @@ class NQueens {
     }
 
     void parallel2(int argc, char** argv) {
-      int num_nodes, rank;
+      int num_nodes, rank, buf, sol = 0;
+      MPI_Init(&argc, &argv);
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
+
       if (num_nodes < n) {
         for (auto i = 0u; i < n; ++i) {
           if (i % num_nodes == rank) {
             auto solutions = sequential();
+            sol += solutions;
           }
         }
+      } else {
+        auto solutions = sequential();
+      }
+
+      if (rank == MASTER) {
+        for (int i = 1; i < num_nodes; ++i) {
+          MPI_Recv(&buf, 1, MPI_INT, i, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          sol += buf;
+        }
+
+        std::cout << "Solutions: " << sol << std::endl;
+      } else {
+        MPI_Send(&sol, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD);
       }
     }
     /**
@@ -135,6 +153,7 @@ int main(int argc, char** argv) {
   auto value = nq.sequential();
   std::cout << value << std::endl;
   /* nq.parallel(argc, argv); */
+  /* nq.parallel2(argc, argv */
 
   return EXIT_SUCCESS;
 }
