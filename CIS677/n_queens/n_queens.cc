@@ -44,6 +44,16 @@ class NQueens {
       }
     }
 
+    void parallel2(int argc, char** argv) {
+      int num_nodex, rank;
+      if (num_nodex < n) {
+        for (auto i = 0u; i < n; ++i) {
+          if (i % num_nodex == ank) {
+            auto solutions = sequential();
+          }
+        }
+      }
+    }
     /**
      * Parallel runs in MPI until all
      * queens have been placed
@@ -61,7 +71,7 @@ class NQueens {
       std::vector<int> queens;
       std::vector<std::vector<std::string>> done;
 
-      if (rank != this->MASTER) {
+      if (rank == this->MASTER) {
         std::unique_ptr<int[]> solutions(new int[2 * n]);
         std::unique_ptr<MPI_Request[]> requests(new MPI_Request[num_nodes - 1]);
         for (int i = 0; i < num_nodes; ++i) {
