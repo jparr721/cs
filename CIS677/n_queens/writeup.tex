@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 
 \usepackage{listings}
+\usepackage{graphicx}
 
 \begin{document}
 \title{%
@@ -121,7 +122,8 @@ void sequential_helper(
       bool valid = true;
 
       for (auto j = 0u; valid && j < queens.size(); ++j) {
-        valid = (queens[j] != i) && (abs(queens[j] - i) != queens.size() - j);
+        valid = (queens[j] != i) &&
+          (abs(queens[j] - i) != queens.size() - j);
       }
 
       if (valid) {
@@ -162,7 +164,8 @@ void parallel2(int argc, char** argv) {
 
   if (rank == MASTER) {
     for (int i = 1; i < num_nodes; ++i) {
-      MPI_Recv(&buf, 1, MPI_INT, i, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&buf, 1, MPI_INT, i, TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       sol += buf;
     }
 
@@ -174,7 +177,7 @@ void parallel2(int argc, char** argv) {
   MPI_Finalize();
 }
 \end{lstlisting}
-This code is very simplistic in nature and had some issues scaling much better than the sequential version.
+This code is very simplistic in nature and had some issues scaling much better than the sequential version. This was discovered to be because the parallel version was not filly implemented properly. The master thread is doing the calculation on a single node and, while the subnodes are calculating, master actually does all of the work anyway so it provides no real speedup other than the fact it was run on better hardware.
 
 \subsection{The More Involved Approach}
 I sought to find a way to improve the exisiting systm by intermingling the code with the layout of the distributed system. This would allow for each node to perform a task on each row of the matrix instead of trying to achieve some arbitrary result 24 times over and comparing at the end. I wanted to see how truly distributed I could get. What ended up being produced was a very fragile piece of code which in some cases worked, but not all. This was unfortuante because it seemed quite promising what the output could be. I am excited at the prospect of improving on the MPI approach to a problem for the final project. The final (incomplete) solution is as follows:
@@ -196,15 +199,19 @@ void parallel(int argc, char** argv) {
 
   if (rank == this->MASTER) {
     std::unique_ptr<int[]> solutions(new int[2 * n]);
-    std::unique_ptr<MPI_Request[]> requests(new MPI_Request[num_nodes - 1]);
+    std::unique_ptr<MPI_Request[]> requests(
+      new MPI_Request[num_nodes - 1]);
     for (int i = 0; i < num_nodes; ++i) {
-      MPI_Irecv(&solutions[i], 1, MPI_INT, i, TAG, MPI_COMM_WORLD, &requests[i]);
+      MPI_Irecv(&solutions[i], 1, MPI_INT, i,
+        TAG, MPI_COMM_WORLD, &requests[i]);
     }
+    std::cout << solutions[0] << std::endl
   } else {
     for (int i = 0; i < num_nodes; ++i) {
       MPI_Isend(&i, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, &req);
       MPI_Wait(&req, MPI_STATUS_IGNORE);
-      MPI_Recv(&data_size, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&data_size, 1, MPI_INT, MASTER, TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
       if (data_size <= 0) {
         std::cerr << "Failed to hit node: " << i << std::endl;
@@ -231,7 +238,8 @@ void parallel(int argc, char** argv) {
           bool valid = true;
 
           for (auto j = 0u; valid && j < queens.size(); ++j) {
-            valid = (queens[j] != i) && (abs(queens[j] - i) != queens.size() - j);
+            valid = (queens[j] != i) &&
+              (abs(queens[j] - i) != queens.size() - j);
           }
 
           if (valid) {
@@ -242,13 +250,63 @@ void parallel(int argc, char** argv) {
         }
       }
       return_values[i] = done.size();
+    std::cout << return_values[0] << std::endl
     }
   }
 
   MPI_Finalize();
 }
 \end{lstlisting}
-This code was on the right track and, when it worked, produced the right output. It just had a weird habit of taking entire nodes offline for some odd reason. Because of the deadline I was unfortunately unable to achieve the desired outcome I was looking for.
+This code was on the right track and, when it worked, produced the right output. It just had a weird habit of taking entire nodes offline for some odd reason. Because of the deadline I was unfortunately unable to achieve the desired outcome I was looking for. I have a hypothesis that it is due to the load distribution overloading a system un uniformly and leaving some machines with less work to do which led to instability overall.
 
+\section{Validation}
+365596
+14772512
 \section{Results}
+I had results for a few of my different tests. I first compared the sequential single-node representations of the depth-first vs standard backtracking approach and saw a marginal, and consistent speedup of about ~.76. However, when it came to my involved inmplementation I found the speedup to be a decently better.
+\subsection{Optimal Algorithm Speedup Comparison}
+For each algorithm I saw the following runtimes, the parallel versions were run with flag -np 20 on the datacom lab systems:
+
+Non-Parallel:
+\begin{itemize}
+  \item 8x8 Game Board: 0.01s
+  \item 12x12 Game Board: 0.56s
+  \item 14x14 Game Board: 21.68s
+  \item 15x15 Game Board: 2m 18s
+  \item 16x16 Game Board: 24m 18s
+\end{itemize}
+
+Parallel:
+\begin{itemize}
+  \item 8x8 Game Board: 1s
+  \item 12x12 Game Board: 1.34s
+  \item 14x14 Game Board: 10.2s
+  \item 15x15 Game Board: 58s
+  \item 16x16 Game Board: 5m 48s
+\end{itemize}
+
+Speedup:
+\begin{itemize}
+\item 8x8 Speedup: less than .1s
+  \item 12x12 Speedup: .1
+  \item 14x14 Speedup: .42
+  \item 15x15 Speedup: 2.38
+  \item 16x16 Speedup: 4.41
+\end{itemize}
+
+
+
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{graph.jpg}
+  \caption{The speedup graph}
+\end{figure}
+
+As can be seen there was a pretty linear speedup presented. The graph shows that as the iterations and size of the problem increased, the speedup also increased in a pseudo-exponential way at first before
+moving more linearly upward.
+
+\section{Conclusion}
+This project was definitely a journey. Trying to wrestle through OpenMPI configurations and getting the code to work in parallel more efficiently proved to be an interesting challenge that really
+stretched what I thought I knew about distributed execution environments. Overall I am a little disappointed by my results, but I think in the context of a large, more easily split project, things
+may have seen a much better speedup. I plan to continue using OpenMPI on my local cluster to see if I can improve the overall runtime in the future.
+
 \end{document}
