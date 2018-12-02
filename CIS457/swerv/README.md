@@ -7,7 +7,7 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make
-$ cd ../bin
+$ cd ..
 $ ./swerver <OPTIONS>
 ```
 ### Usage
