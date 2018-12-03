@@ -50,7 +50,6 @@ namespace swerver {
     // Write to a string
     std::string str((std::istreambuf_iterator<char>(f)),
                      std::istreambuf_iterator<char>());
-
     return str;
   }
 
@@ -300,17 +299,24 @@ namespace swerver {
           filename.push_back(req.substr(delimLoc + 1, req.length()));
           auto content_type = c.make_content_type(filename[1]);
           // Check if the file exists first
-          if (access(req.c_str(), F_OK) != -1) {
-            std::cout << "Could not find file." << std::endl;
+          std::string path = t.instance->docroot + "/" + req;
+          std::cout << "Searching for " << path << std::endl;
+          if (access(path.c_str(), F_OK) != -1) {
             std::string did_mod = c.modded_since(input, req, filename[1]);
-            if (did_mod != "") {
-              auto file_contents = c.read_file(req);
-              if (file_contents == "") c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
-              c.send_http_response(t.socket, 200, true, content_type, req, did_mod, file_contents);
+            if (did_mod == "") {
+              auto file_contents = c.read_file(path);
+              if (file_contents == "") {
+                c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
+              } else {
+                c.send_http_response(t.socket, 200, true, content_type, req, did_mod, file_contents);
+              }
             } else {
-              auto file_contents = c.read_file(req);
-              if (file_contents == "") c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
-              c.send_http_response(t.socket, 304, true, content_type, req, did_mod, file_contents);
+              auto file_contents = c.read_file(path);
+              if (file_contents == "") {
+                c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
+              } else {
+                c.send_http_response(t.socket, 304, true, content_type, req, did_mod, file_contents);
+              }
             }
           } else {
             c.send_http_response(t.socket, 404, true, content_type, req, "", c.html404);
