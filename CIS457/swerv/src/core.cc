@@ -112,7 +112,7 @@ namespace swerver {
       std::cout << "Running server with default configuration" << std::endl;
       return true;
     } else {
-      for (int i = 1; i < argc - 1; ++i) {
+      for (int i = 1; i < argc - 1; i+=2) {
         std::string opt(argv[i]);
         if (opt == "-p") {
            this->port = std::stoi(argv[i + 1]);
@@ -249,7 +249,7 @@ namespace swerver {
         else if (default_path == ".log") this->logfile = default_path;
       }
     }
-
+    std::cout << "Document root is set to " << this->docroot << std::endl;
     return true;
   }
 
@@ -285,20 +285,23 @@ namespace swerver {
       c.log_request(input);
 
       std::string request_type = input.substr(0, 3);
-
+	
       if (request_type == "GET") {
         bool file_request = false;
         std::string req = input.substr(5, input.substr(5).find(" ", 0));
-
         if (req == "") {
           c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Default);
         } else {
+	  std::string delimiter = ".";
+          int delimLoc = req.find(delimiter);
+          if (delimLoc < 0) delimLoc = req.length();
           std::vector<std::string> filename;
+          filename.push_back(req.substr(0, delimLoc));
+          filename.push_back(req.substr(delimLoc + 1, req.length()));
           auto content_type = c.make_content_type(filename[1]);
-          boost::algorithm::split(filename, req, boost::is_any_of("."));
-
           // Check if the file exists first
           if (access(req.c_str(), F_OK) != -1) {
+            std::cout << "Could not find file." << std::endl;
             std::string did_mod = c.modded_since(input, req, filename[1]);
             if (did_mod != "") {
               auto file_contents = c.read_file(req);
@@ -309,6 +312,8 @@ namespace swerver {
               if (file_contents == "") c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
               c.send_http_response(t.socket, 304, true, content_type, req, did_mod, file_contents);
             }
+          } else {
+            c.send_http_response(t.socket, 404, true, content_type, req, "", c.html404);
           }
         }
       }
