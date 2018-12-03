@@ -33,6 +33,8 @@ namespace swerver {
 
   void Core::log_request(std::string log) {
     std::cout << log << std::endl;
+    fstream logroot(this->logfile);
+    logroot << log << "\n";
   }
 
   std::string Core::make_path(std::string dir, std::string file) const {
@@ -214,12 +216,15 @@ namespace swerver {
         << "\r\n\n";
     }
 
+    header << file_data << "\r\n";
+
     send(socket, header.str().c_str(), header.str().size(), 0);
     std::cout << "{ Header: " << header.str() << "}" << std::endl;
+    return;
   }
 
-  bool Core::init_system_file(std::string path, std::string default_path) {
-    struct stat info;
+  bool Core::init_system_directory(std::string path, std::string default_path) {
+    stat info;
 
     if (stat(path.c_str(), &info) != 0) {
       std::cout << "Failed to find directory: " << path << " creating" << std::endl;
@@ -246,6 +251,20 @@ namespace swerver {
     }
 
     return true;
+  }
+
+  void Core::init_system_file(std::string path, std::string default_path) {
+    stat info;
+    fstream logfile(path);
+
+    if (!logfile) {
+      std::cout << "Failed to find file: " << path << " creating" << std::endl;
+      logfile.open(path, fstream::in | fstream::out | fstream::trunc);
+      logfile.close();
+    } else {
+      std::cout << "logfile found, proceeding" << std::endl;
+      logfile.close();
+    }
   }
 
   void* Core::thread_handler(void* args) {
@@ -303,12 +322,11 @@ namespace swerver {
 
     bool err;
     // Create docroot
-    err = this->init_system_file(this->docroot, ".doc");
+    err = this->init_system_directory(this->docroot, ".doc");
     if (!err) return EXIT_FAILURE;
 
     // Create logfile root
-    err = this->init_system_file(this->logfile, ".log");
-    if (!err) return EXIT_FAILURE;
+    this->init_system_file(this->logfile, ".log");
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 

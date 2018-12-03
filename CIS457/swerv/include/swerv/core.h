@@ -106,6 +106,7 @@ namespace swerver {
       std::string make_path(std::string dir, std::string file) const;
 
       bool init_system_file(std::string path, std::string default_path);
+      bool init_system_directory(std::string path, std::string default_path);
       bool handle_args(int argc, char** argv);
 
       Core::ContentType make_content_type(std::string ext);
