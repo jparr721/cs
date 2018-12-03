@@ -33,7 +33,7 @@ namespace swerver {
 
   void Core::log_request(std::string log) {
     std::cout << log << std::endl;
-    fstream logroot(this->logfile);
+    std::fstream logroot(this->logfile);
     logroot << log << "\n";
   }
 
@@ -224,7 +224,7 @@ namespace swerver {
   }
 
   bool Core::init_system_directory(std::string path, std::string default_path) {
-    stat info;
+    struct stat info;
 
     if (stat(path.c_str(), &info) != 0) {
       std::cout << "Failed to find directory: " << path << " creating" << std::endl;
@@ -254,12 +254,12 @@ namespace swerver {
   }
 
   void Core::init_system_file(std::string path, std::string default_path) {
-    stat info;
-    fstream logfile(path);
+    struct stat info;
+    std::fstream logfile(path);
 
     if (!logfile) {
       std::cout << "Failed to find file: " << path << " creating" << std::endl;
-      logfile.open(path, fstream::in | fstream::out | fstream::trunc);
+      logfile.open(path, std::fstream::in | std::fstream::out | std::fstream::trunc);
       logfile.close();
     } else {
       std::cout << "logfile found, proceeding" << std::endl;
