@@ -164,7 +164,7 @@ namespace swerver {
         code_msg = std::to_string(code) + "\r\n";
         break;
     }
-
+    std::cout << "got the code" << std::endl;
     if (keep_alive) {
       connection_type = "keep-alive\r\n";
     } else {
@@ -187,10 +187,10 @@ namespace swerver {
       case Core::ContentType::pdf:
         // pdf
         content_type_string = "application/pdf\r\n";
-        pdf_header = "Content-Disposition: inline; filename=" + filename + "\r\n";
+        pdf_header = "Content-Disposition: inline; filename=" + filename + "\r";
         break;
     }
-
+    std::cout << "got content type" << std::endl;
     std::ostringstream header;
     header << "HTTP/1.1 " << code_msg
       << "Date: " << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X")
@@ -199,11 +199,11 @@ namespace swerver {
       << "Accepted-Ranges: bytes\r\n"
       << "Connection: "
       << connection_type
-      << "Content-Type: "
-      << content_type_string
-      << "\r\n"
       << "Content-Length: "
       << html.length()
+      << "\r\n"
+      << "Content-Type: "
+      << content_type_string
       << "\r\n";
     if (content_type == Core::ContentType::pdf) {
       header << pdf_header;
@@ -213,10 +213,13 @@ namespace swerver {
       header << "Last-Modified: "
         << last_modified
         << "\r\n\n";
+    } else {
+      header << "\n";
     }
 
     header << file_data << "\r\n";
-
+    std::cout << "Header size: " << header.str().size() << std::endl;
+    std::cout << "Socket: " << socket << std::endl;
     send(socket, header.str().c_str(), header.str().size(), 0);
     std::cout << "{ Header: " << header.str() << "}" << std::endl;
     return;
@@ -268,13 +271,18 @@ namespace swerver {
 
   void* Core::thread_handler(void* args) {
     Core::thread t;
-    Core c;
     std::memcpy(&t, args, sizeof(Core::thread));
+    Core c = *t.instance;
     socklen_t sin_size = sizeof t.socket;
     char line[5000];
 
     for (;;) {
       int in = recv(t.socket, line, 5000, 0);
+      
+      if (in == 0) {
+        pthread_exit(NULL);
+      }
+
       if (in < 0) {
         std::cout << "Failed to get data from client" << std::endl;
       }
@@ -284,10 +292,10 @@ namespace swerver {
       c.log_request(input);
 
       std::string request_type = input.substr(0, 3);
-	
+      std::string req = input.substr(5, input.substr(5).find(" ", 0));
+      std::cout << "Request: " << req << std::endl;
       if (request_type == "GET") {
         bool file_request = false;
-        std::string req = input.substr(5, input.substr(5).find(" ", 0));
         if (req == "") {
           c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Default);
         } else {
@@ -302,12 +310,16 @@ namespace swerver {
           std::string path = t.instance->docroot + "/" + req;
           std::cout << "Searching for " << path << std::endl;
           if (access(path.c_str(), F_OK) != -1) {
+            std::cout << "now im this far" << std::endl;
             std::string did_mod = c.modded_since(input, req, filename[1]);
             if (did_mod == "") {
               auto file_contents = c.read_file(path);
+              std::cout << "read file" << std::endl;
               if (file_contents == "") {
+                std::cout << "shit" << std::endl;
                 c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
               } else {
+                std::cout << "shit2" << std::endl;
                 c.send_http_response(t.socket, 200, true, content_type, req, did_mod, file_contents);
               }
             } else {
@@ -322,6 +334,8 @@ namespace swerver {
             c.send_http_response(t.socket, 404, true, content_type, req, "", c.html404);
           }
         }
+      } else {
+        c.send_http_response(t.socket, 501, true, c.Core::ContentType::html, req, "", c.html501);
       }
     }
   }
