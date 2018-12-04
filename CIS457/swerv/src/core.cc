@@ -43,7 +43,17 @@ namespace swerver {
     return std::string(p);
   }
 
+  void Core::sanitize_filepath(std::string& filepath) const {
+    for (int i = 0; i < filepath.length(); ++i) {
+      // Remove slashes so it just breaks
+      if (filepath[i] == '/') {
+        filepath.erase(filepath.begin() + i);
+      }
+    }
+  }
+
   std::string Core::read_file(std::string filename) const {
+    this->sanitize_filepath(filename);
     std::ifstream f(filename);
     if (!f.good()) return "";
 
@@ -278,7 +288,7 @@ namespace swerver {
 
     for (;;) {
       int in = recv(t.socket, line, 5000, 0);
-      
+
       if (in == 0) {
         pthread_exit(NULL);
       }
@@ -299,27 +309,26 @@ namespace swerver {
         if (req == "") {
           c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Default);
         } else {
-	  std::string delimiter = ".";
+          std::string delimiter = ".";
           int delimLoc = req.find(delimiter);
           if (delimLoc < 0) delimLoc = req.length();
+
           std::vector<std::string> filename;
           filename.push_back(req.substr(0, delimLoc));
           filename.push_back(req.substr(delimLoc + 1, req.length()));
           auto content_type = c.make_content_type(filename[1]);
+
           // Check if the file exists first
           std::string path = t.instance->docroot + "/" + req;
           std::cout << "Searching for " << path << std::endl;
+
           if (access(path.c_str(), F_OK) != -1) {
-            std::cout << "now im this far" << std::endl;
             std::string did_mod = c.modded_since(input, req, filename[1]);
             if (did_mod == "") {
               auto file_contents = c.read_file(path);
-              std::cout << "read file" << std::endl;
               if (file_contents == "") {
-                std::cout << "shit" << std::endl;
                 c.send_http_response(t.socket, 200, true, c.Core::ContentType::html, "", "", c.html200Failed);
               } else {
-                std::cout << "shit2" << std::endl;
                 c.send_http_response(t.socket, 200, true, content_type, req, did_mod, file_contents);
               }
             } else {

@@ -98,6 +98,7 @@ namespace swerver {
           std::string last_modified,
           std::string file_data) const;
       void log_request(std::string log);
+      void sanitize_filepath(std::string& filepath) const;
 
       std::string check_file_mod(std::string path);
       std::string get_current_time();
