@@ -53,7 +53,7 @@ namespace swerver {
   }
 
   std::string Core::read_file(std::string filename) const {
-    this->sanitize_filepath(filename);
+    /* this->sanitize_filepath(filename); */
     std::ifstream f(filename);
     if (!f.good()) return "";
 
