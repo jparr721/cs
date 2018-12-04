@@ -174,7 +174,6 @@ namespace swerver {
         code_msg = std::to_string(code) + "\r\n";
         break;
     }
-    std::cout << "got the code" << std::endl;
     if (keep_alive) {
       connection_type = "keep-alive\r\n";
     } else {
@@ -200,7 +199,7 @@ namespace swerver {
         pdf_header = "Content-Disposition: inline; filename=" + filename + "\r";
         break;
     }
-    std::cout << "got content type" << std::endl;
+
     std::ostringstream header;
     header << "HTTP/1.1 " << code_msg
       << "Date: " << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X")
