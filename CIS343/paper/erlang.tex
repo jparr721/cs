@@ -39,7 +39,21 @@ languages are not seen in the same way in Erlang. This is because of two reasons
 Expressions are evaluated in a bottom-up approach. All subexpressions are evaluated before the expression itself is evaluated, This is always the case unless explicitly stated
 otherwise. For example, a simple addition expression of the following form: $$expr1 + expr2$$ $expr1$ and $expr2$ are expressions as well as the whole expression adding them
 together. Both expressions, $expr1$ and $expr2$ are evaluated first - in any order - before the addition is performed [1]. Precedence is determined by how the expression is
-structured. In most cases
+structured. In most cases individual statements are handled randomly like they are in standard imperative languages, however, in cases where compound statments exist, the individual operations are executed before the compond operation. In general, scoping is
+handled almost the exact same as C and other imperative programming languages. However, since Erlang doesn't really use class structures, the encapsulation of data is preserved in the design of functions and scoping of variables inside of those functions.
+
+Erlang also features full module support but no idea of namespaces. All declared modules exist in the global scope and it is up to the developer to properly handle the encapsulation of important data objects. Thankfully, the functional nature of the code prevents much of the associated problems that could be surmised from hearing this. This is because the functions work heavily off of returned values, it's one of the reasons that every if statement requires an else, something MUST always be returned from the function
+execution. This provides the assurance of the functionality and the integrity of the data as it moves between modules. In the event that code execution is unpredictable, erlang features a robust exception system with about 20 built in exception types. It also
+has suppport for standard try-catch blocks as well. This allows for code to be even more reliable as Erlang can throw errors without breaking the code at runtime. Erlang can also be dynamically restarted allowing for the same codebase to continuously run
+forever even though changes are actively being made to that same code. This ties back to the \"run forever\" idea. Erlang code is made to start running and never stop unless there is a severe error. This makes things great for handling the new updates that code
+changes and bring without needing to take a web service down for maintainence.
+
+\section{Onward To Elixir}
+So, if elixir exists, does erlang even matter? The short answer is yes, the longer answer is that it depends on the use case when you need one or the other. Elixir brings
+a modern, ruby-like syntax to the erlang ecosystem and serves as a superset of Erlang. It brings robust new features but still maintains 100\% backward compatibility with
+the erlang stack. The cases where elixir can't be used is when interfacing with existing code. You can still communicate with it through elixir, but knowledge of erlang
+must also exist first to allow for an understanding of what is going on with the erlang code on the deeper level. That's really it. Erlang and Elixir are both useful and
+beautiful solutions to whatever problem needs to be solved, it really just depends on what the user needs to get done and how old the codebase is.
 
 \begin{thebibliography}{9}
   \bibitem{erlangcreators}

@@ -1,7 +1,6 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/Arch Linux) (preloaded format=pdflatex 2018.9.8)  2 DEC 2018 18:44
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/Arch Linux) (preloaded format=latex 2018.12.6)  7 DEC 2018 22:59
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **erlang.tex
 (./erlang.tex
@@ -135,11 +134,11 @@ Package etexcmds Info: Could not find \expanded.
 (etexcmds)             In the latter case, load this package earlier.
 )))
 (/usr/share/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
-Package: pdftexcmds 2018/01/30 v0.27 Utility functions of pdfTeX for LuaTeX (HO
+Package: pdftexcmds 2018/09/10 v0.29 Utility functions of pdfTeX for LuaTeX (HO
 )
 
 (/usr/share/texmf-dist/tex/generic/oberdiek/ifpdf.sty
-Package: ifpdf 2017/03/15 v3.2 Provides the ifpdf switch
+Package: ifpdf 2018/09/07 v3.3 Provides the ifpdf switch
 )
 Package pdftexcmds Info: LuaTeX not detected.
 Package pdftexcmds Info: \pdf@primitive is available.
@@ -168,18 +167,18 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <10.95> on input line 27.
- [2]
-Underfull \hbox (badness 10000) in paragraph at lines 58--61
+ [2] [3]
+Underfull \hbox (badness 10000) in paragraph at lines 72--75
 []\OT1/cmr/m/n/10.95 The Wiki-me-dia Foun-da-tion \OT1/cmr/m/it/10.95 Er-lang (
 pro-gram-ming lan-guage)\OT1/cmr/m/n/10.95 .
  []
 
-[3] (./erlang.aux) ) 
+[4] (./erlang.aux) ) 
 Here is how much of TeX's memory you used:
- 2783 strings out of 492642
- 39148 string characters out of 6135567
- 105396 words of memory out of 5000000
- 6668 multiletter control sequences out of 15000+600000
+ 2785 strings out of 492640
+ 39165 string characters out of 6135523
+ 105528 words of memory out of 5000000
+ 6672 multiletter control sequences out of 15000+600000
  8542 words of font info for 30 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  41i,6n,32p,552b,217s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -189,10 +188,10 @@ are/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-dist/fonts/type1/pub
 lic/amsfonts/cm/cmr17.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm
 /cmsy8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on erlang.pdf (3 pages, 91590 bytes).
+Output written on erlang.pdf (4 pages, 96562 bytes).
 PDF statistics:
- 42 PDF objects out of 1000 (max. 8388607)
- 29 compressed objects within 1 object stream
+ 45 PDF objects out of 1000 (max. 8388607)
+ 31 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
