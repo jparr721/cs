@@ -1,0 +1,51 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_e2e54/fast"
+/usr/bin/make -f CMakeFiles/cmTC_e2e54.dir/build.make CMakeFiles/cmTC_e2e54.dir/build
+make[1]: Entering directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_e2e54.dir/CheckSymbolExists.cxx.o
+/usr/bin/c++    -g    -std=gnu++1z -o CMakeFiles/cmTC_e2e54.dir/CheckSymbolExists.cxx.o -c /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx
+Linking CXX executable cmTC_e2e54
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e2e54.dir/link.txt --verbose=1
+/usr/bin/c++   -g     CMakeFiles/cmTC_e2e54.dir/CheckSymbolExists.cxx.o  -o cmTC_e2e54 
+/usr/bin/ld: CMakeFiles/cmTC_e2e54.dir/CheckSymbolExists.cxx.o: in function `main':
+/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx:8: undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_e2e54.dir/build.make:87: cmTC_e2e54] Error 1
+make[1]: Leaving directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+make: *** [Makefile:126: cmTC_e2e54/fast] Error 2
+
+File /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_8cb4e/fast"
+/usr/bin/make -f CMakeFiles/cmTC_8cb4e.dir/build.make CMakeFiles/cmTC_8cb4e.dir/build
+make[1]: Entering directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_8cb4e.dir/CheckFunctionExists.cxx.o
+/usr/bin/c++    -g -DCHECK_FUNCTION_EXISTS=pthread_create   -std=gnu++1z -o CMakeFiles/cmTC_8cb4e.dir/CheckFunctionExists.cxx.o -c /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CheckLibraryExists/CheckFunctionExists.cxx
+Linking CXX executable cmTC_8cb4e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8cb4e.dir/link.txt --verbose=1
+/usr/bin/c++   -g -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_8cb4e.dir/CheckFunctionExists.cxx.o  -o cmTC_8cb4e -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_8cb4e.dir/build.make:87: cmTC_8cb4e] Error 1
+make[1]: Leaving directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+make: *** [Makefile:126: cmTC_8cb4e/fast] Error 2
+
+

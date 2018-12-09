@@ -1,0 +1,28 @@
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_83537/fast"
+/usr/bin/make -f CMakeFiles/cmTC_83537.dir/build.make CMakeFiles/cmTC_83537.dir/build
+make[1]: Entering directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_83537.dir/CheckIncludeFile.cxx.o
+/usr/bin/c++    -g    -std=gnu++1z -o CMakeFiles/cmTC_83537.dir/CheckIncludeFile.cxx.o -c /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp/CheckIncludeFile.cxx
+Linking CXX executable cmTC_83537
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_83537.dir/link.txt --verbose=1
+/usr/bin/c++   -g     CMakeFiles/cmTC_83537.dir/CheckIncludeFile.cxx.o  -o cmTC_83537 
+make[1]: Leaving directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+
+
+Determining if the function pthread_create exists in the pthread passed with the following output:
+Change Dir: /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_bb170/fast"
+/usr/bin/make -f CMakeFiles/cmTC_bb170.dir/build.make CMakeFiles/cmTC_bb170.dir/build
+make[1]: Entering directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_bb170.dir/CheckFunctionExists.cxx.o
+/usr/bin/c++    -g -DCHECK_FUNCTION_EXISTS=pthread_create   -std=gnu++1z -o CMakeFiles/cmTC_bb170.dir/CheckFunctionExists.cxx.o -c /home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CheckLibraryExists/CheckFunctionExists.cxx
+Linking CXX executable cmTC_bb170
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bb170.dir/link.txt --verbose=1
+/usr/bin/c++   -g -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_bb170.dir/CheckFunctionExists.cxx.o  -o cmTC_bb170 -lpthread 
+make[1]: Leaving directory '/home/parrjar/Desktop/cs/CIS457/swerv/CMakeFiles/CMakeTmp'
+
+
