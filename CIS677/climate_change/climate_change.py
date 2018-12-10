@@ -1,21 +1,24 @@
 import sys
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, isdir, dirname
 from operator import add
 
 from pyspark import SparkContext
 
-def calculate(context, dir, label):
+def calculate(context, directory, label):
+    path_root = '/home/DATA/NOAA_weather/'
+
     all_files = []
-    for f in dir:
-        lines = sc.textFile(f)
-        all_files.append(lines)
+    output = None
+    for f in directory:
+        lines = context.textFile(path_root + f)
+        all_files.append((f, lines))
 
-    for data in all_files:
-        data.map(lambda word: word = (word[61:63]))
-            .reduceByKey(lambda a, b: a + b).collectAsMap()
+    for year, data in all_files:
+        output = data.map(lambda word: (f, word[66:70])).reduceByKey(lambda a, b: a + b).collectAsMap()
 
-    maximum_wind = ""
+    maximum_wind = max(output.items(), key=(lambda key: output[key]))
+
     return 'Max for the {}: {}'.format(label, maximum_wind)
 
 def main():
@@ -24,11 +27,24 @@ def main():
         sys.exit(1)
 
     data_path = sys.argv[1]
-    80dirs = [f for f in listdir(data_path) if isdir(f) and int(f) > 1980 and int(f) <= 1989]
-    20dirs = [f for f in listdir(data_path) if isdir(f) and int(f) > 2000 and int(f) <= 2009]
+    dir1980 = []
+    dir2000 = []
+    for f in listdir(data_path):
+        year = None
+        try:
+            year = int(f)
+        except ValueError as ve:
+            print('not a number, skipping: {}'.format(f))
+
+        if type(year) is int and year >= 1980 and year <= 1989:
+            dir1980.append(f)
+        elif type(year) is int and year >= 2000 and year <= 2009:
+            dir2000.append(f)
+        else:
+            print('out of range, skipping: {}'.format(f))
 
     sc = SparkContext(appName="CleanCoal")
-    data = calculate(sc, 80dirs, '80\'s')
+    data = calculate(sc, dir1980, '80\'s')
     print(data)
     sc.stop()
 
