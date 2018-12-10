@@ -12,7 +12,10 @@ defmodule Calculator do
   end
 
   def divide(a, b) do
-    a / b
+    cond do
+      b == 0 -> 0
+      b != 0 -> a / b
+    end
   end
 
   def show_total(lst) do
