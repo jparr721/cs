@@ -15,37 +15,29 @@ def calculate(context, directory, label):
     outfile = open('output', 'a+')
 
     for year in directory:
-        for subfile in listdir(path_root + year):
-            print('YEAR------------------------------------------------')
-            print('YEAR------------------------------------------------')
-            print(year)
-            print('YEAR------------------------------------------------')
-            print('YEAR------------------------------------------------')
-            print('SUBFILE------------------------------------------------')
-            print('SUBFILE------------------------------------------------')
-            print(subfile)
-            print('SUBFILE------------------------------------------------')
-            print('SUBFILE------------------------------------------------')
-            lines = context.textFile(path_root + year + '/' + subfile)
-            speed = lines.map(lambda word: word[66:70]).collect()
-            temp = lines.map(lambda word: word[88:93]).collect()
-            speed_max = max(speed)
-            speed_min = min(speed)
-            temp_max = max(temp)
-            temp_min = min(temp)
+        lines = context.textFile(path_root + year + '/*')
+        speed = lines.map(lambda word: float(word[65:69]) / 10).collect()
+        temp = lines.map(lambda word: float(word[87:92]) / 10).collect()
+        speed_list = [s for s in speed if s < 300]
+        temp_list = [t for t in temp if t <= 300]
+        speed_max = max(speed_list)
+        speed_min = min(speed_list)
+        temp_max = max(temp_list)
+        temp_min = min(temp_list)
+        temp_avg = sum(temp_list)/float(len(temp_list))
 
-            max_speed[year] = max(int(speed_max), max_speed[year])
-            min_speed[year] = min(int(speed_min), min_speed[year])
-            max_temp[year] = max(int(temp_max), max_temp[year])
-            min_temp[year] = min(int(temp_min), min_temp[year])
+        max_speed[year] = max(speed_max, max_speed[year])
+        min_speed[year] = min(speed_min, min_speed[year])
+        max_temp[year] = max(temp_max, max_temp[year])
+        min_temp[year] = min(temp_min, min_temp[year])
 
-        outfile.write('{} {}'.format(year, max_speed[year]))
-        outfile.write('{} {}'.format(year, min_speed[year]))
-        outfile.write('{} {}'.format(year, max_temp[year]))
-        outfile.write('{} {}'.format(year, min_temp[year]))
+        outfile.write('{} Max Speed: {}\n'.format(year, max_speed[year]))
+        outfile.write('{} Min Speed: {}\n'.format(year, min_speed[year]))
+        outfile.write('{} Max Temp: {}\n'.format(year, max_temp[year]))
+        outfile.write('{} Min Temp: {}\n'.format(year, min_temp[year]))
+        outfile.write('{} Average Temp: {}\n'.format(year, temp_avg))
 
-
-    return (max_speed, min_speed, max_temp, min_temp)
+    return (max_speed, min_speed, max_temp, temp_avg)
 
 def main():
     if len(sys.argv) != 2:
@@ -64,13 +56,13 @@ def main():
 
         if type(year) is int and year >= 1980 and year <= 1989:
             dir1980.append(f)
-        elif type(year) is int and year >= 2000 and year <= 2009:
+        elif type(year) is int and year >= 2000 and year <= 2009 and year != 2004:
             dir2000.append(f)
         else:
             print('out of range, skipping: {}'.format(f))
 
     sc = SparkContext(appName="CleanCoal")
-    data1980 = calculate(sc, dir1980, '80\'s')
+    # data1980 = calculate(sc, dir1980, '80\'s')
     data2000 = calculate(sc, dir2000, '2000\'s')
     sc.stop()
 
