@@ -6,6 +6,7 @@ from operator import add
 
 from pyspark import SparkContext
 
+
 def calculate(context, directory, label):
     path_root = '/home/DATA/NOAA_weather/'
     max_speed = defaultdict(int)
@@ -37,7 +38,6 @@ def calculate(context, directory, label):
         outfile.write('{} Min Temp: {}\n'.format(year, min_temp[year]))
         outfile.write('{} Average Temp: {}\n'.format(year, temp_avg))
 
-    return (max_speed, min_speed, max_temp, temp_avg)
 
 def main():
     if len(sys.argv) != 2:
@@ -51,19 +51,21 @@ def main():
         year = None
         try:
             year = int(f)
-        except ValueError as ve:
+        except ValueError:
             print('not a number, skipping: {}'.format(f))
 
         if type(year) is int and year >= 1980 and year <= 1989:
             dir1980.append(f)
-        elif type(year) is int and year >= 2000 and year <= 2009 and year != 2004:
+        elif type(year) is int and year >= 2000 \
+                and year <= 2009 and year != 2004:
             dir2000.append(f)
         else:
             print('out of range, skipping: {}'.format(f))
 
     sc = SparkContext(appName="CleanCoal")
-    # data1980 = calculate(sc, dir1980, '80\'s')
-    data2000 = calculate(sc, dir2000, '2000\'s')
+    calculate(sc, dir1980, '80\'s')
+    calculate(sc, dir2000, '2000\'s')
     sc.stop()
+
 
 main()
