@@ -1,4 +1,5 @@
 import sys
+from collections import defaultdict
 from os import listdir
 from os.path import isfile, isdir, dirname
 from operator import add
@@ -7,19 +8,44 @@ from pyspark import SparkContext
 
 def calculate(context, directory, label):
     path_root = '/home/DATA/NOAA_weather/'
+    max_speed = defaultdict(int)
+    min_speed = defaultdict(int)
+    max_temp = defaultdict(int)
+    min_temp = defaultdict(int)
+    outfile = open('output', 'a+')
 
-    all_files = []
-    output = None
-    for f in directory:
-        lines = context.textFile(path_root + f)
-        all_files.append((f, lines))
+    for year in directory:
+        for subfile in listdir(path_root + year):
+            print('YEAR------------------------------------------------')
+            print('YEAR------------------------------------------------')
+            print(year)
+            print('YEAR------------------------------------------------')
+            print('YEAR------------------------------------------------')
+            print('SUBFILE------------------------------------------------')
+            print('SUBFILE------------------------------------------------')
+            print(subfile)
+            print('SUBFILE------------------------------------------------')
+            print('SUBFILE------------------------------------------------')
+            lines = context.textFile(path_root + year + '/' + subfile)
+            speed = lines.map(lambda word: word[66:70]).collect()
+            temp = lines.map(lambda word: word[88:93]).collect()
+            speed_max = max(speed)
+            speed_min = min(speed)
+            temp_max = max(temp)
+            temp_min = min(temp)
 
-    for year, data in all_files:
-        output = data.map(lambda word: (f, word[66:70])).reduceByKey(lambda a, b: a + b).collectAsMap()
+            max_speed[year] = max(int(speed_max), max_speed[year])
+            min_speed[year] = min(int(speed_min), min_speed[year])
+            max_temp[year] = max(int(temp_max), max_temp[year])
+            min_temp[year] = min(int(temp_min), min_temp[year])
 
-    maximum_wind = max(output.items(), key=(lambda key: output[key]))
+        outfile.write('{} {}'.format(year, max_speed[year]))
+        outfile.write('{} {}'.format(year, min_speed[year]))
+        outfile.write('{} {}'.format(year, max_temp[year]))
+        outfile.write('{} {}'.format(year, min_temp[year]))
 
-    return 'Max for the {}: {}'.format(label, maximum_wind)
+
+    return (max_speed, min_speed, max_temp, min_temp)
 
 def main():
     if len(sys.argv) != 2:
@@ -44,8 +70,8 @@ def main():
             print('out of range, skipping: {}'.format(f))
 
     sc = SparkContext(appName="CleanCoal")
-    data = calculate(sc, dir1980, '80\'s')
-    print(data)
+    data1980 = calculate(sc, dir1980, '80\'s')
+    data2000 = calculate(sc, dir2000, '2000\'s')
     sc.stop()
 
 main()
