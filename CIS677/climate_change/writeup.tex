@@ -1,0 +1,48 @@
+\documentclass[11pt]{article}
+
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{tabularx}
+
+\begin{document}
+\title{Spark-Accelerated Climate Change Analysis}
+\author{Jarred Parr}
+\date{December 2018}
+\maketitle
+
+\section{Introduction}
+Climate change is one of the most talked about topics in modern society. From the mainstream media sources, to the President of
+the United States, you can't avoid the conversation. This project aims to do some analysis of some of the features of Earth that
+would be more directly affected by climate change. The predicted results would primarily be increased wind temperature, and more
+severe weather, a product of which being higher wind speeds. This project does analysis on the wind speed variations over the
+years and the wind temperature variations. This is in the pursuit of providing a reasonable model to show the affect that climate
+change has had in even a short time frame as 3 decades. A linear regressor was used to analyze the data and help determine if,
+based on the data, our current trend will likely continue in whatever direction it was found to go, or if it will being to
+slowly normalize over time.
+
+\section{Program Architecture}
+The software itself is very barebones. The PySpark library takes much of the guesswork out of how to implement things and gives
+an easy to use and refreshing interface in which to interact with the underlying structures in place. As a result, the code itself
+was extrememly easy to implement and work with. Results were able to be obtained in the use of just two functions which,
+realistically, could have been made into just one. There was nothing particularly exemplary discovered in the way of code design
+other than that the implementation itself was rather clean and straightforward.
+
+\section{Code}
+The code is as follows:
+
+\lstset{frame=tb, language=python}
+\begin{lstlisting}
+print('Placeholder text')
+\end{lstlisting}
+
+\section{Results}
+\begin{table}[htb]
+\begin{tabular}{lllll}
+ 1  &  2  &  \\
+ 1  &  2  &  \\
+ 1  &  2  &  \\
+ 1  &  2  &
+\end{tabular}
+\end{table}
+
+\end{document}
