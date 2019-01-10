@@ -30,6 +30,16 @@ game.ready("rekbot")
 #   Here, you log here your id, which you can always fetch from the game object by using my_id.
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
 
+
+""" Finds the optimal dropoff for a ship """
+def findDrop( position, array ):
+    x = 1000
+    for val in array:
+        y = game_map.calculate_distance(position, array)
+        if y < x:
+            x = y
+    return x
+
 """ <<<Game Loop>>> """
 
 while True:
@@ -55,7 +65,7 @@ while True:
             if ship.position == me.shipyard.position:
                 ship_status[ship.id] = "exploring"
             else:
-                move = game_map.naive_navigate(ship, me.shipyard.position)
+                move = game_map.naive_navigate(ship, findDrop(me.shipyard.position, me.get_dropoffs())
                 comand_queue.append(ship.move(move))
 
         elif ship.halite_amount >= constants.MAX_HALITE / 4:
