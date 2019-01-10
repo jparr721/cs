@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # Python 3.6
 
+### MAX 6 DROPOFFS
+### FAVOR HIGH-HALITE ZONES
+
 # Import the Halite SDK, which will let you interact with the game.
 import hlt
 
@@ -39,6 +42,30 @@ def findDrop( position, array ):
         if y < x:
             x = y
     return x
+    
+def add_ship_to_map(ship, ship_locations, x, y):
+    map[[x, y]] = ship.id
+
+def make_dropoff():
+    # MAX 6 DROPOFFS
+    pass
+    
+def check_direction(coordinates: list):
+     ### MAKE SURE COORDINATES ARE NEVER [1, 1] [1, -1], [-1, 1] 
+     ## RETURN THE VALID CARDINAL DIRECTIONS TO MOVE
+
+def check_radius(ship, ship_locations):
+    x, y = ship.position.x, ship.position.y
+    for x_i in range(-1, 1):
+#        if x + x_i < 0:
+#            x_i = x
+        for y_i in range(-1, 1):
+            ## CHECK AROUND SHIP HERE
+            new_dir = [x + x_i, y + y_i]
+            cardinal_direction = (x_i, y_i)
+            if new_dir in ship_locations:
+                check_direction(new_dir)
+            ## USE IS OCCUPIED TO CHECK 
 
 """ <<<Game Loop>>> """
 
@@ -54,8 +81,11 @@ while True:
     #   end of the turn.
     command_queue = []
     ship_status = {}
+    ## SHIP LOCATIONS INDEXED BY [[x, y], ship_id]
+    ship_locations = {}
 
     for ship in me.get_ships():
+        x, y = ship.position.x, ship.position.y 
         logging.info("Ship {} has {} halite.".format(ship.id, ship.halite_amount))
 
         if ship.id not in ship_status:
