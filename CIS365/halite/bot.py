@@ -42,16 +42,16 @@ def findDrop( position, array ):
         if y < x:
             x = y
     return x
-    
+
 def add_ship_to_map(ship, ship_locations, x, y):
     map[[x, y]] = ship.id
 
 def make_dropoff():
     # MAX 6 DROPOFFS
     pass
-    
+
 def check_direction(coordinates: list):
-     ### MAKE SURE COORDINATES ARE NEVER [1, 1] [1, -1], [-1, 1] 
+     ### MAKE SURE COORDINATES ARE NEVER [1, 1] [1, -1], [-1, 1]
      ## RETURN THE VALID CARDINAL DIRECTIONS TO MOVE
 
 def check_radius(ship, ship_locations):
@@ -65,7 +65,7 @@ def check_radius(ship, ship_locations):
             cardinal_direction = (x_i, y_i)
             if new_dir in ship_locations:
                 check_direction(new_dir)
-            ## USE IS OCCUPIED TO CHECK 
+            ## USE IS OCCUPIED TO CHECK
 
 """ <<<Game Loop>>> """
 
@@ -85,7 +85,7 @@ while True:
     ship_locations = {}
 
     for ship in me.get_ships():
-        x, y = ship.position.x, ship.position.y 
+        x, y = ship.position.x, ship.position.y
         logging.info("Ship {} has {} halite.".format(ship.id, ship.halite_amount))
 
         if ship.id not in ship_status:
