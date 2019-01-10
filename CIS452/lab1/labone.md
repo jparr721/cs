@@ -47,7 +47,7 @@ by Jarred Parr and Alexander Fountain
    
    ```
 
-7.  The first problem is that on line 11 a do while loop occurs, so there will always be one extra allocation of `data1` and `data2` in memory even after adding the free for `data2` after the value prints. To get around this, we must add an additional free of `data1` and `data2` after the while loop declaration. The fixed code is as follows:
+7. The first problem is that on line 11 a do while loop occurs, so there will always be one extra allocation of `data1` and `data2` in memory even after adding the free for `data2` after the value prints. To get around this, we must add an additional free of `data1` and `data2` after the while loop declaration. The fixed code is as follows:
 
 ```c
 #include <stdio.h>
@@ -82,7 +82,7 @@ int main() {
 
 8. Write is invoked as many times as the command enters the while loop + 1. So since the program runs once, that iteration is automatically going to happen and write will be called once. Every instance following that where the input is not equal to `quit` will incur another usage of the write command
 
-9. TODO
+9. The C library subroutine that is called is the `printf` function call which uses the write system call to write the bytes to a particular file descriptor whether it be `STDOUT` or otherwise.
 
 10. ```c++
     // This can also be accompisled with the getpass() function on *NIX operating systems.
