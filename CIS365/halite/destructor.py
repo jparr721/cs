@@ -79,9 +79,9 @@ while True:
             ship_status[ship.id] = "exploring"
 
     ##This splits the ships into two random groups.  Group true searches east and false searches west.
-        if ship.group not True or not False:
+        if ship.group != True or ship.group != False:
             z = random.randint(1,2)
-            if z = 1
+            if z == 1:
                 ship.group = True
             else:
                 ship.group = False
@@ -89,16 +89,16 @@ while True:
         if ship_status[ship.id] == "returning":
             if ship.position == me.shipyard.position:
                 ship_status[ship.id] = "exploring"
-            else:
-                move = game_map.naive_navigate(ship, find_drop(me.shipyard.position, me.get_dropoffs())
-                comand_queue.append(ship.move(move))
+            #else:
+                #move = game_map.naive_navigate(ship, find_drop(me.shipyard.position, me.get_dropoffs())
+                #command_queue.append(ship.move(move))
 
         elif ship.halite_amount >= constants.MAX_HALITE / 4:
             ship_status[ship.id] = "returning"
 
         if ship.is_full:
-            move = game_map.naive_navigate(ship, find_drop(me.shipyard.position, me.get_dropoffs())
-            comand_queue.append(ship.move(move))
+            #move = game_map.naive_navigate(ship, find_drop(me.shipyard.position, me.get_dropoffs())
+            #command_queue.append(ship.moveDirection(Direction.move))
             ship_status[ship_id] = "returning"
 
     ##Currently this is what determins which way the ship moves.  Would like to improve it to spawn drop off's
@@ -113,7 +113,7 @@ while True:
             else:
                 command_queue.append(ship.stay_still())
 
-         if ship.group == False:
+        if ship.group == False:
             if not game_map[position.directional_offset(East)].is_occupied:
                 command_queue.append(ship.moveDirection.East)
             if not game_map[position.directional_offset(South)].is_occupied:
