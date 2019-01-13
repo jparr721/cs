@@ -18,9 +18,7 @@ endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
-add_executable(linreg_test
+add_executable(linreg
   "${PROJECT_SOURCE_DIR}/main.cc"
   "${PROJECT_SOURCE_DIR}/linreg.cc"
 )
-
-target_link_libraries(linreg)
