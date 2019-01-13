@@ -42,7 +42,7 @@ std::pair<double, double> LinReg::trendline(const std::vector<double>& x, const 
 std::vector<double> LinReg::polynomial_trendline(
     const std::vector<double>& x,
     const std::vector<double>& y,
-    const int& order) {
+    const int& terms) {
   std::vector<double> coefficients;
 
   if (x.size() != y.size()) {
@@ -50,7 +50,7 @@ std::vector<double> LinReg::polynomial_trendline(
   }
 
   size_t N = x.size();
-  int n = order;
+  int n = terms;
   int np1 = n + 1;
   int np2 = n + 2;
   int tnp1 = 2 * n + 1;
