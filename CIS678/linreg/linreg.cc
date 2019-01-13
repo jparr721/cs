@@ -169,3 +169,11 @@ bool LinReg::read_infile(
   in.close();
   return true;
 }
+
+bool LinReg::write_to_file(const std::string& input, const std::string& filename) {
+  std::ofstream out(filename);
+  out << input;
+  out.close();
+
+  return true;
+}

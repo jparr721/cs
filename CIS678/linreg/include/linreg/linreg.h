@@ -17,6 +17,8 @@ class LinReg {
         const std::vector<double>& y,
         const int& terms);
 
+    bool write_to_file(const std::string& input, const std::string& filename);
+
     void print_vectors();
   private:
     bool read_infile(
