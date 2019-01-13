@@ -2,15 +2,26 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 
 LinReg::LinReg(const std::string& filepath) {
-  if (!read_infile(filepath, lines)) {
+  if (!read_infile(filepath, left, right)) {
     throw std::runtime_error("Error reading input file");
   }
+}
+
+void LinReg::print_vectors() {
+  std::for_each(left.begin(), left.end(), [&](const auto v) {
+    std::cout << "left: "<< v << std::endl;
+  });
+
+  std::for_each(right.begin(), right.end(), [&](const auto v) {
+    std::cout << "right: "<< v << std::endl;
+  });
 }
 
 std::pair<double, double> LinReg::trendline(const std::vector<double>& x, const std::vector<double>& y) {
@@ -122,7 +133,10 @@ std::vector<double> LinReg::polynomial_trendline(
   return coefficients;
 }
 
-bool LinReg::read_infile(const std::string& file, std::vector<double>& lines) {
+bool LinReg::read_infile(
+    const std::string& file,
+    std::vector<double>& left,
+    std::vector<double>& right) {
   std::ifstream in(file);
 
   if (!in) {
@@ -131,10 +145,23 @@ bool LinReg::read_infile(const std::string& file, std::vector<double>& lines) {
   }
 
   std::string line;
+  bool on = false;
   while (std::getline(in, line)) {
     if (line.size() > 0) {
       if (line != "nan") {
-        lines.push_back(std::stod(line));
+        int i = 0;
+
+        std::vector<double> temp;
+        std::stringstream ss(line);
+
+        while (ss >> i) {
+          temp.push_back(i);
+
+          if (ss.peek() == ',') { ss.ignore(); }
+        }
+        left.push_back(temp[0]);
+        right.push_back(temp[1]);
+        temp.erase(temp.begin());
       }
     }
   }

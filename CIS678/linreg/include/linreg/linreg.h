@@ -7,14 +7,21 @@
 
 class LinReg {
   public:
+    std::vector<double> left;
+    std::vector<double> right;
+
     LinReg(const std::string& filepath);
     std::pair<double, double> trendline(const std::vector<double>& x, const std::vector<double>& y);
     std::vector<double> polynomial_trendline(
         const std::vector<double>& x,
         const std::vector<double>& y,
         const int& order);
+
+    void print_vectors();
   private:
-    std::vector<double> lines;
-    bool read_infile(const std::string& file, std::vector<double>& lines);
+    bool read_infile(
+        const std::string& file,
+        std::vector<double>& left,
+        std::vector<double>& right);
 };
 #endif
