@@ -58,7 +58,7 @@ class Ship(Entity):
     """
     __ships = {}
 
-    def __init__(self, owner, id, position, halite_amount):
+    def __init__(self, owner, id, position, halite_amount, group):
         super().__init__(owner, id, position)
         self.halite_amount = halite_amount
 
