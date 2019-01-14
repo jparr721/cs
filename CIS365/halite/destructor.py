@@ -117,13 +117,13 @@ while True:
 #                command_queue.append(ship.stay_still())
                 
                 
-        if not game_map[Position.directional_offset(Direction.North)].is_occupied:
+        if not game_map[Position.directional_offset(0, -1)].is_occupied:
             command_queue.append(ship.moveDirection.North)
-        elif not game_map[Position.directional_offset(South)].is_occupied:
+        elif not game_map[Position.directional_offset(0, 1)].is_occupied:
             command_queue.append(ship.moveDirection.South)
-        elif not game_map[Position.directional_offset(West)].is_occupied:
+        elif not game_map[Position.directional_offset(-1, 0)].is_occupied:
             command_queue.append(ship.moveDirection.West)
-        elif not game_map[Position.directional_offset(East)].is_occupied:
+        elif not game_map[Position.directional_offset(1, 0)].is_occupied:
             command_queue.append(ship.moveDirection.East)
         else:
             command_queue.append(ship.stay_still())
@@ -137,6 +137,7 @@ while True:
 
     # Send your moves back to the game environment, ending this turn.
     game.end_turn(command_queue)
+
 
 
 
