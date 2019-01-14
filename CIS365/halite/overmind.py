@@ -4,43 +4,58 @@ from hlt.positions import Direction, Position
 import random
 import logging
 
-class Individual(object):
+
+class IndividualHaliteMuncher(object):
     def __init__(self):
-        self.fitness = -100
-        self.genes = []
-        self.gene_length = 8
+        self.halite = 0  # Halite represents our fitness
         self.sight_distance = random.randint(1, 33)
         self.max_halite_move = random.randint(0, 1001)
         self.max_halite_return = random.randint(0, 1001)
-        self.halite_so_far = 0
+        self.ships_to_produce = random.randint(0, 101)
+        self.stop_spawning = random.randint(0, 501)
+        self.attribute_vector = [
+                self.sight_distance,
+                self.max_halite_move,
+                self.max_halite_return,
+                self.ships_to_produce,
+                self.stop_spawning
+                ]
 
     def calculate_fitness(self):
-        for i in range(self.gene_length):
-            if self.genes[i] == 1:
-                self.fitness += 1
-
-class Population(object):
-    def __inif__(self):
-        self.population_size = 10
-        self.inidividuals = [Individual() for _ in range(self.population_size)]
-        self.fittest = 0
-
-    def get_fittest():
-        max_fitness = -29183710
-        max_fitness_idx = 0
-
-        for i in range(len(self.inidividuals)):
-            indiv_fitness = self.inidividuals[i].fitness
-            if max_fitness <= indiv_fitness:
-                max_fitness = inidiv_fitness
-                max_fitness_idx = i
+        '''
+        The higher the halite, the higher the fitness, baby!
+        '''
+        return self.halite
 
 
 class InterGalacticHaliteMuncher(object):
-    def __init__(self):
-        self.population = Population()
+    def __init__(self, pop_size, generations):
+        self.population = [IndividualHaliteMuncher()
+                           for _ in range(self.pop_size)]
         self.fittest = None
         self.generation_count = 0
 
-    def selection():
-        fittest = self.population.get_fittest()
+    def get_fittest(self, pop: list)->IndividualHaliteMuncher:
+        best = None
+        for individual in pop:
+            if best is not None:
+                best = max(best.calculate_fitness(),
+                           individual.calculate_fitness())
+            else:
+                best = individual
+        return best
+
+    def selection(self, ratio: int = 2)->list:
+        the_chosen_ones = []
+        pop_tmp = self.population
+
+        # Get amount based on ratio
+        for _ in range(int(len(pop_tmp)/ratio)):
+            local_fittest = self.get_fittest(pop_tmp)
+            the_chosen_ones.append(local_fittest)
+            pop_tmp.remove(local_fittest)
+
+        return the_chosen_ones
+
+    def mutation(self, mutation_point: int = int(5/3)):
+        pass
