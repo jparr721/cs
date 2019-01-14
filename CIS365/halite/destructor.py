@@ -64,8 +64,8 @@ while True:
     me = game.me
     game_map = game.game_map
 
-    me = BUTTHOLE_SHREDDER.game.me
-    game_map = BUTTHOLE_SHREDDER.game.game_map
+    me = game.me
+    game_map = game.game_map
 
     # A command queue holds all the commands you will run this turn. You build this list up and submit it at the
     #   end of the turn.
@@ -132,12 +132,11 @@ while True:
 
     # If the game is in the first 300 turns and you have enough halite, spawn a ship.
     # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
-    if BUTTHOLE_SHREDDER.game.turn_number <= 300 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
+    if game.turn_number <= 300 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
         command_queue.append(me.shipyard.spawn())
 
     # Send your moves back to the game environment, ending this turn.
-    BUTTHOLE_SHREDDER.game.end_turn(command_queue)
-
+    game.end_turn(command_queue)
 
 
 
