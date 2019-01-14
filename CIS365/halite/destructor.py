@@ -2,7 +2,7 @@
 
 import hlt
 from hlt import constants
-from hlt.positions import Direction, Position
+from hlt.positionals import Direction, positionals
 import random
 import logging
 
@@ -10,56 +10,59 @@ import logging
 BAD_COORDINATES = [(1, 1), (1, -1), (-1, 1)]
 
 
-class Annihilator(object):
-    def __init__(self):
-        self.game = hlt.Game()
-        self.game.read("ANNIHILATOR")
-        self.game_map = self.game.game_map
-        self.me = self.game.me
-        self.direction = Direction()
-        self.ships = self.me.get_ships()
-        self.dropoff_count = 0
-        self.ship_locations = {}
-        logging.info('Bot created, ID is: {}.'.format(self.game.my_id))
 
-    def find_drop(self, position, array):
-        x = 1000
-        for val in array:
-            y = self.game_map.calculate_distance(position, array)
-            if y < x:
-                x = y
-        return x
+def __init__(self):
+    self.game = hlt.Game()
+    self.game.read("ANNIHILATOR")
+    self.game_map = self.game.game_map
+    self.me = self.game.me
+    self.direction = Direction()
+    self.ships = self.me.get_ships()
+    self.dropoff_count = 0
+    self.ship_locations = {}
+    logging.info('Bot created, ID is: {}.'.format(self.game.my_id))
 
-    def adjust_ship_map(self, ship, x, y):
-        self.ship_locations[ship.id] = (x, y)
+def find_drop(self, position, array):
+    x = 1000
+    for val in array:
+        y = self.game_map.calculate_distance(position, array)
+        if y < x:
+            x = y
+    return x
 
-    def make_dropoff(self):
-        if self.dropoff_count == 6:
-            return
-        # Max 6 dropoff points globalls
-        self.dropoff_count += 1
+def adjust_ship_map(self, ship, x, y):
+    self.ship_locations[ship.id] = (x, y)
 
-    def check_direction(self, coordinates):
-        available_directions = []
-        if coordinates not in BAD_COORDINATES:
-            available_directions.append(self.direction.convert(coordinates))
+def make_dropoff(self):
+    if self.dropoff_count == 6:
+        return
+    # Max 6 dropoff points globalls
+    self.dropoff_count += 1
 
-    def reload_ships(self):
-        self.ships = self.me.get_ships()
+def check_direction(self, coordinates):
+    available_directions = []
+    if coordinates not in BAD_COORDINATES:
+        available_directions.append(self.direction.convert(coordinates))
 
-    def check_radius(self, ship, ship_locations):
-        x, y = (ship.position.x, ship.position.y)
-        for x_i in range(-1, 2):
-            for y_i in range(-1, 2):
-                new_direction = [x + x_i, y + y_i]
-                cardinal_direction = (x_i, y_i)
-                # IMPLEMENT DICT VALUE CHECK HERE
+def reload_ships(self):
+    self.ships = self.me.get_ships()
 
-game.ready("rekbot")
+def check_radius(self, ship, ship_locations):
+    x, y = (ship.position.x, ship.position.y)
+    for x_i in range(-1, 2):
+        for y_i in range(-1, 2):
+            new_direction = [x + x_i, y + y_i]
+            cardinal_direction = (x_i, y_i)
+            # IMPLEMENT DICT VALUE CHECK HERE
+
+game = hlt.Game()
+game.ready("MyPythonBot")
 logging.info("Player ID is {}.".format(game.my_id))
 
 while True:
-    BUTTHOLE_SHREDDER = Annihilator()
+    game.update_frame()
+    me = game.me
+    game_map = game.game_map
 
     me = game.me
     game_map = game.game_map
@@ -79,12 +82,12 @@ while True:
             ship_status[ship.id] = "exploring"
 
     ##This splits the ships into two random groups.  Group true searches east and false searches west.
-        if ship.group != True or ship.group != False:
-            z = random.randint(1,2)
-            if z == 1:
-                ship.group = True
-            else:
-                ship.group = False
+#        if ship.group != True or ship.group != False:
+#            z = random.randint(1,2)
+#            if z == 1:
+#                ship.group = True
+#            else:
+#                ship.group = False
 
         if ship_status[ship.id] == "returning":
             if ship.position == me.shipyard.position:
@@ -103,25 +106,29 @@ while True:
 
     ##Currently this is what determins which way the ship moves.  Would like to improve it to spawn drop off's
     # if it's far enough from another dropoff and has enough hlt.
-        if ship.group == True:
-            if not game_map[position.directional_offset(West)].is_occupied:
-                command_queue.append(ship.moveDirection.West)
-            if not game_map[position.directional_offset(North)].is_occupied:
-                command_queue.append(ship.moveDirection.North)
-            if not game_map[position.directional_offset(South)].is_occupied:
-                command_queue.append(ship.moveDirection.South)
-            else:
-                command_queue.append(ship.stay_still())
+#        if ship.group == True:
+#            if not game_map[position.directional_offset(West)].is_occupied:
+#                command_queue.append(ship.moveDirection.West)
+#            if not game_map[position.directional_offset(North)].is_occupied:
+#                command_queue.append(ship.moveDirection.North)
+#            if not game_map[position.directional_offset(South)].is_occupied:
+#                command_queue.append(ship.moveDirection.South)
+#            else:
+#                command_queue.append(ship.stay_still())
+                
+                
+        if not positionals.directional_offset(North).is_occupied:
+            command_queue.append(ship.moveDirection.North)
+        elif not game_map[position.directional_offset(South)].is_occupied:
+            command_queue.append(ship.moveDirection.South)
+        elif not game_map[position.directional_offset(West)].is_occupied:
+            command_queue.append(ship.moveDirection.West)
+        elif not game_map[position.directional_offset(East)].is_occupied:
+            command_queue.append(ship.moveDirection.East)
+        else:
+            command_queue.append(ship.stay_still())
 
-        if ship.group == False:
-            if not game_map[position.directional_offset(East)].is_occupied:
-                command_queue.append(ship.moveDirection.East)
-            if not game_map[position.directional_offset(South)].is_occupied:
-                command_queue.append(ship.moveDirection.South)
-            if not game_map[position.directional_offset(North)].is_occupied:
-                command_queue.append(ship.moveDirection.North)
-            else:
-                command_queue.append(ship.stay_still())
+       
 
     # If the game is in the first 300 turns and you have enough halite, spawn a ship.
     # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
@@ -131,10 +138,6 @@ while True:
     # Send your moves back to the game environment, ending this turn.
     game.end_turn(command_queue)
 
-
-    ship.position.directional_offset(test_direction)
-    position.get_surrounding_cardinals()
-    game_map[position].halite_amount
 
 
 
