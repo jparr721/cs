@@ -60,35 +60,19 @@ game = hlt.Game()
 game.ready("MyPythonBot")
 logging.info("Player ID is {}.".format(game.my_id))
 
+
 def make_move(ship, move_vector): 
-    valid_move = False 
     tmp_vec = []
     for move in move_vector:
-        if not game_map[ship.position.directional_offset(move)].is_occupied:
-            tmp_vec = copy.deepcopy(move_vector)
+        tmp_vec = copy.deepcopy(move_vector)
+        if game_map[ship.position.directional_offset(move)].is_occupied:
             tmp_vec.remove(move)
-            valid_move = True
             
-    if valid_move:
+    if tmp_vec:
         return random.choice(tmp_vec)
 
     return Direction.Still
 
-#        
-#        if not game_map[ship.position.directional_offset(Direction.North)].is_occupied:
-#            tmp_vec = copy.deepcopy(move_vector)
-#            del tmp_vec(Direction.North)
-#            return random.choice(tmp_vec)
-#        elif not game_map[ship.position.directional_offset(Direction.South)].is_occupied:
-#            return (ship.move(Direction.South))
-#        elif not game_map[ship.position.directional_offset(Direction.West)].is_occupied:
-#            return (ship.move(Direction.West))
-#        elif not game_map[ship.position.directional_offset(Direction.East)].is_occupied:
-#            return (ship.move(Direction.East))
-#        else:
-#            return (ship.stay_still())
-
-    
 
 while True:
     game.update_frame()
@@ -136,17 +120,6 @@ while True:
         best_move = make_move(ship, move_vector)
         logging.info('BEST MOVE: {}'.format(best_move))
         command_queue.append(ship.move(best_move))
-#        if not game_map[ship.position.directional_offset(Direction.North)].is_occupied:
-#            command_queue.append(ship.move(Direction.North))
-#        elif not game_map[ship.position.directional_offset(Direction.South)].is_occupied:
-#            command_queue.append(ship.move(Direction.South))
-#        elif not game_map[ship.position.directional_offset(Direction.West)].is_occupied:
-#            command_queue.append(ship.move(Direction.West))
-#        elif not game_map[ship.position.directional_offset(Direction.East)].is_occupied:
-#            command_queue.append(ship.move(Direction.East))
-#        else:
-#            command_queue.append(ship.stay_still())
-
        
 
     # If the game is in the first 300 turns and you have enough halite, spawn a ship.
