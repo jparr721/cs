@@ -2,6 +2,7 @@
 
 import hlt
 from hlt import constants
+from hlt import player
 from hlt.positionals import Direction, Position
 import random
 import copy
@@ -23,13 +24,16 @@ def __init__(self):
     self.ship_locations = {}
     logging.info('Bot created, ID is: {}.'.format(self.game.my_id))
 
-def find_drop(self, position, array):
-    x = 1000
+def find_drop(self, array):
+    a = 1000
     for val in array:
-        y = self.game_map.calculate_distance(position, array)
-        if y < x:
-            x = y
-    return x
+        b = game_map.calculate_distance(self, val)
+        if b < a:
+            a = b
+    for val in array:
+        b = game_map.calculate_distance(self, val)
+        if b == a:
+            return val
 
 def adjust_ship_map(self, ship, x, y):
     self.ship_locations[ship.id] = (x, y)
@@ -69,6 +73,12 @@ def make_move(ship, move_vector):
             tmp_vec.remove(move)
             
     if tmp_vec:
+        if ship.halite_amount >= 50:
+            ship_status[ship.id] = "returning"
+            full_move = game_map.naive_navigate(ship, me.shipyard.position)
+            logging.info("FULL MOVE: {}".format(full_move))
+            return full_move
+            
         return random.choice(tmp_vec)
 
     return Direction.Still
@@ -94,31 +104,17 @@ while True:
         if ship.id not in ship_status:
             ship_status[ship.id] = "exploring"
 
-    ##This splits the ships into two random groups.  Group true searches east and false searches west.
-#        if ship.group != True or ship.group != False:
-#            z = random.randint(1,2)
-#            if z == 1:
-#                ship.group = True
-#            else:
-#                ship.group = False
 
         if ship_status[ship.id] == "returning":
             if ship.position == me.shipyard.position:
                 ship_status[ship.id] = "exploring"
-            #else:
-                #move = game_map.naive_navigate(ship, find_drop(me.shipyard.position, me.get_dropoffs())
-                #command_queue.append(ship.move(move))
+
 
         elif ship.halite_amount >= constants.MAX_HALITE / 4:
             ship_status[ship.id] = "returning"
 
-        if ship.is_full:
-            #move = game_map.naive_navigate(ship, find_drop(me.shipyard.position, me.get_dropoffs())
-            #command_queue.append(ship.moveDirection(Direction.move))
-            ship_status[ship_id] = "returning"
         
         best_move = make_move(ship, move_vector)
-        logging.info('BEST MOVE: {}'.format(best_move))
         command_queue.append(ship.move(best_move))
        
 
