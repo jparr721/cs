@@ -1,0 +1,45 @@
+\documentclass[11pt]{apa6}
+
+\usepackage{listings}
+\usepackage{graphicx}
+
+\begin{document}
+\title{C++ Optimized Linear and Polynomial Regression}
+\author{Jarred Parr}
+\affiliation{}
+\date{January 2019}
+\maketitle
+
+\section{Introduction}
+Linear regression sits as one of the key introductory problems solved in introductory machine learning coursers, this project is no exception. The goal of this project was the implement linear regression in a unique way that would
+hopefully be seen as an improvement over the well-known approaches. C++ was used to compare how the gcc compiler handles advanced implementations. Vector math and other such operations can be computationally intensive. On a
+standard Intel CPU with no hyper-threading, I tasked myself with seeing just how much I could squeeze out of this program via analysis of the hot-path and compiler optimization options.
+
+\section{Program Architecture}
+Architecturally, many notes were taken from the high-frequency trading practices. Liberal use of the STL was able to promote significant code speedup in some places, especially in the linear trend line case. Observation of this code
+particularly around lines 31-37, the long block of const double assignments, shows how powerful the STL has gotten in modern C++. I was able to shrink many cumbersome for loops and hard-to-read expressions into simple and easy to
+interpret one-line expressions. The $x^2$ calculation and the $xy$ pair calculations were able to be extremely heavily optimized through the $std::inner_product()$ function. Instead of running nested loops to perform the square
+calculation, this code run time remains the same, but the code overhead reduction of taking away the compiler's need to perform inference on what the code is doing allowed for a speedup of about 1.74. This was verified by running
+the for-loop implementation against the STL-heavy implementation inside of $godbolt.org$ and also with the Google code profiler. For the polynomial regression, performing the complex linear algebra of acquiring an upper triangular
+matrix, then back-substituting the values down the chain is computationally intensive. Great care was taken to remove ambiguity from the compiler to allow it to run as efficiently as possible, but the lack of STL-magic being able
+to save me made it hard to optimize heavily. Some routines were scrubbed after inspection in the $godbolt.org$ assembly code inspector and the overall assembly code shrank considerably under gcc's highest optimization $(-O3)$, but
+it still only gave a modest speedup of 1.2.
+
+\section{Growth Areas}
+Linear algebra, as it stands, is pretty straightforward. Matrix math and computations are not too difficult where it would be unwieldy to the faint of heart, but not too trivial that it is unnecessary to have a grasp of the needed skills. However,
+this project sought to stretch my understanding of doing these operations raw (no library support), and in a language like C++, it was definitely a bit of an uphill struggle to say the least. Many times during optimization, especially for my matrix
+normalization process, I found that there was a great deal of debugging that had to be done to properly access indices of matrices under certain circumstances. To be more granular, there were many specific cases, like when trying to handle the
+detection of upper triangular matrices, which would then trigger the next step in simplifying the linear system. It isn't as simple as saying $if (matrix == identity_matrix) { exit; }$, instead, guards needed to be implemented to check for $terminal$
+conditions or, more simply, a point where the matrix could no longer be simplified. Since not all matrices simplify to the identity matrix, it was tricky to figure out when a particular matrix had the right values, which then allowed me to perform
+the needed calculations to acquire the coefficients to the polynomial equation. It definitely took much longer than I had wanted, but it was very enlightening to apply the math advice of my current linear algebra professor to these unique problems.
+
+\section{Managing Data}
+Data!
+
+\section{Source Code}
+All source code is provided at the end of this document to maintain formatting.
+
+\section{Conclusion}
+This project taught me a lot about micro-optimization. Since Linear Regression is a fairly straightforward process, it can be easy to write it off as simply another frivelous exercise. However, digging into more advanced classification techniques
+and expansion areas on the subject at hand can facilitate some interesting results and hypothesis.
+\end{document}
