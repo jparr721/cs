@@ -1,4 +1,34 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn import linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+
+
+def lin_reg():
+    frame = pd.read_csv('bin/downloads-test.csv')
+    frame = frame.dropna()
+    x = frame['hours']
+    y = frame['downloads']
+    x = list(x)
+    y = list(y)
+
+    # train
+    z = np.polyfit(x, y, 3)
+    f = np.poly1d(z)
+    print(f)
+
+    x_new = np.linspace(x[0], x[-1], 50)
+    y_new = f(x_new)
+
+    plt.plot(x, y, 'o', x_new, y_new)
+    plt.show()
+
+    # body_reg = linear_model.LinearRegression()
+    # body_reg.fit(x, y)
+    # plt.scatter(x, y)
+    # plt.plot(x, body_reg.predict(x))
+    # plt.show()
 
 
 def visualize():
@@ -27,4 +57,4 @@ def visualize():
         print(results)
 
 
-visualize()
+lin_reg()
