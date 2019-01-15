@@ -8,14 +8,15 @@ from sklearn.metrics import mean_squared_error, r2_score
 def lin_reg():
     frame = pd.read_csv('bin/downloads-test.csv')
     frame = frame.dropna()
-    print(frame)
     x = frame['hours']
     y = frame['downloads']
+    x = list(x)
+    y = list(y)
 
     # train
-    print(np.polyfit(x, y, 2))
     z = np.polyfit(x, y, 3)
     f = np.poly1d(z)
+    print(f)
 
     x_new = np.linspace(x[0], x[-1], 50)
     y_new = f(x_new)
