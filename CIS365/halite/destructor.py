@@ -10,6 +10,8 @@ import logging
 
 
 BAD_COORDINATES = [(1, 1), (1, -1), (-1, 1)]
+drop_locations = []
+home_drop = True
 
 
 
@@ -23,26 +25,36 @@ def __init__(self):
     self.dropoff_count = 0
     self.ship_locations = {}
     logging.info('Bot created, ID is: {}.'.format(self.game.my_id))
-
-def find_drop(self, array):
+    
+def find_drop(ship):
     a = 1000
-    for val in array:
-        b = game_map.calculate_distance(self, val)
+    for val in drop_locations:
+        b = game_map.calculate_distance(ship, val)
         if b < a:
             a = b
-    for val in array:
-        b = game_map.calculate_distance(self, val)
+    for val in drop_locations:
+        b = game_map.calculate_distance(ship, val)
         if b == a:
             return val
-
+        
+def make_drop(ship):
+    if len(drop_locations) > 3:
+        return
+    else:
+        return True
+        
 def adjust_ship_map(self, ship, x, y):
     self.ship_locations[ship.id] = (x, y)
 
-def make_dropoff(self):
-    if self.dropoff_count == 6:
+def make_dropoff(self, ship):
+    if self.dropoff_count == 4:
         return
-    # Max 6 dropoff points globalls
-    self.dropoff_count += 1
+    # Max 4 dropoff points globalls
+    
+    if make_drop:
+        drop_locations.append(ship.position)
+        ship.make_dropoff()
+    return
 
 def check_direction(self, coordinates):
     available_directions = []
@@ -65,20 +77,21 @@ game.ready("MyPythonBot")
 logging.info("Player ID is {}.".format(game.my_id))
 
 
-def make_move(ship, move_vector):
+def make_move(ship, move_vector): 
     tmp_vec = []
     for move in move_vector:
         tmp_vec = copy.deepcopy(move_vector)
         if game_map[ship.position.directional_offset(move)].is_occupied:
             tmp_vec.remove(move)
-
+            
     if tmp_vec:
         if ship.halite_amount >= 50:
             ship_status[ship.id] = "returning"
-            full_move = game_map.naive_navigate(ship, me.shipyard.position)
+            full_move = game_map.naive_navigate(ship, find_drop(ship.position))
+            #full_move = game_map.naive_navigate(ship, me.shipyard.position)
             logging.info("FULL MOVE: {}".format(full_move))
             return full_move
-
+            
         return random.choice(tmp_vec)
 
     return Direction.Still
@@ -142,6 +155,10 @@ while True:
     move_locations = []
     #move_vector = [Direction.North, Direction.South, Direction.West, Direction.East]
 
+    if home_drop:
+        drop_locations.append(me.shipyard.position)
+        home_drop = False
+    
     for ship in me.get_ships():
         x, y = ship.position.x, ship.position.y
         ship_locations[ship.id] = [x,y]
