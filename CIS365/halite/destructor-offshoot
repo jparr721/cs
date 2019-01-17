@@ -141,55 +141,6 @@ def find_shipyard_direction(ship):
         
     else:
         return False
- 
-
-def make_move(ship, move_vector): 
-    tmp_vec = copy.deepcopy(move_vector)
-    for move, diagonal in zip(move_vector, diagonals):
-        if game_map[ship.position.directional_offset(move)].is_occupied:
-            if game_map[ship.position.directional_offset(diagonal)].is_occupied:  
-                tmp_vec = [value for value in check_diag(diagonal)]
-            else:
-                tmp_vec.remove(move)
-                
-            
-    if tmp_vec:
-        if ship.halite_amount >= constants.MAX_HALITE * 0.3:
-            ship_status[ship.id] = "returning"
-            full_move = game_map.naive_navigate(ship, find_drop(ship.position))
-            logging.info("FULL MOVE: {}".format(full_move))
-            return full_move
-            
-        if not ship_status[ship.id] == "returning":
-            var = find_shipyard_direction(ship)
-            if var != False:
-                if var == "North":
-                    if "North" in tmp_vec:
-                        tmp_vec.remove(Direction.North)
-                        
-                if var == "South":
-                    if "South" in tmp_vec:
-                        tmp_vec.remove(Direction.South)
-
-                if var == "East":
-                    if "East" in tmp_vec:
-                        tmp_vec.remove(Direction.East)
-                        
-                if var == "West":
-                    if "West" in tmp_vec:
-                        tmp_vec.remove(Direction.West)
-            
-        return random.choice(tmp_vec)
-
-    return Direction.Still
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -222,13 +173,7 @@ def make_smart_move(ship, move_vector):
             
 
     return Direction.Still
-    
-    
-    
-    
-    
-    
-    
+
     
 game = hlt.Game()
 game.ready("ANNIHILATOR")
@@ -266,8 +211,6 @@ while True:
         elif ship.halite_amount >= constants.MAX_HALITE * 0.3:
             ship_status[ship.id] = "returning"
 
-
-#        best_move = make_move(ship, move_vector)
         best_move = make_smart_move(ship, move_vector)
         command_queue.append(ship.move(best_move))
 
