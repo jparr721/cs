@@ -29,8 +29,8 @@ def check_ship_nearby(move_vector):
     tmp_vec = copy.deepcopy(move_vector)
     for move in move_vector:
         if game_map[me.shipyard.position.directional_offset(move)].is_occupied:
-            tmp_vec.remove(move)
-    return tmp_vec
+            return True
+    return False
     
     
 def find_drop(ship):
@@ -113,7 +113,7 @@ def make_move(ship, move_vector):
                 
             
     if tmp_vec:
-        if ship.halite_amount >= constants.MAX_HALITE * 0.5:
+        if ship.halite_amount >= constants.MAX_HALITE * 0.3:
             ship_status[ship.id] = "returning"
             full_move = game_map.naive_navigate(ship, find_drop(ship.position))
             logging.info("FULL MOVE: {}".format(full_move))
@@ -123,13 +123,20 @@ def make_move(ship, move_vector):
             var = find_shipyard_direction(ship)
             if var != False:
                 if var == "North":
-                    tmp_vec.remove(Direction.North)
+                    if "North" in tmp_vec:
+                        tmp_vec.remove(Direction.North)
+                        
                 if var == "South":
-                    tmp_vec.remove(Direction.South)
+                    if "South" in tmp_vec:
+                        tmp_vec.remove(Direction.South)
+
                 if var == "East":
-                    tmp_vec.remove(Direction.East)
+                    if "East" in tmp_vec:
+                        tmp_vec.remove(Direction.East)
+                        
                 if var == "West":
-                    tmp_vec.remove(Direction.West)
+                    if "West" in tmp_vec:
+                        tmp_vec.remove(Direction.West)
             
         return random.choice(tmp_vec)
 
@@ -167,7 +174,7 @@ while True:
                 ship_status[ship.id] = "exploring"
 
 
-        elif ship.halite_amount >= constants.MAX_HALITE * 0.5:
+        elif ship.halite_amount >= constants.MAX_HALITE * 0.3:
             ship_status[ship.id] = "returning"
 
 
@@ -180,8 +187,8 @@ while True:
     # If the game is in the first 300 turns and you have enough halite, spawn a ship.
     # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
     if game.turn_number % 6 == 0 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
-        #if not check_ship_nearby(move_vector):
-        command_queue.append(me.shipyard.spawn())
+        if not check_ship_nearby(move_vector):
+            command_queue.append(me.shipyard.spawn())
 
     # Send your moves back to the game environment, ending this turn.
     game.end_turn(command_queue)
