@@ -153,7 +153,7 @@ while True:
     command_queue = []
     ship_status = {}
     move_locations = []
-    #move_vector = [Direction.North, Direction.South, Direction.West, Direction.East]
+    move_vector = [Direction.North, Direction.South, Direction.West, Direction.East]
 
     if home_drop:
         drop_locations.append(me.shipyard.position)
@@ -176,26 +176,26 @@ while True:
                 ship_status[ship.id] = "exploring"
 
 
-        elif ship.halite_amount >= constants.MAX_HALITE / 4:
+        elif ship.halite_amount >= constants.MAX_HALITE * 0.8:
             ship_status[ship.id] = "returning"
 
 
-        best_move = make_move(ship, valid_move_list)
-        move_loc_temp = ship_locations[ship.id]
-        if best_move == Direction.North:
-            move_loc_temp[1] = move_loc_temp[1] - 1
-            move_locations.append(move_loc_temp)
-        elif best_move == Direction.West:
-            move_loc_temp[0] = move_loc_temp[0] - 1
-            move_locations.append(move_loc_temp)
-        elif best_move == Direction.East:
-            move_loc_temp[0] = move_loc_temp[0] + 1
-            move_locations.append(move_loc_temp)
-        elif best_move == Direction.South:
-            move_loc_temp[1] = move_loc_temp[1] + 1
-            move_locations.append(move_loc_temp)
-        else:
-            move_locations.append(ship_locations[ship.id])
+        best_move = make_move(ship, move_vector)
+#        move_loc_temp = ship_locations[ship.id]
+#        if best_move == Direction.North:
+#            move_loc_temp[1] = move_loc_temp[1] - 1
+#            move_locations.append(move_loc_temp)
+#        elif best_move == Direction.West:
+#            move_loc_temp[0] = move_loc_temp[0] - 1
+#            move_locations.append(move_loc_temp)
+#        elif best_move == Direction.East:
+#            move_loc_temp[0] = move_loc_temp[0] + 1
+#            move_locations.append(move_loc_temp)
+#        elif best_move == Direction.South:
+#            move_loc_temp[1] = move_loc_temp[1] + 1
+#            move_locations.append(move_loc_temp)
+#        else:
+#            move_locations.append(ship_locations[ship.id])
 
         command_queue.append(ship.move(best_move))
 
@@ -204,7 +204,7 @@ while True:
 
     # If the game is in the first 300 turns and you have enough halite, spawn a ship.
     # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
-    if game.turn_number <= 300 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
+    if game.turn_number % 6 == 0 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
         command_queue.append(me.shipyard.spawn())
 
     # Send your moves back to the game environment, ending this turn.
