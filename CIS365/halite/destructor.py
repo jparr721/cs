@@ -87,16 +87,16 @@ def check_diag(position):
     
 def find_shipyard_direction(ship):
     if game_map[me.shipyard.position] == game_map[ship.position.directional_offset(Direction.North)]:
-        return Direction.North
+        return "North"
         
     if game_map[me.shipyard.position] == game_map[ship.position.directional_offset(Direction.South)]:
-        return Direction.South
+        return "South"
         
     if game_map[me.shipyard.position] == game_map[ship.position.directional_offset(Direction.East)]:
-        return Direction.East
+        return "East"
         
     if game_map[me.shipyard.position] == game_map[ship.position.directional_offset(Direction.West)]:
-        return Direction.West
+        return "West"
         
     else:
         return False
@@ -122,7 +122,14 @@ def make_move(ship, move_vector):
         if not ship_status[ship.id] == "returning":
             var = find_shipyard_direction(ship)
             if var != False:
-                tmp_vec.remove(var)
+                if var == "North":
+                    tmp_vec.remove(Direction.North)
+                if var == "South":
+                    tmp_vec.remove(Direction.South)
+                if var == "East":
+                    tmp_vec.remove(Direction.East)
+                if var == "West":
+                    tmp_vec.remove(Direction.West)
             
         return random.choice(tmp_vec)
 
