@@ -109,9 +109,10 @@ while True:
                 'next_move': ship.position,
                 'ship_status': 'exploring'
             }
+        make_move(ship, ya_boy, issa_map)
 
     for ship in ya_boy.get_ships():
-        make_destination(ship, issa_map, ya_boy)
+        make_move(ship, issa_map, ya_boy)
 
     if game.turn_number <= 300 and \
         ya_boy.halite_amount >= constants.SHIP_COST \
