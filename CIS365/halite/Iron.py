@@ -166,13 +166,13 @@ while True:
             command_queue.append(ya_boy.shipyard.spawn())
 
     for ship_id in ship_locations:
-        # check_position(ship_id)
+        check_position(ship_id, True)
         logging.info(
             'SHIP INFO: {}'.format(ship_locations[ship_id]['next_move']))
         command_queue.append(
                 ship_locations[ship_id]['ship'].move(
                     issa_map.naive_navigate(
-                        ship_locations[ship_id]['ship'],
+                        ship_locations[ship_id]['ship'], 
                         ship_locations[ship_id]['next_move'])))
 
     game.end_turn(command_queue)
