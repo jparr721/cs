@@ -82,7 +82,7 @@ def make_move(ship, ya_boy, issa_map):
     if ship.halite_amount >= constants.MAX_HALITE * 0.7:
         ship_locations[ship.id]['ship_status'] = 'returning'
         logging.info('Ship: {} going home'.format(ship.id))
-        ship_locations[ship.id]['moving_to'] = ya_boy.shipyard.positon
+        ship_locations[ship.id]['moving_to'] = ya_boy.shipyard.position
 
     if ship_locations[ship.id]['ship_status'] == 'exploring':
         # dont leave if halite high
