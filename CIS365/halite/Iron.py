@@ -118,4 +118,7 @@ while True:
             if check_ship_nearby(ship_id, ya_boy):
                 command_queue.append(ya_boy.shipyard.spawn())
 
+    for ship_id in ship_locations:
+        command_queue.append(ship_id['ship'].move(ship_id['next_move']))
+
     game.end_turn(command_queue)
