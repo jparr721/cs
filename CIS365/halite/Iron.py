@@ -89,7 +89,12 @@ def make_move(ship, ya_boy, issa_map):
         if issa_map[ship.position].halite_amount >= OPTIMUM_HALITE_SATURATION:
             ship_locations[ship.id]['next_move'] = Direction.Still
         else:
-            max_halite = check_perimeter(issa_map)[1]
+            max_halite = None
+            perim = check_perimeter(issa_map)
+            if len(perim) > 1:
+                max_halite = perim[1]
+            else:
+                max_halite = ship.position
             logging.info('MAKE_MOVE: {}'.format(max_halite[1]))
             ship_locations[ship.id]['next_move'] = max_halite[1]
 
