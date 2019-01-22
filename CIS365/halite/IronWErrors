@@ -65,8 +65,7 @@ def check_collision(ship, move, issa_map, ya_boy):
         the_ship = ship_locations[ship_id]['ship']
         the_next_move = ship_locations[ship_id]['next_move']
         logging.info('NEXT MOVE: {} {}'.format(the_next_move, move))
-        if the_next_move == move \
-                and the_ship != ship:
+        if the_next_move == move and the_ship != ship:
             continue
         else:
             return False
@@ -131,8 +130,6 @@ def make_move(ship, ya_boy, issa_map):
             spots = check_perimeter(issa_map)
             best_spot = find_closest_halite(ship, issa_map, ya_boy, spots)
             logging.info("BEST SPOT: {}".format(best_spot))
-            temp_spot = make_destination(ship, best_spot, issa_map, ya_boy)
-            logging.info("NEW SPOT: {}".format(temp_spot))
             ship_locations[ship.id]['next_move'] = make_destination(ship, best_spot, issa_map, ya_boy)
 
 
