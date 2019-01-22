@@ -11,6 +11,10 @@ ship_locations = {}
 # Saturation 2 is better though
 OPTIMUM_HALITE_SATURATION = constants.MAX_HALITE / 2
 
+# Sight distance
+SIGHT_DISTANCE = 10
+
+
 def check_position(ship_id, make_position=False):
     ref = ship_locations[ship_id]['next_move']
     if isinstance(ref, Position):
@@ -23,25 +27,37 @@ def check_position(ship_id, make_position=False):
         ship_locations[ship_id]['next_move'] = Position(ref[0], ref[1])
         return
 
+
 def check_perimeter(game_map):
+    global OPTIMUM_HALITE_SATURATION
     spots = []
-    # search all cells for halite
-    # Possibly optimize by robot spot
-    # for better performance
     for row in range(game_map.height):
         for col in range(game_map.width):
             pos = Position(row, col)
             if game_map[pos].halite_amount >= OPTIMUM_HALITE_SATURATION:
                 spots.append(game_map[pos])
-                
-    # Get only the data we need from the list
-    spots = [(x.halite_amount, x.position) for x in spots]
+    if len(spots) == 0:
+        logging.info('Lowering global threshold')
+        OPTIMUM_HALITE_SATURATION = OPTIMUM_HALITE_SATURATION / 2
 
-    # Get top 5 to keep things clean
-    if len(spots) > 5:
-        return sorted(spots, key=lambda i: i[0], reverse=True)[:5]
-    else:
-        return sorted(spots, key=lambda i: i[0], reverse=True)
+    return spots
+
+
+def find_closest_halite(ship, issa_map, ya_boy, perimeter):
+    if len(perimeter) == 0:
+        return Direction.Still
+
+    distance = 100000000000000
+    optimum_location = Position(0, 0)
+
+    for location in perimeter:
+        calculated_distance = issa_map.calculate_distance(
+                ship.position, location.position)
+        if calculated_distance < distance:
+            optimum_location = location
+            distance = min(calculated_distance, distance)
+
+    return optimum_location
 
 
 def check_collision(ship, move, issa_map, ya_boy):
@@ -58,45 +74,47 @@ def check_collision(ship, move, issa_map, ya_boy):
     return True
 
 
-def make_destination(ship, issa_map, ya_boy):
+def make_destination(ship, destination, issa_map, ya_boy):
     ''' Finds the destination'''
 
     # If we don't have a lot of halite
-    if ship.halite_amount >= OPTIMUM_HALITE_SATURATION * .2:
-        ship_locations[ship.id]['moving_to'] = Direction.Still
+    if ship.halite_amount <= issa_map[ship.position].halite_amount * 0.1:
+        return Direction.Still
 
     possible_moves = issa_map.get_unsafe_moves(
             ship.position, ship_locations[ship.id]['moving_to'])
 
     for move in possible_moves:
         if not check_collision(ship, move, issa_map, ya_boy):
-            ship_locations[ship.id]['next_move'] = Position(move[0], move[1])
-            break
+            logging.info('Move: {}'.format(move))
+            return Position(move[0], move[1])
         else:
             continue
     # No valid moves? Stand still and suck some halite
-    ship_locations[ship.id]['next_move'] = Direction.Still
+    return Direction.Still
 
 
 def make_move(ship, ya_boy, issa_map):
-    if ship.halite_amount >= constants.MAX_HALITE * 0.7:
+    if ship.halite_amount > 900 and \
+            ship_locations['ship_status'] == 'exploring':
         ship_locations[ship.id]['ship_status'] = 'returning'
-        logging.info('Ship: {} going home'.format(ship.id))
         ship_locations[ship.id]['moving_to'] = ya_boy.shipyard.position
 
+    if ship_locations[ship.id]['ship_status'] == 'returning':
+        if issa_map[ship.position].has_structure:
+            ship_locations[ship.id]['ship_status'] = 'exploring'
+            ship_locations[ship.id]['moving_to'] = None
+        else:
+            ship_locations[ship.id]['next_move'] = make_destination(
+                    ship, ya_boy.shipyard.position, issa_map, ya_boy)
     if ship_locations[ship.id]['ship_status'] == 'exploring':
-        # dont leave if halite high
         if issa_map[ship.position].halite_amount >= OPTIMUM_HALITE_SATURATION:
             ship_locations[ship.id]['next_move'] = Direction.Still
         else:
-            max_halite = None
-            perim = check_perimeter(issa_map)
-            if len(perim) > 1:
-                max_halite = perim[1]
-            else:
-                max_halite = ship.position
-            logging.info('MAKE_MOVE: {}'.format(max_halite[1]))
-            ship_locations[ship.id]['next_move'] = max_halite[1]
+            spots = check_perimeter(issa_map)
+            best_spot = find_closest_halite(ship, issa_map, ya_boy, spots)
+            ship_locations[ship.id]['next_move'] = make_destination(
+                    ship, best_spot, issa_map, ya_boy)
 
 
 def check_ship_nearby(ship_id, ya_boy):
@@ -121,7 +139,7 @@ while True:
     for ship_id in ship_locations:
         if not ya_boy.has_ship(ship_id):
             dead_ships.append(ship_id)
-            
+
     for dead_ship in dead_ships:
         del ship_locations[dead_ship]
 
@@ -130,7 +148,7 @@ while True:
         if ship.id not in ship_locations:
             ship_locations[ship.id] = {
                 'ship': ship,
-                'moving_to': Position(0, 0),
+                'moving_to': None,
                 'next_move': ship.position,
                 'ship_status': 'exploring'
             }
@@ -154,13 +172,10 @@ while True:
             command_queue.append(ya_boy.shipyard.spawn())
 
     for ship_id in ship_locations:
-        check_position(ship_id, True)
+        idx = ship_locations[ship_id]['next_move']
         logging.info(
             'SHIP INFO: {}'.format(ship_locations[ship_id]['next_move']))
         command_queue.append(
-                ship_locations[ship_id]['ship'].move(
-                    issa_map.naive_navigate(
-                        ship_locations[ship_id]['ship'], 
-                        ship_locations[ship_id]['next_move'])))
+                ship_locations[ship_id]['ship'].move(idx))
 
     game.end_turn(command_queue)
