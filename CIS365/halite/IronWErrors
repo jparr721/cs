@@ -88,7 +88,20 @@ def make_destination(ship, destination, issa_map, ya_boy):
     for move in possible_moves:
         if not check_collision(ship, move, issa_map, ya_boy):
             logging.info('Move: {}'.format(move))
-            return Position(move[0], move[1])
+            ship_locations[ship.id]['moving_to'] = move
+            if move == (0, 1):
+                return Direction.North
+            
+            if move == (0, -1):
+                return Direction.South
+            
+            if move == (1, 0):
+                return Direction.East
+            
+            if move == (-1, 0):
+                return Direction.West
+#            return move
+#            return Position(move[0], move[1])
     # No valid moves? Stand still and suck some halite
     return Direction.Still
 
@@ -160,12 +173,7 @@ while True:
             }
         make_move(ship, ya_boy, issa_map)
 
-    for ship in ya_boy.get_ships():
-        make_move(ship, ya_boy, issa_map)
-
-    if game.turn_number <= 300 and \
-        ya_boy.halite_amount >= constants.SHIP_COST \
-            and not issa_map[ya_boy.shipyard].is_occupied:
+    if game.turn_number <= 300 and ya_boy.halite_amount >= constants.SHIP_COST and not issa_map[ya_boy.shipyard].is_occupied:
 
         if len(ya_boy.get_ships()) != 0:
             # Make sure no ships are nearby
@@ -178,10 +186,8 @@ while True:
             command_queue.append(ya_boy.shipyard.spawn())
 
     for ship_id in ship_locations:
-        idx = ship_locations[ship_id]['next_move']
-        logging.info(
-            'SHIP INFO: {}'.format(ship_locations[ship_id]['next_move']))
-        command_queue.append(
-                ship_locations[ship_id]['ship'].move(idx))
+        idx = ship_locations[ship_id]['moving_to']
+        logging.info('SHIP INFO: {}'.format(ship_locations[ship_id]['next_move']))
+        command_queue.append(ship_locations[ship_id]['ship'].move(idx))
 
     game.end_turn(command_queue)
