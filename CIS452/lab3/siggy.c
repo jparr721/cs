@@ -17,15 +17,17 @@ void sig_handler(int signum);
 void child_process(pid_t pid) {
   srand(time(NULL));
   // Our random 5 second wait time
-  int random_time = rand() % 6;
-  int choice = rand() % 2;
-  printf("waiting...");
+  for (;;) {
+    int random_time = rand() % 6;
+    int choice = rand() % 2;
+    printf("waiting...");
 
-  sleep(random_time);
-  if (choice == 1)
-    kill(pid, SIGUSR1);
-  else
-    kill(pid, SIGUSR2);
+    sleep(random_time);
+    if (choice == 1)
+      kill(pid, SIGUSR1);
+    else
+      kill(pid, SIGUSR2);
+  }
 }
 
 void sig_handler(int signum) {
@@ -61,5 +63,6 @@ int main(int argc, char** argv) {
     child_process(pid);
   } else {
     printf("Spawned child pid# %d\n", pid);
+    wait(&pid);
   }
 }
