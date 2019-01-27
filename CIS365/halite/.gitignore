@@ -1,0 +1,16 @@
+MyBot
+Makefile
+*.hlt
+*.log
+*~
+*.pyc
+*.pyo
+__pycache__/
+*.class
+*.ipr
+*.iws
+model
+data
+replays
+saved_models
+venv/
