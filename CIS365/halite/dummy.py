@@ -4,7 +4,4 @@ game = hlt.Game()
 game.ready("dummy")
 
 while True:
-    game.end_turn([]) 
-    
-
-
+    game.end_turn([])

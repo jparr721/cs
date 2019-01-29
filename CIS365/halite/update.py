@@ -1,19 +1,9 @@
-import hlt
-from hlt import constants
-from hlt.positionals import Direction
-from hlt.positionals import Position
-import random
-import logging
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 from torch.autograd import Variable
 import torch.optim as optim
-import matplotlib.pyplot as plt
-import random
 import numpy as np
-from itertools import count
 from collections import namedtuple
 import ast
 import sys
@@ -55,7 +45,7 @@ for line in f.readlines():
     raw_data.append(data)
 
 # Sort by ships, turns
-raw_data = sorted(raw_data, key = lambda x: (int(x[0]), int(x[2]), int(x[1])))
+raw_data = sorted(raw_data, key=lambda x: (int(x[0]), int(x[2]), int(x[1])))
 
 for data in raw_data:
     episode, t, sid, reward, sample, state = data
