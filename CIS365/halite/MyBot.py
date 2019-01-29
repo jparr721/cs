@@ -18,6 +18,7 @@ data_path = 'data/batch_data'
 ship_vision_range = 16
 halite_threshold = 500
 rscale = 10
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 '''End Globals'''
 
 
@@ -81,7 +82,10 @@ def select_direction(state):
     ----------
     state - The state of the agent
     '''
-    state = torch.FloatTensor(state).cuda()
+    if DEVICE == 'cuda':
+        state = torch.FloatTensor(state).cuda()
+    else:
+        state = torch.FloatTensor(state)
     state = Variable(state)
     probs = policy_net(state)
     m = Categorical(probs)
@@ -129,7 +133,8 @@ def is_safe(position):
 # Our policy neural network instance
 policy_net = PolicyNet()
 # Use this to declare it as a cuda-enabled network
-policy_net.cuda()
+if DEVICE == 'cuda':
+    policy_net.cuda()
 
 # Load existing / save new model
 try:

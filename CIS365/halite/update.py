@@ -7,8 +7,9 @@ import numpy as np
 from collections import namedtuple
 import ast
 import sys
-
 from policy_net import PolicyNet
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 no_update = sys.argv[1].startswith("n")
 if no_update:
@@ -21,7 +22,8 @@ cuda = torch.device('cuda')
 print("Using ", torch.cuda.get_device_name(0))
 
 policy_net = PolicyNet()
-policy_net.cuda()
+if DEVICE == 'cuda':
+    policy_net.cuda()
 optimizer = optim.Adam(policy_net.parameters(), lr=3e-3)
 eps = np.finfo(np.float32).eps.item()
 
@@ -55,11 +57,17 @@ for data in raw_data:
     episode = int(episode)
     t = int(t)
     reward = float(reward)
-    sample = torch.tensor(float(sample)).cuda()
+    if DEVICE == 'cuda':
+        sample = torch.tensor(float(sample)).cuda()
+    else:
+        sample = torch.tensor(float(sample))
     state = ast.literal_eval(state)
 
     # Calculating
-    state = torch.FloatTensor(state).cuda()
+    if DEVICE == 'cuda':
+        state = torch.FloatTensor(state).cuda()
+    else:
+        state = torch.FloatTensor(state)
     state = Variable(state)
     probs = policy_net(state)
     m = Categorical(probs)
@@ -89,7 +97,8 @@ gamma = 0.5
 
 last_t = 600
 last_sid = -69
-for (e, t, sid, r) in zip(episodes[::-1], turns[::-1], sids[::-1], savedrewards[::-1]):
+for (e, t, sid, r) in zip(
+        episodes[::-1], turns[::-1], sids[::-1], savedrewards[::-1]):
     # Check for new episode
     if t > last_t or sid != last_sid:
         R = 0
@@ -98,14 +107,25 @@ for (e, t, sid, r) in zip(episodes[::-1], turns[::-1], sids[::-1], savedrewards[
     # Running reward
     R = r + gamma * R
     rewards.insert(0, R)
-rewards = torch.tensor(rewards).cuda()
+if DEVICE == 'cuda':
+    rewards = torch.tensor(rewards).cuda()
+else:
+    rewards = torch.tensor(rewards)
 rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
 for (log_prob, value), r in zip(savedactions, rewards):
     reward = r - value.item()
     policy_losses.append(-log_prob * reward)
-    value_losses.append(F.smooth_l1_loss(value, torch.tensor([r]).cuda()))
-optimizer.zero_grad()
-loss = torch.stack(policy_losses).sum().cuda() + torch.stack(value_losses).sum().cuda()
+    if DEVICE == 'cuda':
+        value_losses.append(F.smooth_l1_loss(value, torch.tensor([r]).cuda()))
+        optimizer.zero_grad()
+        loss = torch.stack(
+                policy_losses) \
+            .sum().cuda() + torch.stack(value_losses).sum().cuda()
+    else:
+        value_losses.append(F.smooth_l1_loss(value, torch.tensor([r])))
+        optimizer.zero_grad()
+        loss = torch.stack(
+                policy_losses).sum() + torch.stack(value_losses).sum()
 loss = loss/len(turns)
 
 loss.backward()

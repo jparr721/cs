@@ -25,7 +25,6 @@ class PolicyNet(nn.Module):
         self.l4 = nn.Linear(512, 256)
         self.l5 = nn.Linear(256, 128)
         self.l6 = nn.Linear(128, 64)
-        self.l7 = nn.Linear(64, 32)
 
         # Action out
         # Actions have many different output dimensions
@@ -62,7 +61,6 @@ class PolicyNet(nn.Module):
         x = F.relu(self.l4(x))
         x = F.relu(self.l5(x))
         x = F.relu(self.l6(x))
-        x = F.relu(self.l7(x))
         return x
 
     def forward(self, x):
