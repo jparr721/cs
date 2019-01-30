@@ -16,7 +16,6 @@ do
     ./halite --replay-directory replays/ -vvv --width 32 --height 32 "python3.6 MyBot.py ${j} $3" "python3.6 dummy.py"
   done
   if [ "$3" == "y" ]; then
-      cp model/state saved/state_batch${j}_episode${i}_${timestamp}
       python3.6 update.py $3
   fi
 done

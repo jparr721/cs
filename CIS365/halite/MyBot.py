@@ -19,6 +19,8 @@ ship_vision_range = 16
 halite_threshold = 500
 rscale = 10
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+batch_data = []
+did_write = False
 '''End Globals'''
 
 
@@ -176,8 +178,9 @@ while True:
         if not values:
             continue
 
-        last_state, last_action_sample, last_position, go_home, last_halite = \
-            values
+        logging.info(len(values))
+        
+        last_state, last_action_sample, last_position, go_home, last_halite = values
 
         # Calculate reward
         last_reward = 0
@@ -190,11 +193,9 @@ while True:
         if not last_state or go_home:
             continue
 
-        # Write to file
-        # TODO(jparr721) - If time, try to optimize this
+        # Write to data array
         if not no_update:
-            with open(data_path, "a") as f:
-                f.write("{}|{}|{}|{}|{}|{}\n".format(
+            batch_data.append("{}|{}|{}|{}|{}|{}\n".format(
                     episode,
                     t,
                     sid,
@@ -258,4 +259,11 @@ while True:
             and shipyard not in unsafe_positions:
         commands.append(me.shipyard.spawn())
 
+    # Write data array to file
+    if t >= 398 and not did_write:
+        with open(data_path, "a") as f:
+            f.write("{}\n".format(me.halite_amount))
+            f.write(''.join(datum for datum in batch_data))
+        did_write = True
+        
     game.end_turn(commands)

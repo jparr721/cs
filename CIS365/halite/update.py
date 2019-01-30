@@ -8,6 +8,7 @@ from collections import namedtuple
 import ast
 import sys
 from policy_net import PolicyNet
+import shutil
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -38,13 +39,24 @@ savedrewards = []
 turns = []
 sids = []
 episodes = []
+scores = []
+num_episodes = 0
 
 # Read data
 raw_data = []
 f = open(data_path, "r")
 for line in f.readlines():
     data = line.strip().split("|")
-    raw_data.append(data)
+    if len(data) == 1:
+        scores.append(int(data[0]))
+        num_episodes += 1
+    else:
+        raw_data.append(data)
+
+mean_score = sum(scores)/float(num_episodes)
+# Save old state with mean score
+shutil.copyfile('model/state', 'saved/state_{}'.format(mean_score))
+
 
 # Sort by ships, turns
 raw_data = sorted(raw_data, key=lambda x: (int(x[0]), int(x[2]), int(x[1])))
@@ -72,7 +84,7 @@ for data in raw_data:
     probs = policy_net(state)
     m = Categorical(probs)
     log_prob = m.log_prob(sample)
-
+    
     # Log episode
     episodes.append(episode)
 
@@ -89,6 +101,7 @@ for data in raw_data:
     action = SavedAction(log_prob, policy_net.get_state_value(state))
     savedactions.append(action)
 
+    
 R = 0
 policy_losses = []
 value_losses = []
