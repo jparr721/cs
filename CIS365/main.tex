@@ -2,7 +2,7 @@
 %2345678901234567890123456789012345678901234567890123456789012345678901234567890
 %        1         2         3         4         5         6         7         8
 
-\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out
+\documentclass[letterpaper, 11 pt, conference]{ieeeconf}  % Comment this line out
                                                           % if you need a4paper
 %\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4
                                                           % paper
@@ -25,7 +25,7 @@
 %\usepackage{amssymb}  % assumes amsmath package installed
 
 \title{\LARGE \bf
-GPU-Accelearated A2C Agents in Halite.io
+Halite Agent Optimization via GPU-Accelerated DQN
 }
 
 
@@ -55,21 +55,13 @@ Actor Critic Agents provide a robust, reliable way to product highly efficient b
 
 The Halite AI competition is commonly seen as a way to build AI best practices, try some new strategies, and also just learn something new. In most cases, people use a minimal amount of the myriad of machine learning based tools available. This is typically done in favor of more simple, and streamlined approaches. The top scoring agents in the leader board are currently mostly hard-coded with complex logic handling situations like collisions, collection, and offensive strategies. Genetic algorithms were fairly common to tune the games parameters and make bots that used their limited senses efficiently. All of the aforementioned strategies were attempted with mediocre results. Whether it was lack of time, ingenuity, or otherwise, our team decided that something else needed to be done. After looking for ways to improve computation times on our genetic algorithm, the idea of reinforcement learning to self tune the entire model was brought up and considered as a viable approach to solve the issues imposed upon the bots.
 
-\section{MATHEMATICAL FOUNDATIONS}
+\section{BACKGROUND}
+Reinforcement learning is a perfect blend between decisions, and the delayed rewards those decisions can produce. In most cases, reinforcement learning acts as a result of states, and the actions in which it can take based on that state. The goal is for the algorithm to maximize reward without making mistakes that would incur a harsh punishment. As a result, this appeared to be the perfect use case for the halite agents. In this case, the goal was to find the moves that maximized the hailte at the end state of the game. Through the actions it takes, the goal was to prioritize the location of a global maximum in which the agents would have robust enough movements to not only perform  well, but also act in a way of self preservation in the event of enemy collision. There were a number of things that had to be considered to make this happen, which will be discussed below. This is how this problem can be solved with a standard reinforcement approach which, in this case, would be just a Q-learning algorithm. To make things a bit more complex, and also to facilitate more automated tuning, we utilized a neural network (commonly referred to as $deep reinforcement learning$, to optimize the mapping of state-action pairs to a given reward. This is done via our policy agent system, which can be seen in $policy\_net.py$. A policy agent does exactly what was just discussed, it takes the state action pairs, and their outcome and, over time, it begins to be able to infer the best possible outcome given the pair. Our neural network is able to learn in this way. Since we do not need to worry about the generated data, this gives us the freedom to allow the agent to self train, and we really only need to tune the $\gamma$, which is our discount factor to prevent taking the local best, and a few other hyperparameters for our optimization algorithm, which uses the $Adam Optimizer$.
 
-\subsection{Equations}
+\section{CONSIDERATIONS}
+Many processes are in place to optimize well known algorithms such as this, and the team made an effort to apply both known and holistic guess-and-check systems. For example, we were able to observe that the use of a deeply layered neural network caused the granularity to be a big boost at the cost of run time performance. While it was still able to perform well, we had to do a lot of tuning on the number of layers to avoid large bottlenecks within our architecture. This is primarily because, as mentioned previously, with greater granularity comes an extremely large amount of computational overhead as you get into 6+ layers. Unfortunately, our data was far from linearly separable which prevented us from utilizing a more simple architecture, and when embedded in the Q network, it took some time to get things from timing out as a result of the jumps between different pieces of software. Another particularly challenging system was optimizing the system to run well on a CPU. The test environment for the final system will be run on a MacBook Pro, so reliance on GPUs in the final model will not be a viable choice, which required a strong rewrite of some of our core modules. Outside of that, the only other main considerations were that of the typical machine learning process of inference, testing, and tuning of hyperparameters. This was most of the process for converging on a final model which will be used in the presentation.
 
-$$
-\alpha + \beta = \chi \eqno{(1)}
-$$
-
-
-\subsection{Some Common Mistakes}
-\begin{itemize}
-
-
-\item Over or under optimizing hyper parameters.
-\end{itemize}
+\section{GROWTH AREAS}
 
 \section{CONCLUSIONS}
 done
@@ -83,7 +75,7 @@ done
 
 \begin{thebibliography}{99}
 
-\bibitem{c1} G. O. Young, ÒSynthetic structure of industrial plastics (Book style with paper title and editor),Ó 	in Plastics, 2nd ed. vol. 3, J. Peters, Ed.  New York: McGraw-Hill, 1964, pp. 15Ð64.
+\bibitem{c1} Skymind AI, A Beginners Guide to Reinforcement Learning, 2019
 
 
 
