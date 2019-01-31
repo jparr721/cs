@@ -84,7 +84,7 @@ for data in raw_data:
     probs = policy_net(state)
     m = Categorical(probs)
     log_prob = m.log_prob(sample)
-    
+
     # Log episode
     episodes.append(episode)
 
@@ -101,7 +101,6 @@ for data in raw_data:
     action = SavedAction(log_prob, policy_net.get_state_value(state))
     savedactions.append(action)
 
-    
 R = 0
 policy_losses = []
 value_losses = []
