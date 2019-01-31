@@ -10,7 +10,7 @@ import sys
 from policy_net import PolicyNet
 import shutil
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 no_update = sys.argv[1].startswith("n")
 if no_update:

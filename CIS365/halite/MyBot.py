@@ -18,7 +18,7 @@ data_path = 'data/batch_data'
 ship_vision_range = 16
 halite_threshold = 500
 rscale = 10
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_data = []
 did_write = False
 '''End Globals'''
