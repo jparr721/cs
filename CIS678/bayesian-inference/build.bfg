@@ -1,8 +1,8 @@
 # -*- python -*-
 
 main = executable(
-    'bullet',
-    files=find_files('bullet', '*.cc', extra='*.h'),
-    compile_options(
-      ['std=c++1z', '-Wall', '-Werror', '-Wextra', '-pedantic'],
-    link_options=['-libstdc++fs'])
+    'bae',
+    files=find_files('bayes', '*.cc', extra='*.h'),
+    compile_options=(
+        ['-std=c++1z', '-Wall', '-Werror', '-Wextra', '-pedantic', '-fopenmp', '-libstdc++fs']),
+    link_options=['-fopenmp'])
