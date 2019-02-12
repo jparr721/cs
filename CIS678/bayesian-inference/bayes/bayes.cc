@@ -12,7 +12,6 @@ namespace bayes {
   document::document(const std::string& doc_path) {
     load_document(doc_path);
     stem_document();
-
   }
 
   void document::load_document(const std::string& doc_path) {
@@ -32,11 +31,16 @@ namespace bayes {
       for (size_t i = 0; i < lines_.size(); ++i) {
         std::vector<std::string> words = split(lines_[i]);
         std::string_view topic = words[0];
+
+        #pragma omp atomic read
         if (topic_frequencies_.find(topic) != topic_frequencies_.end()) {
+          #pragma omp atomic write
           ++topic_frequencies_[topic];
         } else {
+          #pragma omp atomic write
           topic_frequencies_[topic] = 0;
         }
+
         for (size_t j = 0; j < words.size(); ++j) {
           for (const auto& suffix : suffixes) {
             if (ends_with(words[j], suffix)) {
@@ -44,9 +48,23 @@ namespace bayes {
             }
           }
         }
-        // Remove the topic and add it to frequencies
+
+        // Tally frequencies
         count_word_frequencies(words);
+
+        // Remake the words
         lines_[i] = join(words, " ");
+
+        #pragma omp atomic read
+        if (classified_text_.find(topic) != classified_text_.end()) {
+          #pragma omp atmoic write
+          classified_text_[topic] += lines_[i];
+          classified_text_[topic] += " ";
+        } else {
+          #pragma omp atmoic write
+          classified_text_[topic] = lines_[i];
+        }
+
       }
     }
 
@@ -66,6 +84,12 @@ namespace bayes {
         word_frequencies_[word] = 0;
       }
     }
+  }
+
+  std::size_t document::count_words_in_line(const std::string& line) {
+    const std::vector<std::string> woah_big_vector_here = split(line);
+
+    return woah_big_vector_here.size();
   }
 
   bool document::ends_with(const std::string& word, const std::string& suffix) {
@@ -90,13 +114,23 @@ namespace bayes {
     return result;
   }
 
-  const frequency_map document::get_topic_frequencies() const { return topic_frequencies_; }
-  const frequency_map document::get_word_frequencies() const { return word_frequencies_; }
-
-  double Bayes::predict() {
+  // sum the documents
+  double Bayes::fit() {
     std::vector<double> probabilities;
-    int doc_sum = 0;
-    std::for_each(
+
+    // Sum of document class counts;
+    const int doc_sum = std::accumulate(topic_frequencies.begin(), topic_frequencies.end(), 0,
+        [](const std::size_t prev, const auto& el) {
+      return prev + el.second;
+    });
+
+    for (const auto& topic : topics_) {
+      const double class_proba = topic_frequencies_[topic] / doc_sum;
+      const std::string text = current_document_[topic];
+      const int n = current_document_.count_words_in_line(text);
+    }
+
+    return 0.0;
   }
 
 } // namespace bayes
@@ -110,7 +144,7 @@ int main(int argc, char** argv) {
   const std::string path = argv[1];
 
   bayes::document d(path);
-  bayes::Bayes bae(d.get_topic_frequencies(), d.get_word_frequencies());
+  bayes::Bayes bae(d);
 
   bae.predict();
 

@@ -2,6 +2,7 @@
 #define BAYES_H_
 
 #include <array>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -12,13 +13,14 @@ namespace bayes {
     std::unordered_map<std::string_view, int>;
 
   struct document {
+    document() = default;
     document(const std::string& doc_path);
 
     void load_document(const std::string& doc_path);
     void stem_document();
     void count_word_frequencies(const std::vector<std::string>& words);
 
-    int get_word_count(const std::string& word) const;
+    std::size_t count_words_in_line(const std::string& line);
 
     bool ends_with(const std::string& word, const std::string& suffix);
 
@@ -26,12 +28,11 @@ namespace bayes {
 
     std::vector<std::string> split(std::string line);
 
-    const frequency_map get_topic_frequencies() const;
-    const frequency_map get_word_frequencies() const;
-
     std::vector<std::string> lines_;
     frequency_map topic_frequencies_;
     frequency_map word_frequencies_;
+    std::unordered_map<std::string_view, std::string> classified_text_;
+
     const std::array<std::string, 3> suffixes{{"ed", "ing", "'s"}};
     const std::array<std::string, 20> topics{
       {
@@ -45,12 +46,14 @@ namespace bayes {
 
   class Bayes {
     public:
-      Bayes(frequency_map topic_frequencies, frequency_map word_frequencies);
+      Bayes(const document& d) : current_document_(d) {};
 
       double fit();
       double predict();
     private:
       void classifier();
+
+      std::optional<document> current_document_;
   };
 } // namespace bayes
 
