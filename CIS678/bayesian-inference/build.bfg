@@ -4,5 +4,5 @@ main = executable(
     'bae',
     files=find_files('bayes', '*.cc', extra='*.h'),
     compile_options=(
-        ['-std=c++1z', '-Wall', '-Werror', '-Wextra', '-pedantic', '-fopenmp', '-libstdc++fs']),
-    link_options=['-fopenmp'])
+        ['-std=c++1z', '-Wall', '-Werror', '-Wextra', '-pedantic', '-fopenmp', '-lstdc++fs']),
+    link_options=['-fopenmp', '-lstdc++fs'])
