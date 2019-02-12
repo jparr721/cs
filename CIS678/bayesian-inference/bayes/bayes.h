@@ -26,6 +26,9 @@ namespace bayes {
 
     std::vector<std::string> split(std::string line);
 
+    const frequency_map get_topic_frequencies() const;
+    const frequency_map get_word_frequencies() const;
+
     std::vector<std::string> lines_;
     frequency_map topic_frequencies_;
     frequency_map word_frequencies_;
@@ -42,9 +45,10 @@ namespace bayes {
 
   class Bayes {
     public:
-      Bayes(const std::string& data_file);
+      Bayes(frequency_map topic_frequencies, frequency_map word_frequencies);
 
       double fit();
+      double predict();
     private:
       void classifier();
   };

@@ -90,9 +90,29 @@ namespace bayes {
     return result;
   }
 
+  const frequency_map document::get_topic_frequencies() const { return topic_frequencies_; }
+  const frequency_map document::get_word_frequencies() const { return word_frequencies_; }
+
+  double Bayes::predict() {
+    std::vector<double> probabilities;
+    int doc_sum = 0;
+    std::for_each(
+  }
+
 } // namespace bayes
 
-int main() {
-  std::cout << "Sup" << std::endl;
+int main(int argc, char** argv) {
+  if (!argv[1]) {
+    std::cout << "usage: bae data_path" << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  const std::string path = argv[1];
+
+  bayes::document d(path);
+  bayes::Bayes bae(d.get_topic_frequencies(), d.get_word_frequencies());
+
+  bae.predict();
+
   return EXIT_SUCCESS;
 }
