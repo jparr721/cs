@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <unistd.h>
 
 #define FOO 4096
 
@@ -21,6 +22,8 @@ int main ()
       exit (1);
    }
    printf ("value a: %p\t value b: %p\n", (void *) shmPtr, (void *) shmPtr + FOO);
+   printf ("value Id: %d\n", shmId);
+   pause();
    if (shmdt (shmPtr) < 0) {
       perror ("just can't let go\n");
       exit (1);
