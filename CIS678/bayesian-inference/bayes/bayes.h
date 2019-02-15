@@ -13,7 +13,6 @@ namespace bayes {
     std::unordered_map<std::string_view, int>;
 
   struct document {
-    document() = default;
     document(const std::string& doc_path);
 
     void load_document(const std::string& doc_path);
@@ -46,14 +45,14 @@ namespace bayes {
 
   class Bayes {
     public:
-      Bayes(const document& d) : current_document_(d) {};
+      Bayes(const document& d) : doc_(d) {};
 
       double fit();
       double predict();
     private:
       void classifier();
 
-      std::optional<document> current_document_;
+      std::optional<document> doc_;
   };
 } // namespace bayes
 

@@ -5,10 +5,19 @@
 #include <csignal>
 #include <cstring>
 
+void sig_hanlder(int);
+
+struct data {
+  char* input;
+  int reader_one;
+  int reader_two;
+};
+
 const int BIT_SIZE = 4096;
 int shmid;
 char* str;
 int interrupt = 0;
+struct data* info;
 
 void sig_handler(int) {
   std::cout << "Interrupted" << std::endl;
@@ -29,24 +38,23 @@ int main() {
 
   sigaction(SIGINT, &action, nullptr);
 
-  if ((shmid = shmget(key, BIT_SIZE, 0666|IPC_CREAT)) < 0) {
+  if ((shmid = shmget(key, BIT_SIZE, IPC_CREAT)) < 0) {
     std::cerr << "Failed to make shared memory, sorry mate" << std::endl;
     return EXIT_FAILURE;
   }
 
-  char* last;
-  while (!interrupt) {
-    /* if ( == reinterpret_cast<void*>(-1)) { */
-    /* } */
-    str = reinterpret_cast<char*>(shmat(shmid, nullptr, 0));
-
-    if (strcmp(last, str) != 0) {
-      std::cout << "Data from shared memory: " << str << std::endl;
-      last = str;
-    } else {
-      continue;
-    }
+  if ((info = reinterpret_cast<struct data*>(shmat(shmid, nullptr, 0))) == reinterpret_cast<void*>(-1)) {
+    std::cerr << "Failed to attach" << std::endl;
+    return EXIT_FAILURE;
   }
+
+  char* last;
+  do {
+    while(info->reader_one);
+    std::cout << info->input << std::endl;
+
+    info->reader_one = 1;
+  } while(!interrupt);
 
   return EXIT_SUCCESS;
 }

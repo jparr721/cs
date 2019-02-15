@@ -26,19 +26,25 @@ namespace bayes {
   }
 
   void document::stem_document() {
-    #pragma omp parallel
-    {
+    /* #pragma omp parallel */
+    /* { */
       for (size_t i = 0; i < lines_.size(); ++i) {
+        std::cout << lines_[i] << std::endl;
         std::vector<std::string> words = split(lines_[i]);
         std::string_view topic = words[0];
+        std::cout << topic << std::endl;
 
-        #pragma omp atomic read
-        if (topic_frequencies_.find(topic) != topic_frequencies_.end()) {
-          #pragma omp atomic write
+        /* #pragma omp atomic read */
+        for (const auto& c : topic_frequencies_) {
+          std::cout << c.first << " " << c.second << std::endl;
+        }
+        auto found = topic_frequencies_.find(topic);
+        if (found != topic_frequencies_.end()) {
+          /* #pragma omp atomic write */
           ++topic_frequencies_[topic];
         } else {
-          #pragma omp atomic write
-          topic_frequencies_[topic] = 0;
+          /* #pragma omp atomic write */
+          topic_frequencies_[topic] = 1;
         }
 
         for (size_t j = 0; j < words.size(); ++j) {
@@ -55,23 +61,24 @@ namespace bayes {
         // Remake the words
         lines_[i] = join(words, " ");
 
-        #pragma omp atomic read
+        /* #pragma omp atomic read */
         if (classified_text_.find(topic) != classified_text_.end()) {
-          #pragma omp atmoic write
+          /* #pragma omp atmoic write */
           classified_text_[topic] += lines_[i];
           classified_text_[topic] += " ";
         } else {
-          #pragma omp atmoic write
+          /* #pragma omp atmoic write */
           classified_text_[topic] = lines_[i];
         }
 
-      }
+      /* } */
     }
 
     // Clean up word frequencies outside of parallel region
     for (auto it = topics.begin(); it != topics.end(); ++it) {
-      if (word_frequencies_[it]) {
-        word_frequencies_.erase(it);
+      auto found = word_frequencies_.find(*it);
+      if (found != word_frequencies_.end()) {
+        word_frequencies_.erase(*it);
       }
     }
   }
@@ -119,16 +126,18 @@ namespace bayes {
     std::vector<double> probabilities;
 
     // Sum of document class counts;
-    const int doc_sum = std::accumulate(topic_frequencies.begin(), topic_frequencies.end(), 0,
+    const int doc_sum = std::accumulate(
+        doc_->topic_frequencies_.begin(), doc_->topic_frequencies_.end(), 0,
         [](const std::size_t prev, const auto& el) {
       return prev + el.second;
     });
+    std::cout << doc_sum << std::endl;
 
-    for (const auto& topic : topics_) {
-      const double class_proba = topic_frequencies_[topic] / doc_sum;
-      const std::string text = current_document_[topic];
-      const int n = current_document_.count_words_in_line(text);
-    }
+    /* for (const auto& topic : doc_->topics) { */
+    /*   const double class_proba = doc_->topic_frequencies_[topic] / doc_sum; */
+    /*   const std::string text = doc_->topic_frequencies_[topic]; */
+    /*   const int n = doc_->count_words_in_line(text); */
+    /* } */
 
     return 0.0;
   }
@@ -144,9 +153,9 @@ int main(int argc, char** argv) {
   const std::string path = argv[1];
 
   bayes::document d(path);
-  bayes::Bayes bae(d);
+  /* bayes::Bayes bae(d); */
 
-  bae.predict();
+  /* bae.fit(); */
 
   return EXIT_SUCCESS;
 }
