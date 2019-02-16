@@ -26,60 +26,74 @@ namespace bayes {
   }
 
   void document::stem_document() {
-    /* #pragma omp parallel */
-    /* { */
-      for (size_t i = 0; i < lines_.size(); ++i) {
-        std::cout << lines_[i] << std::endl;
-        std::vector<std::string> words = split(lines_[i]);
-        std::string_view topic = words[0];
-        std::cout << topic << std::endl;
+    #pragma omp parallel
+    {
+    for (size_t i = 0; i < lines_.size(); ++i) {
+      for (const auto& c : topic_frequencies_) {
+        std::cout << c.first << " " << c.second << std::endl;
+      }
 
-        /* #pragma omp atomic read */
-        for (const auto& c : topic_frequencies_) {
-          std::cout << c.first << " " << c.second << std::endl;
-        }
-        auto found = topic_frequencies_.find(topic);
-        if (found != topic_frequencies_.end()) {
-          /* #pragma omp atomic write */
-          ++topic_frequencies_[topic];
-        } else {
-          /* #pragma omp atomic write */
-          topic_frequencies_[topic] = 1;
-        }
+      std::vector<std::string> words = split(lines_[i]);
 
-        for (size_t j = 0; j < words.size(); ++j) {
-          for (const auto& suffix : suffixes) {
-            if (ends_with(words[j], suffix)) {
-              words[j].substr(0, words[j].size() - suffix.size());
+      std::string topic = words[0];
+
+      auto found = topic_frequencies_.find(topic);
+      if (found != topic_frequencies_.end()) {
+        #pragma omp critical
+        {
+        ++topic_frequencies_[topic];
+        }
+      } else {
+        #pragma omp critical
+        {
+        topic_frequencies_[topic] = 1;
+        }
+      }
+
+      for (size_t j = 1; j < words.size(); ++j) {
+        for (const auto& suffix : suffixes) {
+          #pragma omp critical
+          {
+          if (ends_with(words[j], suffix)) {
+            words[j].substr(0, words[j].size() - suffix.size());
             }
           }
         }
+      }
 
-        // Tally frequencies
-        count_word_frequencies(words);
+      // Tally frequencies
+      count_word_frequencies(words);
 
-        // Remake the words
-        lines_[i] = join(words, " ");
+      // Remake the words
+      #pragma omp critical
+      {
+      lines_[i] = join(words, " ");
+      }
 
-        /* #pragma omp atomic read */
-        if (classified_text_.find(topic) != classified_text_.end()) {
-          /* #pragma omp atmoic write */
-          classified_text_[topic] += lines_[i];
-          classified_text_[topic] += " ";
-        } else {
-          /* #pragma omp atmoic write */
-          classified_text_[topic] = lines_[i];
+      auto cfound = classified_text_.find(topic);
+      if (cfound != classified_text_.end()) {
+        #pragma omp critical
+        {
+        classified_text_[topic] += lines_[i];
+        classified_text_[topic] += " ";
         }
-
-      /* } */
+      } else {
+        #pragma omp critical
+        {
+        classified_text_[topic] = lines_[i];
+        }
+      }
     }
 
-    // Clean up word frequencies outside of parallel region
-    for (auto it = topics.begin(); it != topics.end(); ++it) {
-      auto found = word_frequencies_.find(*it);
+    for (const auto& topic : topics) {
+      #pragma omp critical
+      {
+      auto found = word_frequencies_.find(topic);
       if (found != word_frequencies_.end()) {
-        word_frequencies_.erase(*it);
+        word_frequencies_.erase(topic);
       }
+      }
+    }
     }
   }
 
@@ -153,9 +167,9 @@ int main(int argc, char** argv) {
   const std::string path = argv[1];
 
   bayes::document d(path);
-  /* bayes::Bayes bae(d); */
+  bayes::Bayes bae(d);
 
-  /* bae.fit(); */
+  bae.fit();
 
   return EXIT_SUCCESS;
 }

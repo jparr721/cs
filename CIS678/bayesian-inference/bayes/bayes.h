@@ -4,19 +4,19 @@
 #include <array>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
 namespace bayes {
   using frequency_map =
-    std::unordered_map<std::string_view, int>;
+    std::unordered_map<std::string, int>;
 
   struct document {
     document(const std::string& doc_path);
 
     void load_document(const std::string& doc_path);
     void stem_document();
+    void ostem_document();
     void count_word_frequencies(const std::vector<std::string>& words);
 
     std::size_t count_words_in_line(const std::string& line);
@@ -30,7 +30,7 @@ namespace bayes {
     std::vector<std::string> lines_;
     frequency_map topic_frequencies_;
     frequency_map word_frequencies_;
-    std::unordered_map<std::string_view, std::string> classified_text_;
+    std::unordered_map<std::string, std::string> classified_text_;
 
     const std::array<std::string, 3> suffixes{{"ed", "ing", "'s"}};
     const std::array<std::string, 20> topics{
