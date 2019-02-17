@@ -27,6 +27,24 @@ namespace bayes {
 
     std::vector<std::string> split(std::string line);
 
+    template<typename TK, typename TV>
+    std::vector<TK> extract_keys(std::unordered_map<TK, TV> const& input_map) {
+      std::vector<TK> retval;
+      for (auto const& element : input_map) {
+        retval.push_back(element.first);
+      }
+      return retval;
+    }
+
+    template<typename TK, typename TV>
+    std::vector<TV> extract_values(std::unordered_map<TK, TV> const& input_map) {
+      std::vector<TV> retval;
+      for (auto const& element : input_map) {
+        retval.push_back(element.second);
+      }
+      return retval;
+    }
+
     std::vector<std::string> lines_;
     frequency_map topic_frequencies_;
     frequency_map word_frequencies_;
@@ -47,12 +65,15 @@ namespace bayes {
     public:
       Bayes(const document& d) : doc_(d) {};
 
-      double fit();
+      void fit();
       double predict();
     private:
       void classifier();
 
       std::optional<document> doc_;
+
+      frequency_map estimates_;
+      frequency_map class_probabilities_;
   };
 } // namespace bayes
 

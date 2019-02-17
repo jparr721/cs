@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -136,8 +137,9 @@ namespace bayes {
   }
 
   // sum the documents
-  double Bayes::fit() {
+  void Bayes::fit() {
     std::vector<double> probabilities;
+    const std::vector<std::string> vocabulary = doc_->extract_keys<std::string, int>(doc_->word_frequencies_);
 
     // Sum of document class counts;
     const int doc_sum = std::accumulate(
@@ -145,15 +147,19 @@ namespace bayes {
         [](const std::size_t prev, const auto& el) {
       return prev + el.second;
     });
-    std::cout << doc_sum << std::endl;
 
-    /* for (const auto& topic : doc_->topics) { */
-    /*   const double class_proba = doc_->topic_frequencies_[topic] / doc_sum; */
-    /*   const std::string text = doc_->topic_frequencies_[topic]; */
-    /*   const int n = doc_->count_words_in_line(text); */
-    /* } */
+    for (const auto& topic : doc_->topics) {
+      const double class_proba = doc_->topic_frequencies_[topic] / doc_sum;
+      const std::string text = doc_->classified_text_[topic];
+      const int n = doc_->count_words_in_line(text);
+      class_probabilities_[topic] = class_proba;
 
-    return 0.0;
+      for (const auto& word : vocabulary) {
+        const int nk = doc_->word_frequencies_[word];
+        const double estimate = std::log(nk + 1) - std::log(n + vocabulary.size());
+        estimates_[word] = estimate;
+      }
+    }
   }
 
 } // namespace bayes
