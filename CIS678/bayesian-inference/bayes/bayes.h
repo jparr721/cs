@@ -11,6 +11,9 @@ namespace bayes {
   using frequency_map =
     std::unordered_map<std::string, int>;
 
+  using probability_map =
+    std::unordered_map<std::string, double>;
+
   struct document {
     document(const std::string& doc_path);
 
@@ -37,7 +40,7 @@ namespace bayes {
     }
 
     template<typename TK, typename TV>
-    std::vector<TV> extract_values(std::unordered_map<TK, TV> const& input_map) {
+    std::vector<TV> extract_values(std::unordered_map<TK, TV> const& input_map) const {
       std::vector<TV> retval;
       for (auto const& element : input_map) {
         retval.push_back(element.second);
@@ -55,7 +58,7 @@ namespace bayes {
       {
         "atheism", "graphics", "mswindows", "pc", "mac", "xwindows",
         "forsale", "autos", "motorcycles", "baseball", "hockey",
-        "cryptology", "electronics", "medicine", "space", "christianity"
+        "cryptology", "electronics", "medicine", "space", "christianity",
         "guns", "mideastpolitics", "politics", "religion"
       }
     };
@@ -66,14 +69,16 @@ namespace bayes {
       Bayes(const document& d) : doc_(d) {};
 
       void fit();
-      double predict();
+      void evaluate();
     private:
       void classifier();
 
+      frequency_map word_count(const std::vector<std::string>& words);
+
       std::optional<document> doc_;
 
-      frequency_map estimates_;
-      frequency_map class_probabilities_;
+      probability_map class_probabilities_;
+      std::unordered_map<std::string, probability_map> topic_word_probabilities_;
   };
 } // namespace bayes
 

@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <stdexcept>
 #include <sstream>
+#include <typeinfo>
 #include "bayes.h"
 
 namespace bayes {
@@ -103,7 +104,7 @@ namespace bayes {
       if (word_frequencies_.find(word) != word_frequencies_.end()) {
         ++word_frequencies_[word];
       } else {
-        word_frequencies_[word] = 0;
+        word_frequencies_[word] = 1;
       }
     }
   }
@@ -136,10 +137,19 @@ namespace bayes {
     return result;
   }
 
+  frequency_map Bayes::word_count(const std::vector<std::string>& words) {
+    frequency_map counts;
+
+    for (const auto& word : words) {
+      ++counts[word];
+    }
+
+    return counts;
+  }
+
   // sum the documents
   void Bayes::fit() {
-    std::vector<double> probabilities;
-    const std::vector<std::string> vocabulary = doc_->extract_keys<std::string, int>(doc_->word_frequencies_);
+    std::vector<std::string> vocabulary = doc_->extract_keys<std::string, int>(doc_->word_frequencies_);
 
     // Sum of document class counts;
     const int doc_sum = std::accumulate(
@@ -149,17 +159,35 @@ namespace bayes {
     });
 
     for (const auto& topic : doc_->topics) {
-      const double class_proba = doc_->topic_frequencies_[topic] / doc_sum;
+      probability_map estimates;
+      const double class_proba = (double)doc_->topic_frequencies_[topic] / (double)doc_sum;
+      std::cout << "Probability of topic " << topic << ": " << class_proba << std::endl;
       const std::string text = doc_->classified_text_[topic];
-      const int n = doc_->count_words_in_line(text);
+      const std::vector<std::string> topic_words = doc_->split(text);
+      frequency_map word_count_in_topic = word_count(topic_words);
+      const double n = (double)doc_->count_words_in_line(text);
       class_probabilities_[topic] = class_proba;
 
       for (const auto& word : vocabulary) {
-        const int nk = doc_->word_frequencies_[word];
-        const double estimate = std::log(nk + 1) - std::log(n + vocabulary.size());
+        const double nk = (double)word_count_in_topic[word];
+        const double estimate = std::log(nk + 1.0) / std::log(n + (double)vocabulary.size());
         estimates_[word] = estimate;
       }
+
+      topic_word_probabilities_[topic] = estimates;
     }
+
+    for (const auto& e : estimates_) {
+      std::cout << e.first << " " << e.second << std::endl;
+    }
+
+    for (const auto& p : class_probabilities_) {
+      std::cout << p.first << " " << p.second << std::endl;
+    }
+  }
+
+  void Bayes::evaluate() {
+
   }
 
 } // namespace bayes
