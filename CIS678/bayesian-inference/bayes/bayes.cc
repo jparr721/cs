@@ -66,6 +66,9 @@ namespace bayes {
       // Tally frequencies
       count_word_frequencies(words);
 
+      // Remove topic from words
+      words.erase(words.begin());
+
       // Remake the words
       #pragma omp critical
       {
@@ -170,15 +173,19 @@ namespace bayes {
 
       for (const auto& word : vocabulary) {
         const double nk = (double)word_count_in_topic[word];
-        const double estimate = std::log(nk + 1.0) / std::log(n + (double)vocabulary.size());
-        estimates_[word] = estimate;
+        const double estimate = (nk + 1.0) / (n + (double)vocabulary.size());
+        estimates[word] = estimate;
       }
 
       topic_word_probabilities_[topic] = estimates;
     }
 
-    for (const auto& e : estimates_) {
-      std::cout << e.first << " " << e.second << std::endl;
+    for (const auto& e : topic_word_probabilities_) {
+      std::cout << "Topic: " << e.first << std::endl;
+
+      for (const auto& p : e.second) {
+        std::cout << p.first << ": " << p.second <<  std::endl;
+      }
     }
 
     for (const auto& p : class_probabilities_) {
@@ -187,7 +194,23 @@ namespace bayes {
   }
 
   void Bayes::evaluate() {
+    document d("../data/forumTest.data");
+    auto new_data = d.lines_;
+    size_t rows = new_data.size();
 
+    for (auto i = 0u; i < rows; ++i) {
+      for (const auto& line : new_data) {
+        probability_map class_proabailities;
+        std::pair<std::string, int> max_probability;
+        double line_probability{0.0};
+
+        auto words = doc_->split(new_data);
+
+        for (const auto& word : words) {
+
+        }
+      }
+    }
   }
 
 } // namespace bayes

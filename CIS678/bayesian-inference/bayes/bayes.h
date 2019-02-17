@@ -70,8 +70,6 @@ namespace bayes {
 
       void fit();
       void evaluate();
-    private:
-      void classifier();
 
       frequency_map word_count(const std::vector<std::string>& words);
 
