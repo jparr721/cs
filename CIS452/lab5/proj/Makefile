@@ -1,7 +1,9 @@
+# all:
+# 	g++ reader.cc -o read
+# 	g++ writer.cc -o write
 all:
-	g++ reader.cc -o read
-	g++ writer.cc -o write
-	g++ reader2.cc -o read2
+	gcc read.c -o read
+	gcc write.c -o write
 
 clean:
-	rm -rf read write read2
+	rm -rf read write

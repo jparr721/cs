@@ -7,17 +7,11 @@
 
 void sig_hanlder(int);
 
-struct data {
-  char* input;
-  int reader_one;
-  int reader_two;
-};
-
 const int BIT_SIZE = 4096;
 int shmid;
+char* shmPtr;
 char* str;
 int interrupt = 0;
-struct data* info;
 
 void sig_handler(int) {
   std::cout << "Interrupted" << std::endl;
@@ -25,7 +19,10 @@ void sig_handler(int) {
 
   shmdt(str);
 
-  shmctl(shmid, IPC_RMID, nullptr);
+  if (shmctl(shmid, IPC_RMID, nullptr) < 0) {
+    std::cerr << "What??? We can't deallocate?!?! RUN, RUN NOW!!!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
 }
 
@@ -43,18 +40,17 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  if ((info = reinterpret_cast<struct data*>(shmat(shmid, nullptr, 0))) == reinterpret_cast<void*>(-1)) {
-    std::cerr << "Failed to attach" << std::endl;
-    return EXIT_FAILURE;
+   if ((shmPtr = reinterpret_cast<char*>(shmat(shmid, nullptr, 0))) == (void*) -1) {
+      std::cerr<< "can't attach" << std::endl;
+      return EXIT_FAILURE;
+   }
+
+  for (;;) {
+    if(*shmPtr != '#') {
+      std::cout << shmPtr << std::endl;
+      *shmPtr = '#';
+    }
   }
-
-  char* last;
-  do {
-    while(info->reader_one);
-    std::cout << info->input << std::endl;
-
-    info->reader_one = 1;
-  } while(!interrupt);
 
   return EXIT_SUCCESS;
 }
