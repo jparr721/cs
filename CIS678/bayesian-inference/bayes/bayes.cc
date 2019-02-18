@@ -67,7 +67,10 @@ namespace bayes {
       count_word_frequencies(words);
 
       // Remove topic from words
-      words.erase(words.begin());
+      /* #pragma omp critical */
+      /* { */
+      /* words.erase(words.begin()); */
+      /* } */
 
       // Remake the words
       #pragma omp critical
@@ -179,38 +182,47 @@ namespace bayes {
 
       topic_word_probabilities_[topic] = estimates;
     }
-
-    for (const auto& e : topic_word_probabilities_) {
-      std::cout << "Topic: " << e.first << std::endl;
-
-      for (const auto& p : e.second) {
-        std::cout << p.first << ": " << p.second <<  std::endl;
-      }
-    }
-
-    for (const auto& p : class_probabilities_) {
-      std::cout << p.first << " " << p.second << std::endl;
-    }
   }
 
   void Bayes::evaluate() {
+    std::cout << "running test suite" << std::endl;
     document d("../data/forumTest.data");
     auto new_data = d.lines_;
-    size_t rows = new_data.size();
+    std::array<std::string, 2> answer;
+    double probability{0.0};
+    std::vector<std::array<std::string, 2>> outcomes;
+    double correct{0.0};
 
-    for (auto i = 0u; i < rows; ++i) {
-      for (const auto& line : new_data) {
-        probability_map class_proabailities;
-        std::pair<std::string, int> max_probability;
-        double line_probability{0.0};
+    for (const auto& line : new_data) {
+      auto words = d.split(line);
+      const auto topic = words[0];
 
-        auto words = doc_->split(new_data);
-
-        for (const auto& word : words) {
-
-        }
+      for (auto data = words.begin() + 1; data != words.end(); ++data) {
+        probability += topic_word_probabilities_[topic][*data];
       }
+      const auto correct = std::max_element(class_probabilities_.begin(),
+          class_probabilities_.end());
+
+      answer[0] = correct->first;
+      answer[1] = correct->second;
+
+      outcomes.push_back(answer);
     }
+
+    // Validate our coutcomes
+    int idx = 0;
+    for (const auto& line : new_data) {
+      auto words = d.split(line);
+      const auto topic = words[0];
+      if (outcomes[idx][0] == topic) {
+        ++correct;
+      }
+
+      ++idx;
+    }
+
+    std::cout << "Percentage correct: " << correct / (double)outcomes.size() << std::endl;
+
   }
 
 } // namespace bayes
@@ -227,6 +239,8 @@ int main(int argc, char** argv) {
   bayes::Bayes bae(d);
 
   bae.fit();
+
+  bae.evaluate();
 
   return EXIT_SUCCESS;
 }
