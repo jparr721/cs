@@ -8,3 +8,8 @@ By Jarred Parr and Alexander Fountain
 3. As the loop values increase, we can observe that there exists a race condition issue from how the shared memory value is read. The value in shared memory may not have time to have been updated before the next read and as a result leads to both of the number ending up as the same value upon completion.
 
 4. As was stated in problem 3, there is an issue in read and write times for the shared memory. With both the parent and child process attemtping to gain access to the piece of shared memory between them, at some point there is a mismatch about what value is stored in memory which leads both of them to take on the same value. There is no blocking operation for reading and writing from the shared memory space so the two processes clobber over one-another.
+
+5. The 3 options for `struct sembuf` are `sem_num`, `sem_op`, and `sem_flg`. These 3 options are specified as the following:
+  - `sem_num` - The semaphore number. This specifies the semaphore that this particular buffer is associated with.
+  - `sem_op` - The semaphore operation. This specifies the operation that the semaphore will be performing
+  - `sem_flg` - The semaphore flag. You can initialize some of these values with certain flags that may affect creation constraints or runtime aspects within the semaphore. Flags faciliate that feature of the semop.
