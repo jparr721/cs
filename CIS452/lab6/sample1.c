@@ -6,15 +6,23 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
+#include <semaphore.h>
 
 #define SIZE 16
 
 int main (int argc, char** argv)
 {
-   int status;
-   long int i, loop, temp, *shmPtr;
-   int shmId;
-   pid_t pid;
+    int status;
+    long int i, loop, temp, *shmPtr;
+    int shmId;
+    pid_t pid;
+
+    sem_t mutex;
+
+   if (sem_init(&mutex, 1, 1) < 0) {
+      perror("Failed to make semaphore");
+      return EXIT_FAILURE;
+   }
 
    loop = atol(argv[1]);
 
@@ -32,9 +40,13 @@ int main (int argc, char** argv)
 
    if (!(pid = fork())) {
       for (i=0; i<loop; i++) {
+        sem_wait(&mutex);
+        printf("Child entered the critical section\n");
         temp = shmPtr[0];
         shmPtr[0] = shmPtr[1];
         shmPtr[1] = temp;
+        printf("Child exiting critical section\n");
+        sem_post(&mutex);
       }
       if (shmdt (shmPtr) < 0) {
          perror ("just can't let go\n");
@@ -42,12 +54,17 @@ int main (int argc, char** argv)
       }
       exit(0);
    }
-   else
+   else {
       for (i=0; i<loop; i++) {
+        sem_wait(&mutex);
+        printf("Parent entered critical section\n");
         temp = shmPtr[1];
         shmPtr[1] = shmPtr[0];
         shmPtr[0] = temp;
+        printf("Parent exiting critical section\n");
+        sem_post(&mutex);
       }
+   }
 
    wait (&status);
    printf ("values: %li\t%li\n", shmPtr[0], shmPtr[1]);
@@ -61,5 +78,6 @@ int main (int argc, char** argv)
       exit(1);
    }
 
+   sem_destroy(&mutex);
    return 0;
 }
