@@ -5,7 +5,8 @@ By Jarred Parr
 
 2. A wait operation would need to be placed on steps 2 and 6 to guard the assignment of the token value to true or false. If the wait operation is not adaquately guarded via making it atomic, then there is the strong likelyhood of a race condition occuring. This could cause undefined behavior across threads as they read and write from the values in a free-for-all manner. Because of this, we could see issues like deadlock occur in the program as it waits infinitely.
 
-3.
+3. 1. This program does not suffer from lockstep synchronization because each program hands off its ability to execute while the other program will stay in a waiting state.
+   2. This program also does not suffer from deadlock due to the fact that, since it hands off after the critical section runs, it gets rid of the final step of deadlock which is circular wait. If only two processes are looking to get into the critical section, then as soon as one finishes, the other one can immediately have access because of how the handoff is done.
 
 4. 1. Mutual Exclusion - This is seen in the dining philosphers problem because they all have access to the same pool of resourcs, the chopsticks, so when they all need two, it leads to some being left without the resources.
    2. Hold and Wait - This holds because each philospher has only one chopstick and when they have one they must wait for resources, but they all have only one, so they all hold and wait.
