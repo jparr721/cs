@@ -7,7 +7,7 @@
 namespace arbol {
 namespace util {
   template<typename M>
-  M load_csv (const std::string & path) {
+  M load_csv(const std::string& path) {
     std::ifstream indata;
     indata.open(path);
     std::string line;
@@ -34,10 +34,12 @@ namespace util {
 
 class Arbol {
   public:
-    void entropy();
+    double entropy(const std::string& k);
+    double gain(const double entropy);
   private:
+
+    Eigen::MatrixXd data_;
     probability_map class_probabilities_;
     probability_map entropies_;
-    std::vector<std::string> classes_;
 };
 } // namespace arbol
