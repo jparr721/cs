@@ -93,6 +93,7 @@ class Arbol {
 
     probability_map class_probabilities_;
     probability_map entropies_;
+    std::map<std::string, std::map<std::string, double>> feature_probabilities_;
     std::map<std::string, std::vector<std::string>> value_ranges_;
 };
 } // namespace arbol

@@ -4,8 +4,12 @@
 #include "arbol.h"
 
 namespace arbol {
+  // This will calculate the gain sum for a class k
   double sum_attributes(const std::string& k) {
+    // Get all of our possible values a class can be
     auto val_opts = value_ranges[k];
+
+
   }
 
   double Arbol::gain(const double S, const double a) {
@@ -19,8 +23,11 @@ namespace arbol {
   }
 
   void Arbol::fit(const std::vector<std::vector<std::string>> data) {
-    const std::vector<std::string> labels = data_[0];
+    std::vector<std::string> labels = data_[0];
     auto class_label_name = labels[labels.size() - 1];
+
+    // Remove the class label heading
+    labels.pop_back();
     auto total_entries_count = data.size();
 
     // First, we want to get the overall probability of each class label
@@ -43,6 +50,12 @@ namespace arbol {
     for (int i = 1; i < keys.size(); ++i) { S -= entropy(keys[i]); }
 
     // With S as a now static value, we can move on calculating mad gains
+    // First, we sum our other class labels
+    for (int j = 0; j < labels.size(); ++j) {
+      for (int i = 1; i < data.size(); ++i) {
+        ++feature_probabilities_[labels[j]][data[i][j]];
+      }
+    }
   }
 
 } // namespace arbol
