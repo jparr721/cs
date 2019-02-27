@@ -4,6 +4,51 @@
 #include "arbol.h"
 
 namespace arbol {
+  std::unique_ptr<data_frame> Arbol::make_dataframe(const std::string& path) {
+    std::ifstream indata;
+    indata.open(path);
+    std::string line;
+    std::vector<std::string> lines;
+    uint idx = 0;
+    int num_targets{-1}, num_attributes{-1}, num_examples{-1};
+
+    // Store lines in vector
+    while (std::getline(indata, line)) {
+      std::stringstream line_stream(line);
+      lines.push_back(line_stream.str());
+    }
+
+    num_targets = std::stoi(lines[0]);
+    num_attributes = std::stoi(lines[2]);
+    num_examples = std::stoi(lines[2 + num_attributes]);
+
+
+    auto targets = split(lines[1]);
+    std::map<std::string, std::vector<std::string>> attributes;
+
+    for (int i = num_attributes + 1; i < num_examples; ++i) {
+      auto vals = split(lines[i]);
+      std::vector<std::string> sub;
+      attributes[vals[0]] = (&lines[i][3], &lines[i][lines[i].size() - 1]);
+    }
+
+    std::vector<std::vector<std::string>> attribute_values;
+    for (int i = num_exampes + 1; i < lines.size(); ++i) {
+      auto vals = split(lines[i]);
+      attribute_values.push_back(vals);
+    }
+
+    auto ptr = std::make_unique<data_frame>(
+        num_targets,
+        targets,
+        num_attributes,
+        attributes,
+        num_examples,
+        attribute_values);
+
+    return ptr;
+  }
+
   // This will calculate the gain sum for a class k
   double sum_attributes(const std::string& k) {
     // Get all of our possible values a class can be

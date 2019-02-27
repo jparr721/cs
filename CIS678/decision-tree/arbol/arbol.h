@@ -1,6 +1,10 @@
+#ifndef ARBOL_H_
+#define ARBOL_H_
+
 #include <Eigen/Dense>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -78,14 +82,53 @@ namespace util {
       std::cout << std::endl;
     }
   }
+
+  inline bool is_integer(const std::string & s) {
+     if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+     char * p;
+     strtol(s.c_str(), &p, 10);
+
+     return (*p == 0);
+  }
+
+  std::vector<std::string> document::split(std::string line) {
+    std::vector<std::string> result;
+    std::istringstream iss(line);
+    for (std::string line; iss >> line;)
+      result.push_back(line);
+
+    return result;
+  }
 } // namespace util
   using probability_map =
     std::unordered_map<std::string, double>;
 
+struct data_frame {
+  data_frame(
+      int nt,
+      std::vector<std::string> t,
+      int na,
+      std::map<std::string, std::vector<std::string>> a,
+      int ne,
+      std::vector<std::vector<std::string>> av) :
+    num_targets(nt), targets(t), num_attributes(na), attributes(a), num_examples(ne), attribute_values(av) {};
+
+  int num_targets;
+  std::vector<std::string> targets;
+
+  int num_attributes;
+  std::map<std::string, std::vector<std::string>> attributes;
+
+  int num_examples;
+  std::vector<std::vector<std::string>> attribute_values;
+};
+
 class Arbol {
   public:
-    Arbol(const std::map<std::string, std::vector<std::string>> value_ranges) : value_ranges_(value_ranges) {};
+    explicit Arbol(const std::map<std::string, std::vector<std::string>> value_ranges) : value_ranges_(value_ranges) {};
 
+    std::unique_ptr<data_frame> make_dataframe(const std::string& path);
     void fit();
   private:
     double entropy(const std::string& k);
@@ -97,3 +140,5 @@ class Arbol {
     std::map<std::string, std::vector<std::string>> value_ranges_;
 };
 } // namespace arbol
+
+#endif // ARBOL_H_
