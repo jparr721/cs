@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <unordered_map>
 
@@ -44,7 +45,7 @@ namespace util {
   }
 
   template<typename TK, typename TV>
-  std::vector<TV> extract_values(std::unordered_map<TK, TV> const& input_map) const {
+  std::vector<TV> extract_values(std::unordered_map<TK, TV> const& input_map) {
     std::vector<TV> retval;
     for (auto const& element : input_map) {
       retval.push_back(element.second);
@@ -52,6 +53,25 @@ namespace util {
     return retval;
   }
 
+  template <typename T>
+  std::string vec_to_string(const std::vector<T>& values) {
+    std::string retval;
+    for (const auto& val : values) {
+      retval += val + ",";
+    }
+
+    return retval;
+  }
+
+  template <typename T>
+  void print_2d_vector(const std::vector<std::vector<T>>& values) {
+    for (const auto& val : values) {
+      for (const auto& v : val) {
+        std::cout << v << ",";
+      }
+      std::cout << std::endl;
+    }
+  }
 
   std::vector<std::vector<std::string>> load_non_numeric(const std::string& path) {
     std::ifstream indata;
@@ -73,16 +93,6 @@ namespace util {
     return values;
   }
 
-  void print_vector(const std::vector<std::vector<std::string>>& the_vector) {
-    for (const auto& row : the_vector) {
-      for (const auto& col : row) {
-        std::cout << col << ", ";
-      }
-
-      std::cout << std::endl;
-    }
-  }
-
   inline bool is_integer(const std::string & s) {
      if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
 
@@ -92,7 +102,7 @@ namespace util {
      return (*p == 0);
   }
 
-  std::vector<std::string> document::split(std::string line) {
+  std::vector<std::string> split(std::string line) {
     std::vector<std::string> result;
     std::istringstream iss(line);
     for (std::string line; iss >> line;)
@@ -122,14 +132,14 @@ struct data_frame {
 
   int num_examples;
   std::vector<std::vector<std::string>> attribute_values;
+
+  /* friend std::ostream& operator<<(std::ostream& os, data_frame df); */
 };
 
 class Arbol {
   public:
-    explicit Arbol(const std::map<std::string, std::vector<std::string>> value_ranges) : value_ranges_(value_ranges) {};
-
     std::unique_ptr<data_frame> make_dataframe(const std::string& path);
-    void fit();
+    void fit(std::shared_ptr<data_frame> data);
   private:
     double entropy(const std::string& k);
     double gain(const double S, const double a);
@@ -137,7 +147,6 @@ class Arbol {
     probability_map class_probabilities_;
     probability_map entropies_;
     std::map<std::string, std::map<std::string, double>> feature_probabilities_;
-    std::map<std::string, std::vector<std::string>> value_ranges_;
 };
 } // namespace arbol
 

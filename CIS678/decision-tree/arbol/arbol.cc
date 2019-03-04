@@ -6,10 +6,14 @@
 namespace arbol {
   std::unique_ptr<data_frame> Arbol::make_dataframe(const std::string& path) {
     std::ifstream indata;
+    // Open our data file
     indata.open(path);
+
+    // Record a line
     std::string line;
     std::vector<std::string> lines;
-    uint idx = 0;
+
+    // Initialize our values to -1 to check for errors
     int num_targets{-1}, num_attributes{-1}, num_examples{-1};
 
     // Store lines in vector
@@ -23,18 +27,19 @@ namespace arbol {
     num_examples = std::stoi(lines[2 + num_attributes]);
 
 
-    auto targets = split(lines[1]);
+    auto targets = util::split(lines[1]);
     std::map<std::string, std::vector<std::string>> attributes;
 
-    for (int i = num_attributes + 1; i < num_examples; ++i) {
-      auto vals = split(lines[i]);
-      std::vector<std::string> sub;
-      attributes[vals[0]] = (&lines[i][3], &lines[i][lines[i].size() - 1]);
+    for (int i = 0; i < num_attributes; ++i) {
+      int idx = i + 4;
+      auto vals = util::split(lines[idx]);
+      std::vector<std::string> sub(vals.begin() + 2, vals.end());;
+      attributes[vals[0]] = sub;
     }
 
     std::vector<std::vector<std::string>> attribute_values;
-    for (int i = num_exampes + 1; i < lines.size(); ++i) {
-      auto vals = split(lines[i]);
+    for (uint i = num_examples + 1; i < lines.size(); ++i) {
+      auto vals = util::split(lines[i]);
       attribute_values.push_back(vals);
     }
 
@@ -52,9 +57,7 @@ namespace arbol {
   // This will calculate the gain sum for a class k
   double sum_attributes(const std::string& k) {
     // Get all of our possible values a class can be
-    auto val_opts = value_ranges[k];
-
-
+    return 0.0;
   }
 
   double Arbol::gain(const double S, const double a) {
@@ -67,47 +70,64 @@ namespace arbol {
     return 0.0;
   }
 
-  void Arbol::fit(const std::vector<std::vector<std::string>> data) {
-    std::vector<std::string> labels = data_[0];
-    auto class_label_name = labels[labels.size() - 1];
+  void Arbol::fit(std::shared_ptr<data_frame> data) {
+    /* std::vector<std::string> labels = data_[0]; */
+    /* auto class_label_name = labels[labels.size() - 1]; */
 
-    // Remove the class label heading
-    labels.pop_back();
-    auto total_entries_count = data.size();
+    /* // Remove the class label heading */
+    /* labels.pop_back(); */
+    /* auto total_entries_count = data.size(); */
 
-    // First, we want to get the overall probability of each class label
-    for (uint i = 1; i < data.size(); ++i) {
-      ++class_probabilities_[data[i][labels.size() - 1]];
-    }
+    /* // First, we want to get the overall probability of each class label */
+    /* for (uint i = 1; i < data.size(); ++i) { */
+    /*   ++class_probabilities_[data[i][labels.size() - 1]]; */
+    /* } */
 
-    // Now, get our true probabilities of each label
-    for (const auto& proba : class_probabilities_) {
-      proba->second = (double)proba->second / (double)total_entries_count;
-    }
+    /* // Now, get our true probabilities of each label */
+    /* for (const auto& proba : class_probabilities_) { */
+    /*   proba->second = (double)proba->second / (double)total_entries_count; */
+    /* } */
 
-    // Now, calculate the entropy of our labels
-    double S{0.0};
+    /* // Now, calculate the entropy of our labels */
+    /* double S{0.0}; */
 
-    auto keys = util::extract_keys<std::string, double>(class_probabilities_);
-    S = entropy(keys[0]);
+    /* auto keys = util::extract_keys<std::string, double>(class_probabilities_); */
+    /* S = entropy(keys[0]); */
 
-    // Now we sum the rest into S.
-    for (int i = 1; i < keys.size(); ++i) { S -= entropy(keys[i]); }
+    /* // Now we sum the rest into S. */
+    /* for (int i = 1; i < keys.size(); ++i) { S -= entropy(keys[i]); } */
 
-    // With S as a now static value, we can move on calculating mad gains
-    // First, we sum our other class labels
-    for (int j = 0; j < labels.size(); ++j) {
-      for (int i = 1; i < data.size(); ++i) {
-        ++feature_probabilities_[labels[j]][data[i][j]];
-      }
-    }
+    /* // With S as a now static value, we can move on calculating mad gains */
+    /* // First, we sum our other class labels */
+    /* for (int j = 0; j < labels.size(); ++j) { */
+    /*   for (int i = 1; i < data.size(); ++i) { */
+    /*     ++feature_probabilities_[labels[j]][data[i][j]]; */
+    /*   } */
+    /* } */
   }
+
+  /* std::ostream& operator<<(std::ostream& os, data_frame df) { */
+  /*   auto mapkeys = extract_keys<std::string, std::vector<std::string>>(df.attributes); */
+  /*   auto mapvals = extract_values<std::string, std::vector<std::string>>(df.attributes); */
+  /*   auto keystring = vec_to_string<std::string>(mapkeys); */
+  /*   auto valstring = vec_to_string<std::string>(mapvals); */
+
+  /*   return os << "num_targets: " << df.num_targets << "\n" */
+  /*             << "targets: " << df.targets << "\n" */
+  /*             << "num_attributes: " << df.num_attributes << "\n" */
+  /*             << "attribute keys: " << keystring << "\n" */
+  /*             << "attribute vals: " << valstring << "\n" */
+  /*             << "num_examples: " << df.num_examples << "\n" */
+  /*             << "examples: " << print_2d_vector<std::string>(df.attribute_values) << "\n"; */
+  /* } */
 
 } // namespace arbol
 
 int main(int argc, char** argv) {
-  std::string arg = argv[1];
-  auto csv = arbol::util::load_non_numeric(arg);
-  arbol::util::print_vector(csv);
+  if (argc < 2) {
+    std::cout << "Usage: arbol <FILE_PATH>" << std::endl;
+  }
+  arbol::Arbol a;
+  auto csv = a.make_dataframe(argv[1]);
   return EXIT_SUCCESS;
 }
