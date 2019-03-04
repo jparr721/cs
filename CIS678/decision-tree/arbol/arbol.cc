@@ -105,22 +105,6 @@ namespace arbol {
     /*   } */
     /* } */
   }
-
-  /* std::ostream& operator<<(std::ostream& os, data_frame df) { */
-  /*   auto mapkeys = extract_keys<std::string, std::vector<std::string>>(df.attributes); */
-  /*   auto mapvals = extract_values<std::string, std::vector<std::string>>(df.attributes); */
-  /*   auto keystring = vec_to_string<std::string>(mapkeys); */
-  /*   auto valstring = vec_to_string<std::string>(mapvals); */
-
-  /*   return os << "num_targets: " << df.num_targets << "\n" */
-  /*             << "targets: " << df.targets << "\n" */
-  /*             << "num_attributes: " << df.num_attributes << "\n" */
-  /*             << "attribute keys: " << keystring << "\n" */
-  /*             << "attribute vals: " << valstring << "\n" */
-  /*             << "num_examples: " << df.num_examples << "\n" */
-  /*             << "examples: " << print_2d_vector<std::string>(df.attribute_values) << "\n"; */
-  /* } */
-
 } // namespace arbol
 
 int main(int argc, char** argv) {

@@ -132,8 +132,6 @@ struct data_frame {
 
   int num_examples;
   std::vector<std::vector<std::string>> attribute_values;
-
-  /* friend std::ostream& operator<<(std::ostream& os, data_frame df); */
 };
 
 class Arbol {
