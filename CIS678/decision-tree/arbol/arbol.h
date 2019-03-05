@@ -3,7 +3,6 @@
 
 #include <Eigen/Dense>
 #include <fstream>
-#include <map>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -35,19 +34,19 @@ namespace util {
                Eigen::RowMajor>>(values.data(), rows, values.size()/rows);
   }
 
-  template<typename TK, typename TV>
-  std::vector<TK> extract_keys(std::unordered_map<TK, TV> const& input_map) {
+  template<typename MapType, typename TK>
+  std::vector<TK> extract_keys(const MapType& input_map) {
     std::vector<TK> retval;
-    for (auto const& element : input_map) {
+    for (const auto& element : input_map) {
       retval.push_back(element.first);
     }
     return retval;
   }
 
-  template<typename TK, typename TV>
-  std::vector<TV> extract_values(std::unordered_map<TK, TV> const& input_map) {
+  template<typename MapType, typename TV>
+  std::vector<TV> extract_values(const MapType& input_map) {
     std::vector<TV> retval;
-    for (auto const& element : input_map) {
+    for (const auto& element : input_map) {
       retval.push_back(element.second);
     }
     return retval;
@@ -119,7 +118,7 @@ struct data_frame {
       int nt,
       std::vector<std::string> t,
       int na,
-      std::map<std::string, std::vector<std::string>> a,
+      std::unordered_map<std::string, std::vector<std::string>> a,
       int ne,
       std::vector<std::vector<std::string>> av) :
     num_targets(nt), targets(t), num_attributes(na), attributes(a), num_examples(ne), attribute_values(av) {};
@@ -128,7 +127,7 @@ struct data_frame {
   std::vector<std::string> targets;
 
   int num_attributes;
-  std::map<std::string, std::vector<std::string>> attributes;
+  std::unordered_map<std::string, std::vector<std::string>> attributes;
 
   int num_examples;
   std::vector<std::vector<std::string>> attribute_values;
@@ -139,12 +138,14 @@ class Arbol {
     std::unique_ptr<data_frame> make_dataframe(const std::string& path);
     void fit(std::shared_ptr<data_frame> data);
   private:
+    void calculate_total_entropy(std::shared_ptr<data_frame> data);
+
     double entropy(const std::string& k);
     double gain(const double S, const double a);
 
+    double total_entropy{0.0};
     probability_map class_probabilities_;
     probability_map entropies_;
-    std::map<std::string, std::map<std::string, double>> feature_probabilities_;
 };
 } // namespace arbol
 

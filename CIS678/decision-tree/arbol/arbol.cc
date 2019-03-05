@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include "arbol.h"
 
@@ -28,7 +29,7 @@ namespace arbol {
 
 
     auto targets = util::split(lines[1]);
-    std::map<std::string, std::vector<std::string>> attributes;
+    std::unordered_map<std::string, std::vector<std::string>> attributes;
 
     for (int i = 0; i < num_attributes; ++i) {
       int idx = i + 4;
@@ -70,40 +71,28 @@ namespace arbol {
     return 0.0;
   }
 
+  void Arbol::calculate_total_entropy(std::shared_ptr<data_frame> data) {
+    const auto dataset = data->attribute_values;
+    std::unordered_map<std::string, double> occurances;
+
+    // Sum the classes
+    for (const auto& row : dataset) {
+      ++occurances[row[row.size() - 1]];
+    }
+
+    const auto vals = util::extract_values<std::unordered_map<std::string, double>, double>(occurances);
+    const auto total = std::accumulate(vals.begin(), vals.end(), 0.0);
+
+    double final_entropy = (occurances.begin()->second/total) * std::log2(occurances.begin()->second/total);
+    for (auto it = std::next(occurances.begin(), 1); it != occurances.end(); ++it) {
+      final_entropy -= (it->second/total * std::log2(it->second / total));
+    }
+
+    total_entropy = final_entropy;
+  }
+
   void Arbol::fit(std::shared_ptr<data_frame> data) {
-    /* std::vector<std::string> labels = data_[0]; */
-    /* auto class_label_name = labels[labels.size() - 1]; */
 
-    /* // Remove the class label heading */
-    /* labels.pop_back(); */
-    /* auto total_entries_count = data.size(); */
-
-    /* // First, we want to get the overall probability of each class label */
-    /* for (uint i = 1; i < data.size(); ++i) { */
-    /*   ++class_probabilities_[data[i][labels.size() - 1]]; */
-    /* } */
-
-    /* // Now, get our true probabilities of each label */
-    /* for (const auto& proba : class_probabilities_) { */
-    /*   proba->second = (double)proba->second / (double)total_entries_count; */
-    /* } */
-
-    /* // Now, calculate the entropy of our labels */
-    /* double S{0.0}; */
-
-    /* auto keys = util::extract_keys<std::string, double>(class_probabilities_); */
-    /* S = entropy(keys[0]); */
-
-    /* // Now we sum the rest into S. */
-    /* for (int i = 1; i < keys.size(); ++i) { S -= entropy(keys[i]); } */
-
-    /* // With S as a now static value, we can move on calculating mad gains */
-    /* // First, we sum our other class labels */
-    /* for (int j = 0; j < labels.size(); ++j) { */
-    /*   for (int i = 1; i < data.size(); ++i) { */
-    /*     ++feature_probabilities_[labels[j]][data[i][j]]; */
-    /*   } */
-    /* } */
   }
 } // namespace arbol
 
