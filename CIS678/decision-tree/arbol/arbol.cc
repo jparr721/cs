@@ -29,7 +29,7 @@ namespace arbol {
 
 
     auto targets = util::split(lines[1]);
-    std::unordered_map<std::string, std::vector<std::string>> attributes;
+    std::map<std::string, std::vector<std::string>> attributes;
 
     for (int i = 0; i < num_attributes; ++i) {
       int idx = i + 4;
@@ -69,6 +69,17 @@ namespace arbol {
     double probability{class_probabilities_[k]};
     entropies_[k] = -probability * std::log2(probability);
     return 0.0;
+  }
+
+  int Arbol::dfs(const std::vector<std::string>& row, int idx) {
+    return 0;
+  }
+
+  std::string Arbol::guess(const std::vector<std::string>& row) {
+    std::string label = "";
+    int leaf_node = dfs(row, 0);
+
+    return leaf_node != -1 ? decision_tree[leaf_node].label : "fail";
   }
 
   void Arbol::calculate_total_entropy(std::shared_ptr<data_frame> data) {

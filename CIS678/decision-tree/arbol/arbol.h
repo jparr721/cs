@@ -92,7 +92,7 @@ namespace util {
     return values;
   }
 
-  inline bool is_integer(const std::string & s) {
+  bool is_integer(const std::string & s) {
      if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
 
      char * p;
@@ -110,15 +110,16 @@ namespace util {
     return result;
   }
 } // namespace util
-  using probability_map =
-    std::unordered_map<std::string, double>;
+
+using probability_map =
+  std::unordered_map<std::string, double>;
 
 struct data_frame {
   data_frame(
       int nt,
       std::vector<std::string> t,
       int na,
-      std::unordered_map<std::string, std::vector<std::string>> a,
+      std::map<std::string, std::vector<std::string>> a,
       int ne,
       std::vector<std::vector<std::string>> av) :
     num_targets(nt), targets(t), num_attributes(na), attributes(a), num_examples(ne), attribute_values(av) {};
@@ -127,11 +128,31 @@ struct data_frame {
   std::vector<std::string> targets;
 
   int num_attributes;
-  std::unordered_map<std::string, std::vector<std::string>> attributes;
+  std::map<std::string, std::vector<std::string>> attributes;
 
   int num_examples;
   std::vector<std::vector<std::string>> attribute_values;
 };
+
+template<class T>
+struct Node<T> {
+  int index;
+  int tree_index;
+
+  bool isLeaf;
+
+  std::string label;
+
+  T value;
+
+  std::vector<int> children;
+
+  Node() {
+    this.is_leaf = false;
+  }
+};
+
+using Tree = std::vector<Node<std::string>>;
 
 class Arbol {
   public:
@@ -140,12 +161,17 @@ class Arbol {
   private:
     void calculate_total_entropy(std::shared_ptr<data_frame> data);
 
+    int dfs(const std::vector<std::string>& row, int idx);
+
     double entropy(const std::string& k);
     double gain(const double S, const double a);
+
+    std::string guess(const std::vector<std::string>& row);
 
     double total_entropy{0.0};
     probability_map class_probabilities_;
     probability_map entropies_;
+    Tree decision_tree;
 };
 } // namespace arbol
 
