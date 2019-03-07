@@ -32,7 +32,7 @@ namespace tree {
 
   class Loader {
     public:
-      std::unique_ptr<dataset> load(const std::string& path) {
+      inline std::unique_ptr<dataset> load(const std::string& path) {
         std::ifstream indata;
         indata.open(path);
 
