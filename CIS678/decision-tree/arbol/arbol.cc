@@ -55,12 +55,6 @@ namespace arbol {
     return ptr;
   }
 
-  // This will calculate the gain sum for a class k
-  double sum_attributes(const std::string& k) {
-    // Get all of our possible values a class can be
-    return 0.0;
-  }
-
   double Arbol::gain(const double S, const double a) {
     return S - a;
   }
