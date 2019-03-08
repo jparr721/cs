@@ -6,23 +6,21 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
-#include <semaphore.h>
+#include <sys/sem.h>
 
 #define SIZE 16
 
 int main (int argc, char** argv)
 {
+    if (argc != 2) {
+      perror("Yo, enter number of loops, thanks");
+      return EXIT_FAILURE;
+    }
     int status;
     long int i, loop, temp, *shmPtr;
-    int shmId;
+    int shmId, sem_id;
     pid_t pid;
-
-    sem_t mutex;
-
-   if (sem_init(&mutex, 1, 1) < 0) {
-      perror("Failed to make semaphore");
-      return EXIT_FAILURE;
-   }
+    struct sembuf semaphores[2];
 
    loop = atol(argv[1]);
 
@@ -35,18 +33,31 @@ int main (int argc, char** argv)
       exit (1);
    }
 
+   key_t key;
+   key = ftok("Secret", 7);
+
+   if ((sem_id = semget(key, 1, IPC_CREAT | 0666)) == -1) {
+      perror("Failed to make the semaphore");
+      return EXIT_FAILURE;
+   }
+   semctl(sem_id, 0, SETVAL, 1);
+   semaphores[0].sem_num = 0;
+   semaphores[0].sem_op = -1;
+   semaphores[0].sem_flg = IPC_NOWAIT;
+   semaphores[1].sem_num = 1;
+   semaphores[1].sem_op = 1;
+   semaphores[1].sem_flg = IPC_NOWAIT;
+
    shmPtr[0] = 0;
    shmPtr[1] = 1;
 
    if (!(pid = fork())) {
       for (i=0; i<loop; i++) {
-        sem_wait(&mutex);
-        printf("Child entered the critical section\n");
+        semop(sem_id, &semaphores[0], 1);
         temp = shmPtr[0];
         shmPtr[0] = shmPtr[1];
         shmPtr[1] = temp;
-        printf("Child exiting critical section\n");
-        sem_post(&mutex);
+        semop(sem_id, &semaphores[1], 1);
       }
       if (shmdt (shmPtr) < 0) {
          perror ("just can't let go\n");
@@ -56,13 +67,11 @@ int main (int argc, char** argv)
    }
    else {
       for (i=0; i<loop; i++) {
-        sem_wait(&mutex);
-        printf("Parent entered critical section\n");
+        semop(sem_id, &semaphores[1], 1);
         temp = shmPtr[1];
         shmPtr[1] = shmPtr[0];
         shmPtr[0] = temp;
-        printf("Parent exiting critical section\n");
-        sem_post(&mutex);
+        semop(sem_id, &semaphores[0], 1);
       }
    }
 
@@ -78,6 +87,5 @@ int main (int argc, char** argv)
       exit(1);
    }
 
-   sem_destroy(&mutex);
    return 0;
 }
