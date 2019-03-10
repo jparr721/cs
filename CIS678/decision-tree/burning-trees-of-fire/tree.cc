@@ -54,25 +54,105 @@ namespace tree {
       tree[index].is_leaf = true;
       tree[index].label = table.data.back().back();
     }
+
+    int selected_idx = select_max_gain(table);
+    std::map<std::string, std::vector<int>> attr_map;
+
+    for (size_t i = 0u; i < table.data.size(); ++i) {
+      attr_map[table.data[i][selected_idx]].push_back(i);
+    }
+
+    tree[index].index = selected_idx;
+    auto majority_pair = get_majority_class_label(table);
+    double total_proportion = (double)majority_pair.second / table.data.size();
+
+    // Assume it is a mostly pure sample in this case
+    // If it's a leaf, we can just blast this answer
+    if (total_proportion > 0.8) {
+      tree[index].is_leaf = true;
+      tree[index].label = majority_pair.first;
+      return;
+    }
+
+    // If it's not a majority label, we need to make one
   }
 
-  double Tree::attribute_entorpy(const Table& table, int index) {
-    return 0.0;
+  std::pair<std::string, int>  Tree::get_majority_class_label(Table table) {
+    std::string label("");
+    int count{0};
+
+    std::map<std::string, int> counts;
+
+    for (size_t i = 0; i < table.data.size(); ++i) {
+      counts[table.data[i].back()]++;
+
+      if (counts[table.data[i].back()] > count) {
+        count = counts[table.data[i].back()];
+        label = table.data[i].back();
+      }
+    }
+
+    return {label, count};
   }
 
-  double Tree::gain(const Table& table, int index) {
-    return total_entropy_ - attribute_entorpy(table, index);
+  double Tree::single_attribute_entropy(const Table& table) const {
+    double ret{0.0};
+    int total = (int) table.data.size();
+
+    std::map<std::string, int> counts;
+
+    for (size_t i = 0; i < table.data.size(); ++i) {
+      counts[table.data[i].back()]++;
+    }
+
+    for (const auto& count : counts) {
+      double p = (double)count.second / total;
+
+      ret += -1.0 * p * std::log2(p);
+    }
+    return ret;
+  }
+
+  double Tree::attribute_entropy(const Table& table, int index) const {
+    double ret{0.0};
+    int total = (int)table.data.size();
+
+    std::map<std::string, std::vector<int>> attr_map;
+    for (size_t i = 0u; i < table.data.size(); ++i) {
+      attr_map[table.data[i][index]].push_back(i);
+    }
+
+    for (const auto& val : attr_map) {
+      Table new_table;
+      for (size_t i = 0u; i < val.second.size(); ++i) {
+        new_table.data.push_back(table.data[val.second[i]]);
+      }
+
+      int next_item_count = (int) new_table.data.size();
+
+      ret += (double) next_item_count / total * single_attribute_entropy(new_table);
+    }
+
+    return ret;
+  }
+
+  double Tree::gain(const Table& table, int index) const {
+    return total_entropy_ - attribute_entropy(table, index);
   }
 
   int Tree::select_max_gain(const Table& table) {
     int idx{-1};
-    int max_gain{0.0};
+    double max_gain{0.0};
 
-    for (size_t i = 0; i < initial_table.size(); ++i) {
-      if (max_gain < gain(Table, i)) {
-        std::cout << "Fuck off" << std::endl;
+    for (size_t i = 0; i < initial_table.data_value_list.size(); ++i) {
+      auto gain_ratio = gain(table, i);
+      if (max_gain < gain_ratio) {
+        max_gain = gain_ratio;
+        idx = i;
       }
     }
+
+    return idx;
   }
 
   std::string Tree::choose(const std::vector<std::string>& row) {
@@ -110,3 +190,18 @@ namespace tree {
     return -1;
   }
 } // namespace tree
+
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cout << "usage: burn <input_path>" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  tree::Loader loader;
+  auto data = loader.load(argv[1]);
+
+  tree::Tree tree(std::move(data));
+  tree.print_mat<std::string>(tree.initial_table.data);
+
+  return EXIT_SUCCESS;
+}

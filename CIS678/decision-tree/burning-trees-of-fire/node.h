@@ -6,7 +6,9 @@
 
 namespace tree {
   struct Node {
+    // Criteria Attr Indedx
     int index;
+    // Tree Index
     int tree_index;
 
     bool is_leaf = false;

@@ -11,7 +11,7 @@
 namespace tree {
   struct dataset {
     dataset(
-        int nt,
+      int nt,
       std::vector<std::string> t,
       int na,
       std::map<std::string, std::vector<std::string>> a,
@@ -50,7 +50,7 @@ namespace tree {
 
         nt = std::stoi(lines[0]);
         na = std::stoi(lines[2]);
-        ne = std::stoi(lines[2 + na]);
+        ne = std::stoi(lines[2 + na + 1]);
 
         auto targets = util::split(lines[1]);
         std::map<std::string, std::vector<std::string>> attributes;
@@ -58,7 +58,12 @@ namespace tree {
         for (int i = 0; i < na; ++i) {
           int idx = i + 4;
           auto vals = util::split(lines[idx]);
-          std::vector<std::string> sub(vals.begin() + 2, vals.end());;
+
+          auto start = vals.begin() + 2;
+          auto end = vals.end();
+
+          std::vector<std::string> sub;
+          std::copy(start, end, sub.begin());
           attributes[vals[0]] = sub;
         }
 
