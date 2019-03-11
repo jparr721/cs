@@ -26,6 +26,9 @@ namespace tree {
   Tree::Tree(std::unique_ptr<dataset> input) {
     data_ = std::move(input);
     initial_table.init(*data_);
+    Node root;
+    root.index = 0;
+    tree.push_back(root);
   }
 
   void Tree::calculate_total_entropy() {
@@ -53,6 +56,7 @@ namespace tree {
     if (is_leaf_node(table)) {
       tree[index].is_leaf = true;
       tree[index].label = table.data.back().back();
+      return;
     }
 
     int selected_idx = select_max_gain(table);
@@ -64,6 +68,7 @@ namespace tree {
 
     tree[index].index = selected_idx;
     auto majority_pair = get_majority_class_label(table);
+    std::cout << majority_pair.first << " --- " << majority_pair.second << std::endl;
     double total_proportion = (double)majority_pair.second / table.data.size();
 
     // Assume it is a mostly pure sample in this case
@@ -75,6 +80,54 @@ namespace tree {
     }
 
     // If it's not a majority label, we need to make one
+    for (size_t i = 0u; i < initial_table.data_value_list[selected_idx].size(); ++i) {
+      std::string value = initial_table.data_value_list[selected_idx][i];
+
+      Table new_table;
+      std::vector<int> attr_indexes = attr_map[value];
+      for (size_t i = 0; i < attr_indexes.size(); ++i) {
+        new_table.data.push_back(table.data[attr_indexes[i]]);
+      }
+
+      Node next_node;
+      next_node.value = value;
+
+      // Since we always add to the bottom, make it current tree size
+      next_node.tree_index = (int)tree.size();
+
+      // Stack another child node location onto the tree
+      tree[index].children.push_back(next_node.tree_index);
+
+      // Push back the next node
+      tree.push_back(next_node);
+
+      // If the table data is empty
+      if (new_table.data.size() == 0) {
+        next_node.is_leaf = true;
+        next_node.label = get_majority_class_label(new_table).first;
+        tree[next_node.index] = next_node;
+      } else {
+        // If not empty, recurse down the subtree
+        std::cout << new_table.data.size() << std::endl;
+        std::cout << new_table.attribute_list.size() << std::endl;
+        std::cout << next_node.label << std::endl;
+        fit(new_table, next_node.index);
+      }
+    }
+  }
+
+  void Tree::print_tree(int idx, std::string branch) {
+    if (tree[idx].is_leaf) {
+      std::cout << branch << "Label: " << tree[idx].label << std::endl;
+    }
+
+    for (size_t i = 0; i < tree[idx].children.size(); ++i) {
+      int child_idx = tree[idx].children[i];
+      std::string attr_name = initial_table.attribute_list[tree[idx].index];
+      std::string attr_value = tree[child_idx].value;
+
+      print_tree(child_idx, branch + attr_name + " = " + attr_value + ", ");
+    }
   }
 
   std::pair<std::string, int>  Tree::get_majority_class_label(Table table) {
@@ -201,7 +254,17 @@ int main(int argc, char** argv) {
   auto data = loader.load(argv[1]);
 
   tree::Tree tree(std::move(data));
+  std::cout << "The data" << std::endl;
   tree.print_mat<std::string>(tree.initial_table.data);
+  tree.print_mat<std::string>(tree.initial_table.data_value_list);
+  std::cout << "attributes..." << std::endl;
+  for (const auto& value : tree.initial_table.attribute_list) {
+    std::cout << value << std::endl;
+  }
+
+  tree.fit(tree.initial_table, 0);
+  std::cout << "Tree generated..." << std::endl;
+  tree.print_tree(0, "");
 
   return EXIT_SUCCESS;
 }

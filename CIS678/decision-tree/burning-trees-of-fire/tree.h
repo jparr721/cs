@@ -22,6 +22,8 @@ namespace tree {
       Tree(std::unique_ptr<dataset> input);
 
       void fit(const Table& table, int index);
+      void print_tree(int idx, std::string branch);
+
       template <typename T>
       void print_mat(const std::vector<std::vector<T>> mat) {
         for (const auto& row : mat) {
@@ -36,6 +38,7 @@ namespace tree {
 
     private:
       void calculate_total_entropy();
+
       int dfs(const std::vector<std::string>& row, int current);
       int select_max_gain(const Table& table);
 

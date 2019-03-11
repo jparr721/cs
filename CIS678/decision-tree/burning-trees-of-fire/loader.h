@@ -52,25 +52,25 @@ namespace tree {
         na = std::stoi(lines[2]);
         ne = std::stoi(lines[2 + na + 1]);
 
-        auto targets = util::split(lines[1]);
+        auto targets = util::split(lines[1], ',');
         std::map<std::string, std::vector<std::string>> attributes;
 
         for (int i = 0; i < na; ++i) {
           int idx = i + 4;
-          auto vals = util::split(lines[idx]);
+          auto vals = util::split(lines[idx], ',');
 
-          auto start = vals.begin() + 2;
-          auto end = vals.end();
-
-          std::vector<std::string> sub;
-          std::copy(start, end, sub.begin());
+          std::vector<std::string> sub(vals.begin() + 2, vals.end());
           attributes[vals[0]] = sub;
         }
 
         std::vector<std::vector<std::string>> attribute_values;
         for (uint i = ne + 1; i < lines.size(); ++i) {
-          auto vals = util::split(lines[i]);
-          attribute_values.push_back(vals);
+          auto vals = util::split(lines[i], ',');
+          for (const auto& val : vals) {
+            std::vector<std::string> ov;
+            ov.push_back(val);
+            attribute_values.push_back(ov);
+          }
         }
 
         // Return a unique ptr to our shared data
