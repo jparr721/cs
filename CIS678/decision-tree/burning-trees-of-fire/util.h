@@ -57,11 +57,13 @@ namespace util {
      return (*p == 0);
   }
 
-  inline std::vector<std::string> split(std::string line) {
+  inline std::vector<std::string> split(const std::string& line, char delim) {
     std::vector<std::string> result;
     std::istringstream iss(line);
-    for (std::string line; iss >> line;)
-      result.push_back(line);
+    std::string the_line = "";
+
+    while (std::getline(iss, the_line, delim))
+      result.push_back(the_line);
 
     return result;
   }
