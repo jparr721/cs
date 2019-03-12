@@ -54,13 +54,15 @@ namespace tree {
 
         auto targets = util::split(lines[1], ',');
         std::map<std::string, std::vector<std::string>> attributes;
+        std::vector<std::string> sub;
 
         for (int i = 0; i < na; ++i) {
-          int idx = i + 4;
+          int idx = i + 3;
           auto vals = util::split(lines[idx], ',');
 
-          std::vector<std::string> sub(vals.begin() + 2, vals.end());
-          attributes[vals[0]] = sub;
+          for (auto it = vals.begin() + 2; it != vals.end(); ++it) {
+            attributes[vals[0]].push_back(*it);
+          }
         }
 
         std::vector<std::vector<std::string>> attribute_values;

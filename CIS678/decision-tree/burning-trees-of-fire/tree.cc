@@ -9,17 +9,14 @@ namespace tree {
     attribute_list = the_data.targets;
     data = the_data.attribute_values;
     data_value_list.resize(attribute_list.size());
+    std::vector<std::string> value;
 
-    for (size_t i = 0u; i < attribute_list.size(); ++i) {
-      std::map<std::string, int> value;
+    for (size_t j = 0u; j < data.size(); ++j) {
+      value.push_back(data[j][0]);
+    }
 
-      for (const auto& val : data) {
-        value[val[i]] = 1;
-      }
-
-      for (const auto& map_val : value) {
-        data_value_list[i].push_back(map_val.first);
-      }
+    for (const auto& map_val : value) {
+      data_value_list[0].push_back(map_val);
     }
   }
 
@@ -254,10 +251,8 @@ int main(int argc, char** argv) {
   auto data = loader.load(argv[1]);
 
   tree::Tree tree(std::move(data));
-  std::cout << "The data" << std::endl;
   tree.print_mat<std::string>(tree.initial_table.data);
   tree.print_mat<std::string>(tree.initial_table.data_value_list);
-  std::cout << "attributes..." << std::endl;
   for (const auto& value : tree.initial_table.attribute_list) {
     std::cout << value << std::endl;
   }

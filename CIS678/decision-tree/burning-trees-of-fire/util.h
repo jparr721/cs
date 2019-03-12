@@ -60,7 +60,7 @@ namespace util {
   inline std::vector<std::string> split(const std::string& line, char delim) {
     std::vector<std::string> result;
     std::istringstream iss(line);
-    std::string the_line;
+    std::string the_line = "";
 
     while (std::getline(iss, the_line, delim))
       result.push_back(the_line);
