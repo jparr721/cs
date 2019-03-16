@@ -2,18 +2,25 @@
 #include <stdlib.h>
 #include <semaphore.h>
 
+int pshared;
 int ret;
-sem_t sem_name;
+int value;
+sem_t sem;
 
-long int count = 1;
+int sem_post(sem_t *sem);
+
+long int count = 0;
 
 int sem_init(sem_t *sem, int pshared, unsigned int value); 
 
 
 int main ()
 {
+	pshared = 0;
+	value = 1;
+
 	for(;;) {
-		sem_post(s&sem_name);
+		ret = sem_post(&sem);
 		count++;
 
 		printf("Count: %ld\n", count);
