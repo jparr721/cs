@@ -24,7 +24,7 @@ class MonoVo:
         Parameters
         ----------
         image_path {str} - The file path for the video image sequences
-        post_path {str} - The file path for the true posts in the images
+        pose_path {str} - The file path for the true poses in the images
         focal_length {float} - The focal length of the camera used
         pp {tuple} - The principal point of the camera
         lk_params {dict} - The params for the Lucas Kanade optical flow
@@ -48,10 +48,10 @@ class MonoVo:
 
         try:
             with open(self.pose_path) as f:
-                self.post = f.readlines()
+                self.pose = f.readlines()
         except Exception as e:
             print(e)
-            raise ValueError('The post file path is invalid')
+            raise ValueError('The pose file path is invalid')
 
         self.process_frame()
 
@@ -141,12 +141,23 @@ class MonoVo:
 
             self.n_features = self.good_new.shape[0]
 
+    def get_mono_coordinates(self):
+        diag = np.array([-1, 0, 0],
+                        [0, -1, 0],
+                        [0, 0, -1])
+        adj_coord = np.matmul(diag, self.t)
+
+        return adj_coord.flatten()
+
+    def get_true_coordinates(self):
+        return self.true_coord.flatten()
+
     def get_absolute_scale(self):
         '''
         Get pose estimation scale for multiplying with the
         rotation and translation vectors
         '''
-        pose = self.post[self.id - 1].strip().split()
+        pose = self.pose[self.id - 1].strip().split()
         x_prev = float(pose[3])
         y_prev = float(pose[7])
         z_prev = float(pose[11])
