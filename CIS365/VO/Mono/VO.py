@@ -11,7 +11,7 @@ class MonoVo:
             focal_length=718.8560,
             pp=(607.1928, 185.2157),
             lk_params=dict(
-                win_size=(21, 21),
+                winSize=(21, 21),
                 criteria=(
                     cv2.TERM_CRITERIA_EPS |
                     cv2.TERM_CRITERIA_COUNT, 30, 0.01)),
@@ -32,7 +32,9 @@ class MonoVo:
         '''
         self.image_path = image_path
         self.pose_path = pose_path
-        self.focal_length = focal_length
+        self.focal = focal_length
+        self.detector = detector
+        self.lk_params = lk_params
         self.pp = pp
         self.R = np.zeros(shape=(3, 3))
         self.t = np.zeros(shape=(3, 3))
@@ -89,7 +91,7 @@ class MonoVo:
         self.p1, status, err = cv2.calcOpticalFlowPyrLK(
                 self.old_frame,
                 self.current_frame,
-                self.points,
+                self.p0,
                 None,
                 **self.lk_params)
 
@@ -111,10 +113,11 @@ class MonoVo:
                     E,
                     self.good_old,
                     self.good_new,
+                    self.R,
+                    self.t,
                     self.focal,
                     self.pp,
-                    cv2.RANSAC,
-                    0.999, 1.0, None)
+                    None)
         else:
             E, _ = cv2.findEssentialMat(
                     self.good_new,
@@ -127,10 +130,11 @@ class MonoVo:
                     E,
                     self.good_old,
                     self.good_new,
+                    self.R.copy(),
+                    self.t.copy(),
                     self.focal,
                     self.pp,
-                    cv2.RANSAC,
-                    0.999, 1.0, None)
+                    None)
             absolute_scale = self.get_absolute_scale()
 
             if (absolute_scale > 0.1 and
@@ -142,9 +146,9 @@ class MonoVo:
             self.n_features = self.good_new.shape[0]
 
     def get_mono_coordinates(self):
-        diag = np.array([-1, 0, 0],
+        diag = np.array([[-1, 0, 0],
                         [0, -1, 0],
-                        [0, 0, -1])
+                        [0, 0, -1]])
         adj_coord = np.matmul(diag, self.t)
 
         return adj_coord.flatten()
@@ -181,11 +185,11 @@ class MonoVo:
                     self.image_path + str().zfill(6)+'.png', 0)
             self.current_frame = cv2.imread(
                     self.image_path + str(1).zfill(6)+'.png', 0)
-            self.visual_odometery()
+            self.visual_odometry()
             self.id = 2
         else:
             self.old_frame = self.current_frame
             self.current_frame = cv2.imread(
                     self.image_path + str(self.id).zfill(6)+'.png', 0)
-            self.visual_odometery()
+            self.visual_odometry()
             self.id += 1
