@@ -1,26 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <semaphore.h>
-
-int pshared;
-int ret;
-int value;
-sem_t sem;
-
-int sem_post(sem_t *sem);
-
-long int count = 0;
-
-int sem_init(sem_t *sem, int pshared, unsigned int value); 
+#include <sys/ipc.h>
+#include <sys/sem.h>
 
 
 int main ()
 {
-	pshared = 0;
-	value = 1;
+	long int count = 1;
+	//Initialize Semaphore here
+	int sem = semget(IPC_PRIVATE, 1, 00600);
 
 	for(;;) {
-		ret = sem_post(&sem);
+		//Increment semaphore count here		
+
+		if(semctl(sem, 0, SETVAL, count) == -1){
+			perror("Darn\n");
+			exit(1);
+		}
+
 		count++;
 
 		printf("Count: %ld\n", count);
