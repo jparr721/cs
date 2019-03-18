@@ -16,6 +16,11 @@ namespace slam {
           std::vector<cv::Point2f>& points1,
           std::vector<cv::Point2f>& points2,
           std::vector<uchar>& status);
+
+      double get_absolute_scale(int frame_id, int sequence_id, double z_cal);
+
+      const int MAX_FRAME = 1000;
+      const int MIN_NUM_FEAT = 2000;
   };
 } // namespace slam
 
