@@ -8,7 +8,7 @@
 namespace slam {
   class Slam {
     public:
-      void process_frame(std::string frame_name);
+      void process_frame();
       void detect_features(cv::Mat img, std::vector<cv::Point2f>& points);
       void track_features(
           cv::Mat img1,
