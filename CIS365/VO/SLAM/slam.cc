@@ -6,15 +6,12 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
-#include <opencv2/video/tracking.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
 #include "slam.h"
 
+/* using namespace cv; */
+
 namespace slam {
-  void Slam::process_frame(std::string frame_name) {
+  void Slam::process_frame() {
     cv::Mat img1, img2;
     // Our rotation and translation vectors
     cv::Mat R_f;
@@ -30,8 +27,8 @@ namespace slam {
     double font_scale{1.0};
     char file1[100];
     char file2[100];
-    file1 = std::sprintf("./dataset/sequences/00/image_0/%06d.png", 0);
-    file2 = std::sprintf("./dataset/sequences/00/image_0/%06d.png", 1);
+    std::sprintf(file1, "./dataset/sequences/00/image_0/%06d.png", 0);
+    std::sprintf(file2, "./dataset/sequences/00/image_0/%06d.png", 1);
 
     cv::Point text_org(10, 50);
 
@@ -80,20 +77,20 @@ namespace slam {
     cv::namedWindow("Road facing camera", cv::WINDOW_AUTOSIZE);
     cv::namedWindow("Trajectory", cv::WINDOW_AUTOSIZE);
 
-    cv::Mat traj = cv::Mat::zeros(600, 600, cv::CV_8UC3);
+    cv::Mat traj = cv::Mat::zeros(cv::Size(600, 600), CV_8UC3);
 
     for (int i = 2; i < MAX_FRAME; ++i) {
-      filename = std::sprintf("./dataset/sequences/00/image_0/%06d.png", i);
+      std::sprintf(filename, "./dataset/sequences/00/image_0/%06d.png", i);
       cv::Mat cur_image_cache = cv::imread(filename);
       cv::cvtColor(cur_image_cache, cur_image, cv::COLOR_BGR2GRAY);
       std::vector<uchar> status;
-      track_features(cur_features, prev_features, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
+      track_features(cur_image, prev_image, cur_features, prev_features, status);
 
       E = cv::findEssentialMat(cur_features, prev_features, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
       cv::recoverPose(E, cur_features, prev_features, R, t, focal, pp, mask);
 
-      cv::Mat prev_points(2, prev_features.size(), cv::CV_64F);
-      cv::Mat cur_points(2, cur_features.size(), cv::CV_64F);
+      cv::Mat prev_points(2, prev_features.size(), CV_64F);
+      cv::Mat cur_points(2, cur_features.size(), CV_64F);
 
       for (int j = 0; i < prev_features.size(); ++i) {
         prev_points.at<double>(0, j) = prev_features.at(j).x;
@@ -118,8 +115,8 @@ namespace slam {
 
       int x = int(t_f.at<double>(0) + 300);
       int y = int(t_f.at<double>(2) + 100);
-      cv::circle(traj, cv::Point(x, y), 1, cv::CV_RGB(255, 0, 0), 2);
-      cv::rectangle(traj, cv::Point(10, 30), cv::Point(550, 50), cv::CV_RGB(0, 0, 0), cv::FILLED);
+      cv::circle(traj, cv::Point(x, y), 1, CV_RGB(255, 0, 0), 2);
+      cv::rectangle(traj, cv::Point(10, 30), cv::Point(550, 50), CV_RGB(0, 0, 0), cv::FILLED);
 
       std::sprintf(text, "Coordinates: x = %02fm y=%02fm z= %02fm", t_f.at<double>(0), t_f.at<double>(1), t_f.at<double>(2));
       cv::putText(traj, text, text_org, font_face, font_scale, cv::Scalar::all(255), thickness, 8);
@@ -130,7 +127,7 @@ namespace slam {
     }
 
     clock_t end = clock();
-    double elapsed{double(end - begin) / cv::CLOCKS_PER_SEC};
+    double elapsed{double(end - begin) / CLOCKS_PER_SEC};
     std::cout << "Total time taken: " << elapsed << std::endl;
   }
 
