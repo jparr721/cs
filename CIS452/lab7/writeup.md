@@ -5,8 +5,8 @@ Jarred Parr and Alexander Fountain
 | System Object                      | Method    | Value                                                        | Details                                                      |
 | ---------------------------------- | --------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Max semaphores per process         | Static    | 256, 32,000                                                  | Found via cat /usr/include/bits/posix_lim.h and semget() man pages. First value is pre 3.19 linux and the other is post |
-| Max value of a counting semaphore  | Static    | 32767                                                        | Found via the man pages of semctl                            |
-| Max value of a counting semaphore  | Empirical | 65535                                                        | Found via count.c shown below. It loops until the value overflows then terminated and read. |
+| Max value of a counting semaphore  | Static    | 32767                                                        | Found via count.c shown below. It loops until the value overflows then terminated and read. |                            
+| Max value of a counting semaphore  | Empirical | 65535                                                        | Found via the man pages of semctl|
 | Maximum shared memory segment size | Empirical | 61632512 bytes                                               | Found in the sysinfo struct in the file lim.c shown below. Value was read from the system given its current state |
 | Page Size                          | Dynamic   | 4096 bytes                                                   | Found via the getconf PAGE_SIZE command                      |
 | Physical Pages in System           | Dynamic   | 4194304                                                      | sysconf(_SC_PHYS_PAGES) to find the physical page number     |
