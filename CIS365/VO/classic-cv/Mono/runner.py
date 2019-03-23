@@ -87,8 +87,8 @@ def run(image_path, pose_path, focal, pp, R_total, t_total):
 
 
 if __name__ == '__main__':
-    image_path = '../dataset/sequences/00/image_0/'
-    pose_path = '../data_pose/dataset/poses/00.txt'
+    pose_path = '../poses/dataset/poses/00.txt'
+    image_path = '../grey/dataset/sequences/00/image_0/'
     focal = 718.8560
     pp = (607.1928, 185.2157)
     R_total = np.zeros((3, 3))
