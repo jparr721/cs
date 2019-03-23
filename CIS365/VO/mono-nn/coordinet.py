@@ -1,17 +1,14 @@
 import keras
 from sklearn.model_selection import train_test_split
 import pathlib
-import cv2
 
 
 class CoordiNet():
-    def __init__(self, img_x, img_y, input_data_path, label_data_path):
-        self.img_x = img_x
-        self.img_y = img_y
+    def __init__(self, input_data_path, label_data_path):
         self.input_data_path = input_data_path
         self.label_data_path = label_data_path
 
-    def make_net(self, models: list):
+    def make_net(self, layers: list):
         self.model = keras.models.Sequential()
         for model in models:
             self.model.add(model)
@@ -50,7 +47,7 @@ class CoordiNet():
             X_train,
             X_valid,
             y_train,
-            y_valid
+            y_valid,
             epochs=1000,
             batch_size=32,
             save_file='model.hd5'):
