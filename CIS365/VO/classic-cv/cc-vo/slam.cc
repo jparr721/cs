@@ -12,7 +12,6 @@
 
 namespace slam {
   void Slam::process_frame() {
-    cv::Mat img1, img2;
     // Our rotation and translation vectors
     cv::Mat R_f;
     cv::Mat t_f;
@@ -27,17 +26,17 @@ namespace slam {
     double font_scale{1.0};
     char file1[100];
     char file2[100];
-    std::sprintf(file1, "./dataset/sequences/00/image_0/%06d.png", 0);
-    std::sprintf(file2, "./dataset/sequences/00/image_0/%06d.png", 1);
+    std::sprintf(file1, "../../../dataset/sequences/00/image_0/%06d.png", 0);
+    std::sprintf(file2, "../../../dataset/sequences/00/image_0/%06d.png", 1);
 
     cv::Point text_org(10, 50);
 
     // Read the first two frames from the dataset
-    cv::Mat img_1_cached = cv::imread(file1);
-    cv::Mat img_2_cached = cv::imread(file2);
+    cv::Mat img1 = cv::imread(file1);
+    cv::Mat img2 = cv::imread(file2);
 
     // Check if it blew up
-    if (!img_1_cached.data || !img_2_cached.data) { std::cerr << "Failed to read image" << std::endl; }
+    if (!img1.data || !img2.data) { std::cerr << "Failed to read image" << std::endl; }
 
     // Begin our feature detection algorithm
     std::vector<cv::Point2f> points1, points2;
@@ -56,15 +55,21 @@ namespace slam {
 
     // Get the pose and essential matrix via y.T * E * y quadratic form transformation
     cv::Mat E, R, t, mask;
+
     // Find this via the RANSAC algorithm
     // E is our essential matrix
     E = cv::findEssentialMat(points2, points1, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
+
+    // Recover the relative camera rotation and translation from the essential matrix
     cv::recoverPose(E, points2, points1, R, t, focal, pp, mask);
 
     cv::Mat prev_image = img2;
     cv::Mat cur_image;
     std::vector<cv::Point2f> prev_features = points2;
     std::vector<cv::Point2f> cur_features;
+
+    std::cout << prev_features.size() << std::endl;
+    std::cout << cur_features.size() << std::endl;
 
     char filename[100];
     char text[100];
@@ -80,10 +85,11 @@ namespace slam {
     cv::Mat traj = cv::Mat::zeros(cv::Size(600, 600), CV_8UC3);
 
     for (int i = 2; i < MAX_FRAME; ++i) {
-      std::sprintf(filename, "./dataset/sequences/00/image_0/%06d.png", i);
-      cv::Mat cur_image_cache = cv::imread(filename);
-      cv::cvtColor(cur_image_cache, cur_image, cv::COLOR_BGR2GRAY);
       std::vector<uchar> status;
+      std::sprintf(filename, "../../../dataset/sequences/00/image_0/%06d.png", i);
+
+      cv::Mat cur_image_cache = cv::imread(filename);
+
       track_features(cur_image, prev_image, cur_features, prev_features, status);
 
       E = cv::findEssentialMat(cur_features, prev_features, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
@@ -144,17 +150,24 @@ namespace slam {
       std::vector<cv::Point2f>& points1,
       std::vector<cv::Point2f>& points2,
       std::vector<uchar>& status) {
+
     std::vector<float> error;
     cv::Size window_size = cv::Size(21, 21);
     cv::TermCriteria term_crit = cv::TermCriteria(
         cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
+
+    std::cout << img1.size() << " " << img2.size() << std::endl;
+    std::cout << points1.size() << " " << points2.size() << std::endl;
+    /* for (const auto& val : points1) { std::cout << val << std::endl; } */
+    /* for (const auto& val : points2) { std::cout << val << std::endl; } */
     cv::calcOpticalFlowPyrLK(
         img1, img2, points1, points2, status, error, window_size, 3, term_crit, 0, 0.001);
+    std::cout << "pass" << std::endl;
 
-    // Get rid of points that the KLT tracker couldn't track
+    // Get rid of points that the KLT tracker couldn't track or if they've gone out of frame
     int index_correction = 0;
     for (int i = 0; i < status.size(); ++i) {
-      cv::Point2f t = points2.at(1 - index_correction);
+      cv::Point2f t = points2.at(i - index_correction);
       if (status.at(i) == 0 || t.x < 0 || t.y < 0) {
         if (t.x < 0 || t.y < 0) {
           status.at(i) = 0;
@@ -178,7 +191,7 @@ namespace slam {
 
     std::string line;
 
-    std::ifstream datfile("./dataset/sequences/00/calib.txt");
+    std::ifstream datfile("../../../dataset/sequences/00/calib.txt");
 
     if (datfile.is_open()) {
       for(;(std::getline(datfile, line)) && (i <= frame_id);) {
