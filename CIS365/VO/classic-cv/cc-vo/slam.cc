@@ -96,8 +96,8 @@ namespace slam {
         prev_points.at<double>(0, j) = prev_features.at(j).x;
         prev_points.at<double>(1, j) = prev_features.at(j).y;
 
+        cur_points.at<double>(0, j) = prev_features.at(j).x;
         cur_points.at<double>(1, j) = prev_features.at(j).y;
-        prev_points.at<double>(1, j) = prev_features.at(j).y;
       }
 
       if (scale > 0.1 && t.at<double>(2) > t.at<double>(0) && t.at<double>(2) > t.at<double>(1)) {
@@ -119,6 +119,7 @@ namespace slam {
       cv::rectangle(traj, cv::Point(10, 30), cv::Point(550, 50), CV_RGB(0, 0, 0), cv::FILLED);
 
       std::sprintf(text, "Coordinates: x = %02fm y=%02fm z= %02fm", t_f.at<double>(0), t_f.at<double>(1), t_f.at<double>(2));
+      std::cout << text << std::endl;
       cv::putText(traj, text, text_org, font_face, font_scale, cv::Scalar::all(255), thickness, 8);
 
       cv::imshow("Road facing camera", cur_image);
@@ -149,8 +150,6 @@ namespace slam {
     cv::Size window_size = cv::Size(21, 21);
     cv::TermCriteria term_crit = cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
 
-    /* std::cout << img1.size() << " " << img2.size() << std::endl; */
-    /* std::cout << points1.size() << " " << points2.size() << std::endl; */
     cv::calcOpticalFlowPyrLK(img1, img2, points1, points2, status, error, window_size, 3, term_crit, 0, 0.001);
 
     // Get rid of points that the KLT tracker couldn't track or if they've gone out of frame
