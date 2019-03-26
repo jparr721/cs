@@ -8,8 +8,6 @@
 #include <cstdio>
 #include "slam.h"
 
-/* using namespace cv; */
-
 namespace slam {
   void Slam::process_frame() {
     // Our rotation and translation vectors
@@ -43,7 +41,6 @@ namespace slam {
 
     // Store features into our point vector
     detect_features(img1, points1);
-
     std::vector<uchar> status;
     // Track our features between image one and two in a sequence
     track_features(img1, img2, points1, points2, status);
@@ -68,9 +65,6 @@ namespace slam {
     std::vector<cv::Point2f> prev_features = points2;
     std::vector<cv::Point2f> cur_features;
 
-    std::cout << prev_features.size() << std::endl;
-    std::cout << cur_features.size() << std::endl;
-
     char filename[100];
     char text[100];
 
@@ -88,9 +82,9 @@ namespace slam {
       std::vector<uchar> status;
       std::sprintf(filename, "../../../dataset/sequences/00/image_0/%06d.png", i);
 
-      cv::Mat cur_image_cache = cv::imread(filename);
+      cv::Mat cur_image = cv::imread(filename);
 
-      track_features(cur_image, prev_image, cur_features, prev_features, status);
+      track_features(prev_image, cur_image, prev_features, cur_features, status);
 
       E = cv::findEssentialMat(cur_features, prev_features, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
       cv::recoverPose(E, cur_features, prev_features, R, t, focal, pp, mask);
@@ -127,7 +121,7 @@ namespace slam {
       std::sprintf(text, "Coordinates: x = %02fm y=%02fm z= %02fm", t_f.at<double>(0), t_f.at<double>(1), t_f.at<double>(2));
       cv::putText(traj, text, text_org, font_face, font_scale, cv::Scalar::all(255), thickness, 8);
 
-      cv::imshow("Road facing camera", cur_image_cache);
+      cv::imshow("Road facing camera", cur_image);
       cv::imshow("Trajectory", traj);
       cv::waitKey(1);
     }
@@ -153,16 +147,11 @@ namespace slam {
 
     std::vector<float> error;
     cv::Size window_size = cv::Size(21, 21);
-    cv::TermCriteria term_crit = cv::TermCriteria(
-        cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
+    cv::TermCriteria term_crit = cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
 
-    std::cout << img1.size() << " " << img2.size() << std::endl;
-    std::cout << points1.size() << " " << points2.size() << std::endl;
-    /* for (const auto& val : points1) { std::cout << val << std::endl; } */
-    /* for (const auto& val : points2) { std::cout << val << std::endl; } */
-    cv::calcOpticalFlowPyrLK(
-        img1, img2, points1, points2, status, error, window_size, 3, term_crit, 0, 0.001);
-    std::cout << "pass" << std::endl;
+    /* std::cout << img1.size() << " " << img2.size() << std::endl; */
+    /* std::cout << points1.size() << " " << points2.size() << std::endl; */
+    cv::calcOpticalFlowPyrLK(img1, img2, points1, points2, status, error, window_size, 3, term_crit, 0, 0.001);
 
     // Get rid of points that the KLT tracker couldn't track or if they've gone out of frame
     int index_correction = 0;
