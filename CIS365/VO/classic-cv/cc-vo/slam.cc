@@ -86,19 +86,23 @@ namespace slam {
 
       track_features(prev_image, cur_image, prev_features, cur_features, status);
 
+      std::cout << cur_features.size() << " " << prev_features.size() << std::endl;
       E = cv::findEssentialMat(cur_features, prev_features, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
       cv::recoverPose(E, cur_features, prev_features, R, t, focal, pp, mask);
 
       cv::Mat prev_points(2, prev_features.size(), CV_64F);
       cv::Mat cur_points(2, cur_features.size(), CV_64F);
 
-      for (int j = 0; i < prev_features.size(); ++i) {
+      for (int j = 0; j < prev_features.size(); ++j) {
         prev_points.at<double>(0, j) = prev_features.at(j).x;
         prev_points.at<double>(1, j) = prev_features.at(j).y;
 
         cur_points.at<double>(0, j) = prev_features.at(j).x;
         cur_points.at<double>(1, j) = prev_features.at(j).y;
       }
+
+      // This breaks the localization map somehow...
+      scale = get_absolute_scale(i, 0, t.at<double>(2));
 
       if (scale > 0.1 && t.at<double>(2) > t.at<double>(0) && t.at<double>(2) > t.at<double>(1)) {
         t_f = t_f + scale * (R_f * t);
@@ -113,8 +117,8 @@ namespace slam {
       prev_image = cur_image.clone();
       prev_features = cur_features;
 
-      int x = int(t_f.at<double>(0) + 300);
-      int y = int(t_f.at<double>(2) + 100);
+      int x = int(t_f.at<double>(0)) + 300;
+      int y = int(t_f.at<double>(2)) + 100;
       cv::circle(traj, cv::Point(x, y), 1, CV_RGB(255, 0, 0), 2);
       cv::rectangle(traj, cv::Point(10, 30), cv::Point(550, 50), CV_RGB(0, 0, 0), cv::FILLED);
 
@@ -160,8 +164,8 @@ namespace slam {
         if (t.x < 0 || t.y < 0) {
           status.at(i) = 0;
         }
-        points1.erase(points1.begin() + i - index_correction);
-        points2.erase(points2.begin() + i - index_correction);
+        points1.erase(points1.begin() + (i - index_correction));
+        points2.erase(points2.begin() + (i - index_correction));
         ++index_correction;
       }
     }
