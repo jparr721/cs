@@ -17,9 +17,14 @@
    c. The amount of memory used as cache surprisingly went down. so and si also went way up to show how much memory was swapping in and out of disk as a result of the use of virtual memory. Pretty much everything from blocks, to interrrupts, to even time stolen from the virtual machine all saw a sharp spike as a result of the increase in load on the system imposed by the program.
 
 4.
-   a.
+
+   a. The page size is 4096 bytes.  It takes 9.094 seconds to run.
+   b. By swapping the i and j values we now access memory column by column instead of row by row.
+   c. The execution time is increased to 9.881 seconds, a 0.787 second difference.
+   d. By swapping the i and j values we now have invalid TLB hits so it takes longer.  (See Diagram Below)
 
 5.
+
    a. After manually calculating, it is clear that the value of `76` for the `COEFFICIENT` parameter is the best option here. Any value larger incurs a segmentation fault by the system which signifies that it has reached it max for a malloc. After running the program, it appears that the physical system memory is almost entirely used besides the small sections of RAM which are thought to be reserved for system critical processes.
   b.
   c. Similar to what was observed in question 3, the system used physical hard drive storage to get more pages of memory to run the intensive program in memory. The command `ps -eo min_flt,maj_flt,cmd` is used to see how many page faults occured during the run of the process. This number showed that > 11000 faults occured which were minor and > 100 major page faults. This is pretty significant, but definitely not nearly as much as an x2go session might incur on a system, which is in the millions. This shows that even when artificially taxing a system, nothing beats a truly intensive program
