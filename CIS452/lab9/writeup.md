@@ -18,6 +18,6 @@
 
 4.
     a. The page size is 4096 bytes.  It takes 9.094 seconds to run.
-    b. 
+    b. By swapping the i and j values we now access memory column by column instead of row by row.
     c. The execution time is increased to 9.881 seconds, a 0.787 second difference.
-    d. 
+    d. By swapping the i and j values we now have invalid TLB hits so it takes longer.  (See Diagram Below)
