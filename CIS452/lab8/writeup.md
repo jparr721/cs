@@ -77,3 +77,10 @@ int main(int argc, char** argv) {
   return 0;
 }
 ```
+
+
+
+### Stack Drawing
+
+![](/home/ghost/Code/cs/CIS452/lab8/MemoryDiagramOSLab8.JPG)
+
