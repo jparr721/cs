@@ -17,4 +17,5 @@
    c. The amount of memory used as cache surprisingly went down. so and si also went way up to show how much memory was swapping in and out of disk as a result of the use of virtual memory. Pretty much everything from blocks, to interrrupts, to even time stolen from the virtual machine all saw a sharp spike as a result of the increase in load on the system imposed by the program.
 
 4.
-    a.
+    a. The page size is 4096 bytes.
+    b. 
