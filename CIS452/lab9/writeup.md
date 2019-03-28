@@ -19,3 +19,5 @@
 4.
     a. The page size is 4096 bytes.  It takes 9.094 seconds to run.
     b. 
+    c. The execution time is increased to 9.881 seconds, a 0.787 second difference.
+    d. 
