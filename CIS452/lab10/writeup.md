@@ -2,7 +2,7 @@
 2. After launching reddit, netflix, and the weather channel, the memory usage went up to about `2.3db`. As a result, it is clear that, while heavily optimized for windows, Edge still has to eat some of the system ram in order to run complex web data. It's far less than the memory consumed by google chrome, however. The memory demand it about `.7gb`.
 
 3.
-
+a. The standby is like the page buffering to allow a process to restart as soon as possible instead of waiting to be swapped in.
 
 4.
 
