@@ -7,6 +7,8 @@ b. The amount of free memory before opening edge is 2388 MB.  After opening the 
 
 4.  The reason for the memory usage not being double that of the first instance is because the two programs share frames.  Since double the frames are not needed, neither is double the memory.
 
-5. Total physical memory is `4gb` and tht eottal virtual memory is `5.37gb`. This is because there is a larger amount of virtual memory as a result of disk space almost always being larger than onboard memory. As a result, there is more available harddrive space to be used for virtual memory.
+5. Total physical memory is `4gb` and that total virtual memory is `5.37gb`. This is because there is a larger amount of virtual memory as a result of disk space almost always being larger than onboard memory. As a result, there is more available harddrive space to be used for virtual memory.
 6. This value is `1408mb` and is used as an extension of RAM for data in RAM that has not been used recently. This is used to speed up reading data from the hard disk. This is similar to the linux swap file or swap partition, which does a similar utility of swapping idle processes out of RAM temporarily. This value of `1408mb` corresponds to the virtual memory size of `~5.4gb` because this is calculated as the total RAM + the pagefile size.
 7. After using `RamMap.exe` it was seen that the `explorer.exe` program is `1484K`.
+
+8. When we type there are no page faults but as soon as we click the menu to view the formatting options it spikes to 401 page faults.  This is because the menu operation wasn't brought into memory origionally.  Once the system stabalized and we changed the font from regular to bold italic, the page faults jumped to 8.  This is a smaller page fault value than the menu operation because the program only has to bring in the font data and write it to memory.  This write option does not cause any page faults.
