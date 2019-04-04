@@ -3,8 +3,8 @@
 
 3.
 a. The standby is like the page buffering to allow a process to restart as soon as possible instead of waiting to be swapped in.
+b. The amount of free memory before opening edge is 2388 MB.  After opening the first instance of edge it drops to 2322 MB free but then drops again to 2239 MB free.  After this stays consistent another instance of edge is opened and the free memory drops to 2063 MB but then goes back up to 2077 MB free.
 
-4.
-
+4.  The reason for the memory usage not being double that of the first instance is because the two programs share frames.  Since double the frames are not needed, neither is double the memory.
 
 
