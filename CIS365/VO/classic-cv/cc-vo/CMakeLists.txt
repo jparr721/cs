@@ -1,9 +1,0 @@
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project(slam LANGUAGES CXX)
-
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
-set(CMAKE_BUILD_TYPE Debug)
-find_package(OpenCV REQUIRED)
-
-add_executable(slam slam.cc view.cc)
-target_link_libraries(slam ${OpenCV_LIBS})

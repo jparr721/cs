@@ -2,3 +2,4 @@ venv/
 dataset/
 build/
 data_odometry_gray.zip
+__pycache__/
