@@ -6,13 +6,17 @@
 
 int main()
 {
-   DIR *dirPtr;
-   struct dirent *entryPtr;
+	DIR *dirPtr;
+	struct dirent *entryPtr;
 
-   dirPtr = opendir (".");
+	dirPtr = opendir (".");
 
-   while ((entryPtr = readdir (dirPtr)))
-      printf ("%-20s\n", entryPtr->d_name);
-   closedir (dirPtr);
-   return 0;
+	while ((entryPtr = readdir (dirPtr))){
+		printf ("%-20s\n", entryPtr->d_name);
+		struct stat st;
+		stat((entryPtr->d_name), &st);
+		printf ("Size: %d bytes\n", st.st_size);
+	}
+	closedir (dirPtr);
+	return 0;
 }

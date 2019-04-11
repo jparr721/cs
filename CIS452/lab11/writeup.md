@@ -41,3 +41,13 @@ Jarred Parr and Alexander Fountain
    ![](./2019-04-10_19-25.png)
 
 2. a. This program opens a pointer to the current directory (denoted by `"."` and performs a while loop and reads the filename of each value in the directory and prints out the values to the console.
+
+   b. SEE sample2output.jpg
+
+3. a. Depth first search tree traversal. This is evident in the layout featuring the sizes of subfolders of the parent first, then the parent, which validates that it accesses the root node and its data before moving onward.
+
+   b. As evidenced by the man page, the block size for `du` is `1024`.
+
+   c. Reporting data size in terms of the block size allows the user to get an idea not only how many blocks the system is utilizing for its storage, but also can inform the user of this number as well in a succinct way.
+
+
