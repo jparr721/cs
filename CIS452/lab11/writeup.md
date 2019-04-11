@@ -40,3 +40,4 @@ Jarred Parr and Alexander Fountain
 
    ![](./2019-04-10_19-25.png)
 
+2. a. This program opens a pointer to the current directory (denoted by `"."` and performs a while loop and reads the filename of each value in the directory and prints out the values to the console.
