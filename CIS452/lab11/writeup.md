@@ -14,21 +14,21 @@ Jarred Parr and Alexander Fountain
    #include <sys/stat.h>
    #include <sys/types.h>
    #include <errno.h>
-   
+
    int main(int argc, char *argv[])
    {
       struct stat statBuf;
-   
+
       if (argc < 2) {
          printf ("Usage: filename required\n");
          exit(1);
       }
-   
+
       if (stat (argv[1], &statBuf) < 0) {
          perror ("huh?  there is ");
          exit(1);
       }
-   
+
       if ((statBuf.st_mode & S_IFMT) == S_IFDIR) {
          printf("%s is a directory\n", argv[1]);
       } else {
@@ -38,4 +38,5 @@ Jarred Parr and Alexander Fountain
    }
    ```
 
-   ![](/home/ghost/Screenshots/2019-04-10_19-25.png)
+   ![](./2019-04-10_19-25.png)
+
