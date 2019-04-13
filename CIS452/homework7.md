@@ -4,7 +4,7 @@ Jarred Parr
 
 
 
-1. a. The lower bound of page faults will be the size of the window which, in this case, is *m*.
+1. a. The lower bound of page faults will be the size of the window which, in this case, is *n*.
 
    b. The upper bound of page faults would occur in the situation that all of the window entries are always missing the next value in the reference string. So the upper bound is *p*.
 
