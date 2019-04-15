@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -38,15 +39,34 @@ void merge(char* dlist[], int l, int m, int r) {
     R[i] = dlist[i];
   }
 
-  for (int i = 0, j = 0, k = l; i < s1 && j < s2;) {
+  int i, j, k;
+  for (i = 0, j = 0, k = l; i < s1 && j < s2; ++k) {
     if (comp(L[i], R[i])) {
-      return;
+      dlist[k] = L[i];
+      ++i;
     }
+
+    if (!comp(L[i], R[i])) {
+      dlist[k] = R[j];
+      ++j;
+    }
+  }
+
+  while (i < s1) {
+    dlist[k] = L[i];
+    ++i;
+    ++k;
+  }
+
+  while (j < s1) {
+    dlist[k] = L[j];
+    ++j;
+    ++k;
   }
 }
 
-void sort(struct dirent* dlist, int l, int r) {
-  int m = (l + r) / 2;
+void sort(char* dlist[], int l, int r) {
+  int m = l + (r - l) / 2;
 
   sort(dlist, l, m);
   sort(dlist, m, r);
@@ -62,24 +82,35 @@ int main(int argc, char** argv) {
 
   int opt;
 
-  char* directory = argv[optind];
+  char* directory = argv[2];
   if (stat(directory, &stat_buf) < 0) {
     perror("Invalid input supplied");
     return -1;
   }
 
+  int i;
+  char entry[DLIST_LEN];
   while ((opt = getopt(argc, argv, "n:i")) != -1) {
     switch(opt) {
       case 'n':
-        // It is a directory
+        i = 0;
         dir_ptr = opendir(directory);
         while ((entry_ptr = readdir(dir_ptr))) {
           struct stat st;
           stat((entry_ptr->d_name), &st);
-          printf("%-20s uid: %d gid: %d\n", entry_ptr->d_name, st.st_uid, st.st_gid);
+          sprintf(entry, "%-20s uid: %d gid: %d\n", entry_ptr->d_name, st.st_uid, st.st_gid);
+          /* printf("%-20s uid: %d gid: %d\n", entry_ptr->d_name, st.st_uid, st.st_gid); */
+          dlist[i] = entry;
+          ++i;
+        }
+        printf("%s", dlist[0]);
+        /* sort(dlist, 0, i - 1); */
+        for (int j = 0; j < i - 1; ++j) {
+          printf("%s", dlist[i]);
         }
         break;
       case 'i':
+        i = 0;
         dir_ptr = opendir(directory);
         while ((entry_ptr = readdir(dir_ptr))) {
           struct stat st;
