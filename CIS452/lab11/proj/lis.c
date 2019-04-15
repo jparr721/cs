@@ -78,7 +78,6 @@ int main(int argc, char** argv) {
   DIR *dir_ptr;
   struct dirent *entry_ptr;
   struct stat stat_buf;
-  char* dlist[DLIST_LEN];
 
   int opt;
 
@@ -88,29 +87,17 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  int i;
-  char entry[DLIST_LEN];
   while ((opt = getopt(argc, argv, "n:i")) != -1) {
     switch(opt) {
       case 'n':
-        i = 0;
         dir_ptr = opendir(directory);
         while ((entry_ptr = readdir(dir_ptr))) {
           struct stat st;
           stat((entry_ptr->d_name), &st);
-          sprintf(entry, "%-20s uid: %d gid: %d\n", entry_ptr->d_name, st.st_uid, st.st_gid);
-          /* printf("%-20s uid: %d gid: %d\n", entry_ptr->d_name, st.st_uid, st.st_gid); */
-          dlist[i] = entry;
-          ++i;
-        }
-        printf("%s", dlist[0]);
-        /* sort(dlist, 0, i - 1); */
-        for (int j = 0; j < i - 1; ++j) {
-          printf("%s", dlist[i]);
+          printf("%-20s uid: %d gid: %d\n", entry_ptr->d_name, st.st_uid, st.st_gid);
         }
         break;
       case 'i':
-        i = 0;
         dir_ptr = opendir(directory);
         while ((entry_ptr = readdir(dir_ptr))) {
           struct stat st;
