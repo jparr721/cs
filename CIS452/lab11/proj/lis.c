@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -6,12 +7,58 @@
 #include <errno.h>
 
 #define DLIST_LEN 1024
+#define MIN(x, y) ((x) < (y)) ? (x) : (y)
+
+int comp(char* n1, char* n2) {
+  size_t l1 = strlen(n1);
+  size_t l2 = strlen(n2);
+  size_t min = MIN(l1, l2);
+
+  for (int i = 0; i < min; ++i) {
+    if (n1[i] != n2[i]) {
+      char ch1 = n1[i] - 'a';
+      char ch2 = n2[i] - 'a';
+      if (ch1 < ch2) return 1;
+    }
+  }
+
+  return l1 == min ? 1 : 0;
+}
+
+void merge(char* dlist[], int l, int m, int r) {
+  int s1 = (m - 1) - l;
+  int s2 = r - m;
+
+  char *L[s1], *R[s2];
+  for (int i = 0; i < s1; ++i) {
+    L[i] = dlist[i];
+  }
+
+  for (int i = m; i < s2; ++i) {
+    R[i] = dlist[i];
+  }
+
+  for (int i = 0, j = 0, k = l; i < s1 && j < s2;) {
+    if (comp(L[i], R[i])) {
+      return;
+    }
+  }
+}
+
+void sort(struct dirent* dlist, int l, int r) {
+  int m = (l + r) / 2;
+
+  sort(dlist, l, m);
+  sort(dlist, m, r);
+
+  merge(dlist, l, m, r);
+}
 
 int main(int argc, char** argv) {
   DIR *dir_ptr;
   struct dirent *entry_ptr;
   struct stat stat_buf;
-  struct dirent dlist[DLIST_LEN];
+  char* dlist[DLIST_LEN];
 
   int opt;
 
@@ -44,7 +91,7 @@ int main(int argc, char** argv) {
         printf("invalid option specified");
         break;
       default:
-        dir_ptr = opendir(directory);
+        dir_ptr = opendir("./");
         while ((entry_ptr = readdir(dir_ptr))) {
           struct stat st;
           stat((entry_ptr->d_name), &st);
@@ -52,5 +99,4 @@ int main(int argc, char** argv) {
         }
     }
   }
-
 }
