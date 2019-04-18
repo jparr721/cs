@@ -27,14 +27,14 @@ int main (int argc, char *argv[]) {
 
     if (argv[1][1] == 'h') {
       if ((link(argv[2], argv[3])) < 0) {
-	perror("error creating hard link");
-	exit(1);
+		perror("error creating hard link");
+		exit(1);
       }
       printf("hard link created\n");
     } else if (argv[1][1] == 's') {
       if ((symlink(argv[2], argv[3])) < 0) {
-	perror("error creating symbolic link");
-	exit(1);
+		perror("error creating symbolic link");
+		exit(1);
       }
       printf("symbolic link created\n");
     }
