@@ -1,1 +1,1 @@
-from tictactoe.envs.tictactoe_env import TicTacToeEnv
+from envs.tictactoe_env import TicTacToeEnv

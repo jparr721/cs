@@ -61,12 +61,12 @@ class TicTacToeEnv(gym.Env):
         self.current_piece = self.X_PIECE
 
         # Init our gym action and env spaces
-        self.action_space = spaces.Discrete(1)
-        self.observation_space = spaces.Box(0, 5, dtype=np.int16)
+        self.action_space = spaces.Discrete(9)
+        self.observation_space = spaces.Discrete(10)
 
         self.action_episode_memory = []
         self.seed()
-        self._reset()
+        self.reset()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
