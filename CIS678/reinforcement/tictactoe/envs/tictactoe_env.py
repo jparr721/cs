@@ -3,6 +3,20 @@ import numpy as np
 from gym import spaces, logger
 from gym.utils import seeding
 
+LEFT = '  '
+
+
+def encode(piece):
+    return 1 if piece == 'x' else 2
+
+
+def decode(piece):
+    return 'x' if piece == 1 else 'o'
+
+
+def next_piece(piece):
+    return 'x' if piece == 'o' else 'o'
+
 
 class TicTacToeEnv(gym.Env):
     '''
@@ -11,15 +25,15 @@ class TicTacToeEnv(gym.Env):
     they have a line of 3 in a row
 
     Ovservation:
-    Type: Box(2)
+    Type: Discrete(10)
     Num     Observation     Min     Max
-    0       Num-x            0       5
-    1       Num-y            0       5
+    0 - 9   The game board  0       9
+    10      The piece       1       2
 
     Actions:
-    Type: Discrete(1)
+    Type: Discrete(9)
     Num     Action
-    0       Place piece
+    0-9     Place piece at coordinates in 3x3 plane
 
     Reward:
     Reward is +10 for winning, reward is -20 for losing
@@ -40,17 +54,19 @@ class TicTacToeEnv(gym.Env):
         self.GAME_BOARD = np.zeros(shape=(self.BOARD_SIZE))
         self.X_PIECE = 'x'
         self.Y_PIECE = 'y'
-        self.num_x = 0
-        self.num_y = 0
+        self.starting_piece = self.X_PIECE
         self.turn = 0
         self.cur_step = -1
         self.cur_episode = 0
+        self.current_piece = self.X_PIECE
 
         # Init our gym action and env spaces
         self.action_space = spaces.Discrete(1)
         self.observation_space = spaces.Box(0, 5, dtype=np.int16)
 
         self.action_episode_memory = []
+        self.seed()
+        self._reset()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -63,41 +79,48 @@ class TicTacToeEnv(gym.Env):
         '''
         assert self.action_space.contains(action),\
             '{} ({}) invalid'.format(action, type(action))
-        done = False
+        if self.done:
+            return self._get_state(), self.done, None
+
         self.cur_step += 1
         self._mini_step(action)
-        reward = self._get_reward(action)
+        self.status = self._check_state(action)
+        self.done = self.status[0]
         state = self._get_state()
-        if reward == 10:
-            done = True
+        reward = 0
 
-        return state, reward, done, {}
+        if self.done:
+            reward = 1 if self.status[1] == 'x' else 0
+
+        self.current_piece = next_piece(self.current_piece)
+        return state, reward, self.done, None
 
     def reset(self):
         self.num_x = 0
         self.num_y = 0
         self.cur_step = -1
-        self.game_won = False
+        self.done = False
+        self.GAME_BOARD = np.zeros(shape=(self.BOARD_SIZE))
 
-    def render(self, mode='human'):
-        print(self.GAME_BOARD)
+    def render(self, mode='human', close=False):
+        if close:
+            return
+        if mode == 'human':
+            self._show_board()
 
     def _get_state(self):
-        return (self.num_x, self.num_y)
+        return tuple(self.GAME_BOARD), self.current_piece
 
-    def _move_viability(self, action: tuple):
-        return not self.GAME_BOARD[action[0]][action[1]]
-
-    def _mini_step(self, action: tuple):
-        if not self._move_viability:
-            raise RuntimeError('Invalid move made')
-
-        self.GAME_BOARD[action[0]][action[1]] = action[2]
+    def _show_board(self):
+        for i in range(0, 9, 3):
+            print(LEFT + '|'.join([i for i in range(i, i + 3)]))
+            if i < 6:
+                print(LEFT + '-----')
 
     def _action(self, action: tuple):
         self.action_eposode_memory[self.cur_episode].append(action)
 
-    def _get_reward(self, action: tuple):
+    def _check_state(self, action: tuple):
 
         def count_piece(count_dict, piece):
             if piece in count_dict:
@@ -106,7 +129,8 @@ class TicTacToeEnv(gym.Env):
                 count_dict[piece] = 1
 
         def check_max(count_dict):
-            return max(count_dict.values())
+            return max(count_dict.values()),
+            max(count_dict, key=count_dict.get)
 
         count_dict = {}
         diag = False
@@ -124,8 +148,8 @@ class TicTacToeEnv(gym.Env):
                 count_piece(count_dict, piece)
 
             # This should ideally never go > 3...
-            if check_max(count_dict) == 3:
-                return 10
+            if check_max(count_dict)[0] == 3:
+                return True, check_max(count_dict)[1]
 
             # No winner? Move on...
             count_dict.clear()
@@ -137,7 +161,7 @@ class TicTacToeEnv(gym.Env):
                 j -= 1
 
             if check_max(count_dict) == 3:
-                return 10
+                return True, check_max(count_dict)[1]
 
         # Check row and col of start point, we always check these
         count_dict.clear()
@@ -146,7 +170,7 @@ class TicTacToeEnv(gym.Env):
             count_piece(count_dict, piece)
 
         if check_max(count_dict) == 3:
-            return 10
+            return True, check_max(count_dict)[1]
 
         count_dict.clear()
         for i in range(3):
@@ -154,6 +178,7 @@ class TicTacToeEnv(gym.Env):
             count_piece(count_dict, piece)
 
         if check_max(count_dict) == 3:
-            return 10
+            return True, check_max(count_dict)[1]
 
-        return 0
+        # Game is still going...
+        return False
