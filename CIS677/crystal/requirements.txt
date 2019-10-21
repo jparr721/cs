@@ -38,6 +38,6 @@ scipy==1.1.0
 six==1.11.0
 team==1.0
 ufw==0.35
-urllib3==1.23
+urllib3==1.24.2
 virtualenv==16.0.0
 webencodings==0.5.1
